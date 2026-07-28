@@ -133,7 +133,7 @@ function postPageScript() {
     function init(){
       if(loaded)return;loaded=true;
       var s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/twikoo@1.6.40/dist/twikoo.all.min.js';
+      s.src='https://cdn.jsdelivr.net/npm/twikoo@1.7.14/dist/twikoo.all.min.js';
       s.onload=function(){try{twikoo.init({envId:envId,el:'#tcomment',path:location.pathname})}catch(e){}};
       document.head.appendChild(s);
     }

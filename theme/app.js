@@ -101,7 +101,7 @@ function __initTwikoo(path){
       if(entries[0].isIntersecting){
         obs.disconnect();
         var s=document.createElement('script');
-        s.src='https://cdn.jsdelivr.net/npm/twikoo@1.6.40/dist/twikoo.all.min.js';
+        s.src='https://cdn.jsdelivr.net/npm/twikoo@1.7.14/dist/twikoo.all.min.js';
         s.onload=doInit;
         document.head.appendChild(s);
       }
