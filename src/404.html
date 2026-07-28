@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 | Moriefy</title>
+<meta name="description" content="页面未找到">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Sans+SC:wght@400;600&display=swap" media="print" onload="this.media='all'">
+<style>
+[data-theme="light"]{--primary:#3E505B;--surface:#FFFFFF;--on-surface:#1C1C1E;--on-surface-variant:#5C5F63;--outline:#8E9196;--surface-container-low:#F8F9FA;--primary-container:#D4DDE3;--on-primary-container:#1B2A33}
+[data-theme="dark"]{--primary:#A2B3BC;--surface:#111315;--on-surface:#E3E3E6;--on-surface-variant:#A0A3A8;--outline:#6B6F73;--surface-container-low:#191B1D;--primary-container:#354A54;--on-primary-container:#BFCDD5}
+@media(prefers-color-scheme:dark){html:not([data-theme="light"]){--primary:#A2B3BC;--surface:#111315;--on-surface:#E3E3E6;--on-surface-variant:#A0A3A8;--outline:#6B6F73;--surface-container-low:#191B1D;--primary-container:#354A54;--on-primary-container:#BFCDD5}}
+*,:before,:after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:'Noto Sans SC','PingFang SC',Georgia,serif;background:var(--surface);color:var(--on-surface);line-height:1.8;font-size:16px;display:flex;flex-direction:column;min-height:100vh;transition:background-color 200ms ease,color 200ms ease}
+a{color:var(--primary);text-decoration:none}
+.top-app-bar{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 24px;background:var(--surface);transition:background-color 200ms}
+.logo{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:300;letter-spacing:.12em;color:var(--on-surface);cursor:pointer;user-select:none;padding:4px 8px;border-radius:8px}
+.spacer{flex:1}
+.icon-btn{width:40px;height:40px;border-radius:20px;border:none;background:none;color:var(--on-surface-variant);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 150ms,color 200ms}
+.icon-btn:hover{background:var(--surface-container-low)}
+.icon-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.theme-wrap{position:relative;width:22px;height:22px}
+.theme-ico{position:absolute;inset:0;transition:transform 350ms cubic-bezier(.2,0,0,1),opacity 250ms}
+.theme-ico.off{transform:rotate(-90deg) scale(0);opacity:0}
+.error-page{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.error-code{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(80px,15vw,140px);font-weight:300;color:var(--on-surface);line-height:1;letter-spacing:.06em;opacity:.15;margin-bottom:16px}
+.error-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:600;color:var(--on-surface);margin-bottom:12px}
+.error-desc{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:15px;color:var(--on-surface-variant);max-width:400px;margin-bottom:32px;line-height:1.7}
+.error-link{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:24px;border:1px solid var(--outline);font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;font-weight:500;color:var(--on-surface);background:none;cursor:pointer;transition:all 200ms;text-decoration:none}
+.error-link:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-container)}
+.error-link{position:relative;overflow:hidden}
+.ripple{position:absolute;border-radius:50%;background:var(--primary);opacity:.3;transform:scale(0);animation:rippleAnim .6s ease-out;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+.error-link svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.site-footer{border-top:1px solid var(--outline);padding:16px 24px;text-align:center;background:var(--surface-container-low);transition:background-color 200ms,color 200ms}
+.footer-copy{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;color:var(--outline)}
+@media(max-width:768px){.top-app-bar{padding:0 4px 0 16px}.error-code{font-size:80px}}
+</style>
+</head>
+<body>
+<header class="top-app-bar">
+  <span class="logo" onclick="location.href='/'">Moriefy</span>
+  <div class="spacer"></div>
+  <button class="icon-btn" aria-label="切换主题" onclick="(function(){var c=document.documentElement.getAttribute('data-theme')||'light';var t=c==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('th',t)}catch(e){};document.querySelectorAll('.theme-wrap').forEach(function(w){var s=w.querySelector('.sun'),m=w.querySelector('.moon');if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}})})()"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
+</header>
+<main class="error-page">
+  <div class="error-code">404</div>
+  <h1 class="error-title">页面未找到</h1>
+  <p class="error-desc">你访问的页面不存在或已被移除。请检查 URL 是否正确，或返回首页。</p>
+  <a class="error-link" href="/"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>返回首页</a>
+</main>
+<footer class="site-footer">
+  <p class="footer-copy">&copy; 2026 Moriefy</p>
+</footer>
+<script>
+(function(){
+  var th=null;try{th=localStorage.getItem('th')}catch(e){}
+  if(!th)th=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  document.documentElement.setAttribute('data-theme',th);
+  document.querySelectorAll('.theme-wrap').forEach(function(w){
+    var s=w.querySelector('.sun'),m=w.querySelector('.moon');
+    if(th==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}
+  });
+})();
+// Ripple effect
+document.querySelector('.error-link').addEventListener('click',function(e){var r=this.getBoundingClientRect(),s=Math.max(r.width,r.height)*2,sp=document.createElement('span');sp.className='ripple';sp.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(e.clientX-r.left-s/2)+'px;top:'+(e.clientY-r.top-s/2)+'px';this.appendChild(sp);sp.addEventListener('animationend',function(){sp.remove()})});
+</script>
+</body>
+</html>
