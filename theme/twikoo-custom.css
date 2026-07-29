@@ -9,38 +9,66 @@
   --tk-primary-container: var(--primary-container, #D4DDE3);
   --tk-on-primary-container: var(--on-primary-container, #1B2A33);
   --tk-surface: var(--surface, #FFFFFF);
+  --tk-surface-container-lowest: var(--surface-container-lowest, #FFFFFF);
+  --tk-surface-container-low: var(--surface-container-low, #F8F9FA);
   --tk-surface-container: var(--surface-container, #F2F3F5);
   --tk-surface-container-high: var(--surface-container-high, #ECEDEF);
+  --tk-surface-container-highest: var(--surface-container-highest, #E6E7E9);
   --tk-on-surface: var(--on-surface, #1C1C1E);
   --tk-on-surface-variant: var(--on-surface-variant, #5C5F63);
   --tk-outline: var(--outline, #8E9196);
   --tk-outline-variant: var(--outline-variant, #E0E1E3);
+  --tk-e1: var(--e1, 0 1px 2px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.03));
+  --tk-e2: var(--e2, 0 2px 6px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.04));
 }
 
-/* ── Comments Count ── */
+/* ── Comments Section ── */
 .tk-comments {
   border-top: 1px solid var(--tk-outline-variant);
-  padding-top: 24px;
+  padding-top: 28px;
 }
 .tk-comments-container {
   padding: 0 !important;
+  background: var(--tk-surface-container-low);
+  border-radius: 16px;
+  padding: 4px 20px 4px 20px !important;
 }
 
 /* ── Comment Item ── */
 .tk-comment {
-  padding: 16px 0 !important;
+  padding: 16px 12px !important;
   margin: 0 !important;
   border: none !important;
   border-bottom: 1px solid var(--tk-outline-variant) !important;
   border-radius: 0 !important;
   background: none !important;
   box-shadow: none !important;
+  border-left: 3px solid transparent !important;
+  transition: border-left-color 200ms, background 200ms !important;
+}
+.tk-comment:hover {
+  box-shadow: none !important;
+  border-left-color: var(--tk-primary-container) !important;
+  background: var(--tk-surface-container-lowest) !important;
 }
 .tk-comment:last-child {
   border-bottom: none !important;
 }
-.tk-comment:hover {
-  box-shadow: none !important;
+
+/* ── Master Comment ── */
+.tk-comment.tk-master {
+  background: var(--tk-primary-container) !important;
+  border-left: 3px solid var(--tk-primary) !important;
+  border-radius: 8px !important;
+  margin: 4px 0 !important;
+}
+.tk-comment.tk-master:hover {
+  background: var(--tk-primary-container) !important;
+  border-left-color: var(--tk-primary) !important;
+}
+.tk-comment.tk-master .tk-nick,
+.tk-comment.tk-master .tk-nick-link strong {
+  color: var(--tk-on-primary-container) !important;
 }
 
 /* ── Avatar ── */
@@ -50,6 +78,7 @@
   border-radius: 50% !important;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--tk-surface-container-low);
 }
 .tk-avatar img,
 .tk-avatar svg {
@@ -145,7 +174,8 @@
   max-width: 100% !important;
   border-radius: 12px !important;
   margin: 8px 0 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08) !important;
+  box-shadow: var(--tk-e2) !important;
+  border: 1px solid var(--tk-outline-variant) !important;
 }
 
 /* ── Reply User Link ── */
@@ -176,7 +206,7 @@
   transition: background 150ms, color 150ms !important;
 }
 .tk-action-icon:hover {
-  background: var(--tk-surface-container) !important;
+  background: var(--tk-surface-container-high) !important;
   color: var(--tk-primary) !important;
 }
 .tk-action-icon svg {
@@ -199,10 +229,15 @@
   margin-left: 46px !important;
   padding-left: 14px !important;
   border-left: 2px solid var(--tk-outline-variant) !important;
+  background: var(--tk-surface-container-low);
+  border-radius: 8px;
+  padding: 4px 4px 4px 14px !important;
+  margin-top: 4px !important;
 }
 .tk-replies .tk-comment {
-  padding: 12px 0 !important;
+  padding: 12px 8px !important;
   border-bottom: none !important;
+  border-left: 3px solid transparent !important;
 }
 
 /* ── Expand/Collapse Buttons ── */
@@ -214,22 +249,28 @@
   padding: 4px 14px !important;
   border-radius: 14px !important;
   border: 1px solid var(--tk-outline-variant) !important;
-  background: none !important;
+  background: var(--tk-surface-container-lowest) !important;
   font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 12px !important;
   color: var(--tk-on-surface-variant) !important;
   cursor: pointer !important;
-  transition: background 200ms, border-color 200ms, color 200ms !important;
+  transition: background 200ms, border-color 200ms, color 200ms, box-shadow 200ms !important;
+  box-shadow: var(--tk-e1) !important;
 }
 .tk-expand:hover {
   background: var(--tk-surface-container) !important;
   border-color: var(--tk-primary) !important;
   color: var(--tk-primary) !important;
+  box-shadow: var(--tk-e2) !important;
 }
 
 /* ── Submit Area ── */
 .tk-submit {
-  padding: 16px 0 !important;
+  padding: 20px 16px !important;
+  background: var(--tk-surface-container-low);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--tk-outline-variant);
 }
 .tk-submit .tk-row {
   display: flex !important;
@@ -243,21 +284,22 @@
 
 /* ── Input Textarea ── */
 .tk-input .el-textarea__inner {
-  background: var(--tk-surface-container) !important;
+  background: var(--tk-surface-container-lowest) !important;
   border: none !important;
   border-bottom: 2px solid var(--tk-outline-variant) !important;
-  border-radius: 0 !important;
-  padding: 12px 4px !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 14px 12px !important;
   font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 14px !important;
   line-height: 1.75 !important;
   color: var(--tk-on-surface) !important;
   box-shadow: none !important;
   resize: none !important;
-  transition: border-color 200ms !important;
+  transition: border-color 200ms, background 200ms !important;
 }
 .tk-input .el-textarea__inner:focus {
   border-bottom-color: var(--tk-primary) !important;
+  background: var(--tk-surface-container-lowest) !important;
   box-shadow: none !important;
 }
 .tk-input .el-textarea__inner::placeholder {
@@ -266,7 +308,7 @@
 
 /* ── Meta Input (nick, mail, link) ── */
 .tk-meta-input .el-input__inner {
-  background: var(--tk-surface-container) !important;
+  background: var(--tk-surface-container-lowest) !important;
   border: none !important;
   border-bottom: 1.5px solid var(--tk-outline-variant) !important;
   border-radius: 0 !important;
@@ -321,7 +363,7 @@
   transition: background 150ms, color 150ms !important;
 }
 .tk-submit-action-icon:hover {
-  background: var(--tk-surface-container) !important;
+  background: var(--tk-surface-container-high) !important;
   color: var(--tk-primary) !important;
 }
 .tk-submit-action-icon svg {
@@ -331,9 +373,9 @@
 
 /* ── Send Button ── */
 .tk-send.el-button--primary {
-  height: 34px !important;
-  padding: 0 20px !important;
-  border-radius: 17px !important;
+  height: 36px !important;
+  padding: 0 24px !important;
+  border-radius: 18px !important;
   border: none !important;
   background: var(--tk-primary) !important;
   color: #fff !important;
@@ -342,14 +384,15 @@
   font-weight: 600 !important;
   cursor: pointer !important;
   transition: background 200ms, box-shadow 200ms !important;
-  box-shadow: none !important;
+  box-shadow: var(--tk-e1) !important;
 }
 .tk-send.el-button--primary:hover {
   background: #2F4A5C !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,.07) !important;
+  box-shadow: var(--tk-e2) !important;
 }
 .tk-send.el-button--primary:active {
   background: #243B4A !important;
+  box-shadow: none !important;
 }
 .tk-send.el-button--primary.is-disabled {
   opacity: .4 !important;
@@ -360,31 +403,33 @@
 /* ── Preview / Cancel Buttons ── */
 .tk-preview.el-button--default,
 .tk-cancel.el-button--default {
-  height: 34px !important;
-  padding: 0 16px !important;
-  border-radius: 17px !important;
+  height: 36px !important;
+  padding: 0 18px !important;
+  border-radius: 18px !important;
   border: 1px solid var(--tk-outline-variant) !important;
-  background: none !important;
+  background: var(--tk-surface-container-lowest) !important;
   font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 13px !important;
   color: var(--tk-on-surface-variant) !important;
-  box-shadow: none !important;
-  transition: background 200ms, border-color 200ms, color 200ms !important;
+  box-shadow: var(--tk-e1) !important;
+  transition: background 200ms, border-color 200ms, color 200ms, box-shadow 200ms !important;
 }
 .tk-preview.el-button--default:hover,
 .tk-cancel.el-button--default:hover {
   background: var(--tk-surface-container) !important;
   border-color: var(--tk-primary) !important;
   color: var(--tk-primary) !important;
+  box-shadow: var(--tk-e2) !important;
 }
 
 /* ── Preview Container ── */
 .tk-preview-container {
-  background: var(--tk-surface-container) !important;
+  background: var(--tk-surface-container-low) !important;
   border: 1px solid var(--tk-outline-variant) !important;
   border-radius: 12px !important;
   padding: 16px !important;
   margin-top: 12px !important;
+  box-shadow: var(--tk-e1) !important;
 }
 
 /* ── Extras (location, OS, browser) ── */
@@ -401,6 +446,9 @@
   gap: 3px !important;
   font-size: 11px !important;
   color: var(--tk-outline) !important;
+  background: var(--tk-surface-container);
+  padding: 2px 8px;
+  border-radius: 8px;
 }
 .tk-extra svg {
   width: 12px !important;
@@ -415,15 +463,6 @@
   margin-left: 8px !important;
 }
 
-/* ── Master Comment Highlight ── */
-.tk-comment.tk-master {
-  background: none !important;
-}
-.tk-comment.tk-master .tk-nick,
-.tk-comment.tk-master .tk-nick-link strong {
-  color: var(--tk-primary) !important;
-}
-
 /* ── Loading ── */
 .tk-loading {
   text-align: center !important;
@@ -434,10 +473,10 @@
 
 /* ── OwO Emoji Panel ── */
 .OwO .OwO-body {
-  background: var(--tk-surface) !important;
+  background: var(--tk-surface-container-low) !important;
   border: 1px solid var(--tk-outline-variant) !important;
   border-radius: 16px !important;
-  box-shadow: 0 4px 14px rgba(0,0,0,.09) !important;
+  box-shadow: var(--tk-e2) !important;
 }
 .OwO .OwO-body .OwO-items {
   border-radius: 12px !important;
@@ -446,7 +485,7 @@
   border-radius: 8px !important;
 }
 .OwO .OwO-body .OwO-item:hover {
-  background: var(--tk-surface-container) !important;
+  background: var(--tk-surface-container-high) !important;
 }
 
 /* ── Dark Mode Overrides ── */
@@ -456,8 +495,11 @@
   --tk-primary-container: #354A54;
   --tk-on-primary-container: #BFCDD5;
   --tk-surface: #191B1D;
+  --tk-surface-container-lowest: #0C0D0F;
+  --tk-surface-container-low: #1E2022;
   --tk-surface-container: #1E2022;
   --tk-surface-container-high: #282A2D;
+  --tk-surface-container-highest: #333538;
   --tk-on-surface: #E3E3E6;
   --tk-on-surface-variant: #A0A3A8;
   --tk-outline: #6B6F73;
