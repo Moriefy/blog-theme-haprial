@@ -1,382 +1,297 @@
-/* ── Twikoo MD3 Override ── */
-/* ID selector wins over Element UI's class-only selectors */
+/* ── Twikoo MD3 魔改 ── */
+/* 父选择器用 .twikoo，这是 Twikoo 渲染后的根 class */
 
-#tcomment,
-#tcomment-friends {
-  /* MD3 color tokens */
-  --tw-primary: var(--primary, #3D5A6E);
+/* ── 颜色变量 ── */
+.twikoo {
+  --tw-theme: var(--primary, #3D5A6E);
   --tw-pc: var(--primary-container, #D4DDE3);
   --tw-opc: var(--on-primary-container, #1B2A33);
   --tw-surface: var(--surface, #FFFFFF);
   --tw-sc-low: var(--surface-container-low, #F8F9FA);
   --tw-sc: var(--surface-container, #F2F3F5);
   --tw-sc-high: var(--surface-container-high, #ECEDEF);
-  --tw-sc-highest: var(--surface-container-highest, #E6E7E9);
   --tw-onsurface: var(--on-surface, #1C1C1E);
   --tw-osv: var(--on-surface-variant, #5C5F63);
   --tw-outline: var(--outline, #8E9196);
   --tw-ov: var(--outline-variant, #E0E1E3);
-  --tw-e1: var(--e1);
-  --tw-e2: var(--e2);
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
 }
 
-/* ── 容器 ── */
-#tcomment .tk-comments-container,
-#tcomment-friends .tk-comments-container {
-  background: var(--tw-sc-low) !important;
-  border-radius: 16px !important;
-  padding: 4px 20px !important;
+/* ── 评论容器 ── */
+.twikoo .tk-comments-container {
+  background: var(--tw-sc-low);
+  border-radius: 16px;
+  padding: 4px 20px;
 }
 
 /* ── 单条评论 ── */
-#tcomment .tk-comment,
-#tcomment-friends .tk-comment {
-  padding: 16px 12px !important;
-  margin: 0 !important;
-  border: none !important;
-  border-bottom: 1px solid var(--tw-ov) !important;
-  border-left: 3px solid transparent !important;
-  border-radius: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
-  transition: border-left-color 200ms, background 200ms !important;
+.twikoo .tk-comments-container > .tk-comment {
+  padding: 16px 12px;
+  margin: 0;
+  border: none;
+  border-bottom: 1px solid var(--tw-ov);
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transition: border-left-color 200ms, background 200ms;
 }
-#tcomment .tk-comment:last-child,
-#tcomment-friends .tk-comment:last-child {
-  border-bottom: none !important;
+.twikoo .tk-comments-container > .tk-comment:last-child {
+  border-bottom: none;
 }
-#tcomment .tk-comment:hover,
-#tcomment-friends .tk-comment:hover {
-  border-left-color: var(--tw-pc) !important;
-  background: var(--tw-surface) !important;
-  box-shadow: none !important;
+.twikoo .tk-comments-container > .tk-comment:hover {
+  border-left-color: var(--tw-pc);
+  background: var(--tw-surface);
 }
 
 /* ── 博主评论 ── */
-#tcomment .tk-master,
-#tcomment-friends .tk-master {
+.twikoo .tk-master {
   background: var(--tw-pc) !important;
-  border-left: 3px solid var(--tw-primary) !important;
+  border-left: 3px solid var(--tw-theme) !important;
   border-radius: 8px !important;
-  margin: 4px 0 !important;
 }
-#tcomment .tk-master:hover,
-#tcomment-friends .tk-master:hover {
-  background: var(--tw-pc) !important;
-}
-#tcomment .tk-master .tk-nick,
-#tcomment-friends .tk-master .tk-nick,
-#tcomment .tk-master .tk-nick-link strong,
-#tcomment-friends .tk-master .tk-nick-link strong {
+.twikoo .tk-master .tk-nick {
   color: var(--tw-opc) !important;
 }
 
 /* ── 头像 ── */
-#tcomment .tk-avatar,
-#tcomment-friends .tk-avatar {
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 50% !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
-}
-#tcomment .tk-avatar img,
-#tcomment-friends .tk-avatar img,
-#tcomment .tk-avatar svg,
-#tcomment-friends .tk-avatar svg {
-  border-radius: 50% !important;
+.twikoo .tk-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
 }
 
-/* ── 昵称 / 时间 / 标签 ── */
-#tcomment .tk-meta,
-#tcomment-friends .tk-meta {
-  display: flex !important;
-  align-items: center !important;
-  flex-wrap: wrap !important;
-  gap: 6px !important;
+/* ── 昵称 / 时间 ── */
+.twikoo .tk-nick {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tw-onsurface);
 }
-#tcomment .tk-nick,
-#tcomment-friends .tk-nick,
-#tcomment .tk-nick-link,
-#tcomment-friends .tk-nick-link {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: var(--tw-onsurface) !important;
-  margin: 0 !important;
+.twikoo .tk-nick-link {
+  color: var(--tw-onsurface);
 }
-#tcomment .tk-time,
-#tcomment-friends .tk-time {
-  font-size: 12px !important;
-  color: var(--tw-outline) !important;
+.twikoo .tk-nick-link:hover {
+  color: var(--tw-theme);
 }
-#tcomment .tk-tag,
-#tcomment-friends .tk-tag {
-  font-size: 10px !important;
-  padding: 1px 8px !important;
-  border-radius: 4px !important;
-  margin: 0 !important;
+.twikoo .tk-time {
+  font-size: 12px;
+  color: var(--tw-outline);
 }
-#tcomment .tk-tag-green,
-#tcomment-friends .tk-tag-green {
-  color: var(--tw-primary) !important;
-  background: var(--tw-pc) !important;
+
+/* ── 标签 ── */
+.twikoo .tk-tag {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+.twikoo .tk-tag-green {
+  color: var(--tw-theme);
+  background: var(--tw-pc);
 }
 
 /* ── 评论内容 ── */
-#tcomment .tk-content,
-#tcomment-friends .tk-content {
-  font-size: 14px !important;
-  line-height: 1.75 !important;
-  color: var(--tw-onsurface) !important;
-  padding: 8px 0 4px !important;
+.twikoo .tk-content {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--tw-onsurface);
+  padding: 8px 0 4px;
 }
-#tcomment .tk-content code,
-#tcomment-friends .tk-content code {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: .85em !important;
-  background: var(--tw-sc-high) !important;
-  color: var(--tw-primary) !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
+.twikoo .tk-content p {
+  margin-bottom: 8px;
 }
-#tcomment .tk-content a,
-#tcomment-friends .tk-content a {
-  color: var(--tw-primary) !important;
-  text-decoration: none !important;
-  border-bottom: 1.5px solid var(--tw-pc) !important;
-  padding-bottom: 1px !important;
+.twikoo .tk-content p:last-child {
+  margin-bottom: 0;
 }
-#tcomment .tk-content a:hover,
-#tcomment-friends .tk-content a:hover {
-  border-bottom-color: var(--tw-primary) !important;
+.twikoo .tk-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .85em;
+  background: var(--tw-sc-high);
+  color: var(--tw-theme);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
-#tcomment .tk-content img,
-#tcomment-friends .tk-content img {
-  max-width: 100% !important;
-  border-radius: 12px !important;
-  margin: 8px 0 !important;
-  box-shadow: var(--tw-e2) !important;
+.twikoo .tk-content a {
+  color: var(--tw-theme);
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--tw-pc);
+  padding-bottom: 1px;
+}
+.twikoo .tk-content a:hover {
+  border-bottom-color: var(--tw-theme);
+}
+.twikoo .tk-content img {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 8px 0;
 }
 
 /* ── 回复区 ── */
-#tcomment .tk-replies,
-#tcomment-friends .tk-replies {
-  margin-left: 46px !important;
-  padding-left: 14px !important;
-  border-left: 2px solid var(--tw-ov) !important;
-  background: var(--tw-sc-low) !important;
-  border-radius: 8px !important;
-  padding: 4px 4px 4px 14px !important;
-  margin-top: 4px !important;
+.twikoo .tk-replies {
+  margin-left: 46px;
+  padding-left: 14px;
+  border-left: 2px solid var(--tw-ov);
+  background: var(--tw-sc-low);
+  border-radius: 8px;
+  padding: 4px 4px 4px 14px;
 }
-#tcomment .tk-replies .tk-comment,
-#tcomment-friends .tk-replies .tk-comment {
-  padding: 12px 8px !important;
-  border-bottom: none !important;
+.twikoo .tk-replies .tk-comment {
+  padding: 12px 8px;
+  border-top: none;
 }
 
 /* ── 操作按钮 ── */
-#tcomment .tk-action,
-#tcomment-friends .tk-action {
-  display: flex !important;
-  align-items: center !important;
-  gap: 2px !important;
-  margin-top: 6px !important;
+.twikoo .tk-action-icon {
+  padding: 4px 10px;
+  border-radius: 14px;
+  color: var(--tw-osv);
 }
-#tcomment .tk-action-icon,
-#tcomment-friends .tk-action-icon {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  padding: 4px 10px !important;
-  border-radius: 14px !important;
-  border: none !important;
-  background: none !important;
-  font-size: 12px !important;
-  color: var(--tw-osv) !important;
-  transition: background 150ms, color 150ms !important;
-}
-#tcomment .tk-action-icon:hover,
-#tcomment-friends .tk-action-icon:hover {
-  background: var(--tw-sc-high) !important;
-  color: var(--tw-primary) !important;
-}
-#tcomment .tk-action-icon svg,
-#tcomment-friends .tk-action-icon svg {
-  width: 14px !important;
-  height: 14px !important;
+.twikoo .tk-action-icon:hover {
+  background: var(--tw-sc-high);
+  color: var(--tw-theme);
 }
 
 /* ── 展开按钮 ── */
-#tcomment .tk-expand,
-#tcomment-friends .tk-expand {
-  padding: 4px 14px !important;
-  border-radius: 14px !important;
-  border: 1px solid var(--tw-ov) !important;
-  background: var(--tw-surface) !important;
-  font-size: 12px !important;
-  color: var(--tw-osv) !important;
-  box-shadow: var(--tw-e1) !important;
-  transition: background 200ms, border-color 200ms, color 200ms !important;
+.twikoo .tk-expand {
+  padding: 4px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--tw-ov);
+  background: var(--tw-surface);
+  color: var(--tw-osv);
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
 }
-#tcomment .tk-expand:hover,
-#tcomment-friends .tk-expand:hover {
-  background: var(--tw-sc) !important;
-  border-color: var(--tw-primary) !important;
-  color: var(--tw-primary) !important;
+.twikoo .tk-expand:hover {
+  background: var(--tw-sc);
+  border-color: var(--tw-theme);
+  color: var(--tw-theme);
 }
 
 /* ── 提交区域 ── */
-#tcomment .tk-submit,
-#tcomment-friends .tk-submit {
-  padding: 20px 16px !important;
-  background: var(--tw-sc-low) !important;
-  border-radius: 16px !important;
-  border: 1px solid var(--tw-ov) !important;
-  margin-bottom: 16px !important;
+.twikoo .tk-submit {
+  padding: 20px 16px;
+  background: var(--tw-sc-low);
+  border-radius: 16px;
+  border: 1px solid var(--tw-ov);
+  margin-bottom: 16px;
 }
 
-/* ── 输入框 ── */
-#tcomment .el-textarea__inner,
-#tcomment-friends .el-textarea__inner {
-  background: var(--tw-surface) !important;
-  border: none !important;
-  border-bottom: 2px solid var(--tw-ov) !important;
-  border-radius: 8px 8px 0 0 !important;
-  padding: 14px 12px !important;
-  font-family: 'Noto Sans SC', sans-serif !important;
-  font-size: 14px !important;
-  line-height: 1.75 !important;
-  color: var(--tw-onsurface) !important;
-  box-shadow: none !important;
-  resize: none !important;
-  transition: border-color 200ms !important;
+/* ── 输入框 (Element UI) ── */
+.twikoo .tk-input .el-textarea__inner {
+  background: var(--tw-surface);
+  border: none;
+  border-bottom: 2px solid var(--tw-ov);
+  border-radius: 8px 8px 0 0;
+  padding: 14px 12px;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--tw-onsurface);
+  box-shadow: none;
+  resize: none;
+  transition: border-color 200ms;
 }
-#tcomment .el-textarea__inner:focus,
-#tcomment-friends .el-textarea__inner:focus {
-  border-bottom-color: var(--tw-primary) !important;
-  box-shadow: none !important;
+.twikoo .tk-input .el-textarea__inner:focus {
+  border-bottom-color: var(--tw-theme);
+  box-shadow: none;
 }
 
-/* ── 昵称/邮箱输入 ── */
-#tcomment .el-input__inner,
-#tcomment-friends .el-input__inner {
-  background: var(--tw-surface) !important;
-  border: none !important;
-  border-bottom: 1.5px solid var(--tw-ov) !important;
-  border-radius: 0 !important;
-  padding: 6px 4px !important;
-  font-family: 'Noto Sans SC', sans-serif !important;
-  font-size: 13px !important;
-  color: var(--tw-onsurface) !important;
-  box-shadow: none !important;
-  transition: border-color 200ms !important;
+/* ── 昵称/邮箱输入 (Element UI) ── */
+.twikoo .el-input__inner {
+  background: var(--tw-surface);
+  border: none;
+  border-bottom: 1.5px solid var(--tw-ov);
+  border-radius: 0;
+  padding: 6px 4px;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  color: var(--tw-onsurface);
+  box-shadow: none;
 }
-#tcomment .el-input__inner:focus,
-#tcomment-friends .el-input__inner:focus {
-  border-bottom-color: var(--tw-primary) !important;
-  box-shadow: none !important;
+.twikoo .el-input__inner:focus {
+  border-bottom-color: var(--tw-theme);
+  box-shadow: none;
 }
-#tcomment .el-input-group__prepend,
-#tcomment-friends .el-input-group__prepend,
-#tcomment .el-input-group__append,
-#tcomment-friends .el-input-group__append {
-  background: none !important;
-  border: none !important;
-  border-bottom: 1.5px solid var(--tw-ov) !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  color: var(--tw-outline) !important;
+.twikoo .el-input-group__prepend,
+.twikoo .el-input-group__append {
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid var(--tw-ov);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--tw-outline);
 }
 
 /* ── 操作行 ── */
-#tcomment .tk-row.actions,
-#tcomment-friends .tk-row.actions {
-  margin-top: 12px !important;
-  padding-top: 12px !important;
-  border-top: 1px solid var(--tw-ov) !important;
+.twikoo .tk-row.actions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tw-ov);
 }
-#tcomment .tk-submit-action-icon,
-#tcomment-friends .tk-submit-action-icon {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 16px !important;
-  color: var(--tw-outline) !important;
-  transition: background 150ms, color 150ms !important;
+.twikoo .tk-submit-action-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  color: var(--tw-outline);
 }
-#tcomment .tk-submit-action-icon:hover,
-#tcomment-friends .tk-submit-action-icon:hover {
-  background: var(--tw-sc-high) !important;
-  color: var(--tw-primary) !important;
+.twikoo .tk-submit-action-icon:hover {
+  background: var(--tw-sc-high);
+  color: var(--tw-theme);
 }
 
 /* ── 发送按钮 ── */
-#tcomment .tk-send.el-button--primary,
-#tcomment-friends .tk-send.el-button--primary {
-  height: 36px !important;
-  padding: 0 24px !important;
-  border-radius: 18px !important;
-  border: none !important;
-  background: var(--tw-primary) !important;
-  color: #fff !important;
-  font-family: 'Noto Sans SC', sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  box-shadow: var(--tw-e1) !important;
-  transition: background 200ms, box-shadow 200ms !important;
+.twikoo .el-button--primary {
+  height: 36px;
+  padding: 0 24px;
+  border-radius: 18px;
+  border: none;
+  background: var(--tw-theme);
+  color: #fff;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
 }
-#tcomment .tk-send.el-button--primary:hover,
-#tcomment-friends .tk-send.el-button--primary:hover {
-  box-shadow: var(--tw-e2) !important;
+.twikoo .el-button--primary:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,.07);
 }
 
 /* ── 预览/取消按钮 ── */
-#tcomment .tk-preview.el-button--default,
-#tcomment-friends .tk-preview.el-button--default,
-#tcomment .tk-cancel.el-button--default,
-#tcomment-friends .tk-cancel.el-button--default {
-  height: 36px !important;
-  padding: 0 18px !important;
-  border-radius: 18px !important;
-  border: 1px solid var(--tw-ov) !important;
-  background: var(--tw-surface) !important;
-  font-size: 13px !important;
-  color: var(--tw-osv) !important;
-  box-shadow: var(--tw-e1) !important;
+.twikoo .tk-cancel.el-button--default,
+.twikoo .tk-preview.el-button--default {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 18px;
+  border: 1px solid var(--tw-ov);
+  background: var(--tw-surface);
+  color: var(--tw-osv);
+  font-size: 13px;
 }
 
 /* ── 预览容器 ── */
-#tcomment .tk-preview-container,
-#tcomment-friends .tk-preview-container {
-  background: var(--tw-sc-low) !important;
-  border: 1px solid var(--tw-ov) !important;
-  border-radius: 12px !important;
-  padding: 16px !important;
+.twikoo .tk-preview-container {
+  background: var(--tw-sc-low);
+  border: 1px solid var(--tw-ov);
+  border-radius: 12px;
+  padding: 16px;
 }
 
 /* ── 设备信息 ── */
-#tcomment .tk-extra,
-#tcomment-friends .tk-extra {
-  font-size: 11px !important;
-  color: var(--tw-outline) !important;
-  background: var(--tw-sc) !important;
-  padding: 2px 8px !important;
-  border-radius: 8px !important;
+.twikoo .tk-extra {
+  font-size: 11px;
+  color: var(--tw-outline);
+  background: var(--tw-sc);
+  padding: 2px 8px;
+  border-radius: 8px;
 }
 
 /* ── 暗色模式 ── */
-[data-theme="dark"] #tcomment,
-[data-theme="dark"] #tcomment-friends,
 [data-theme="dark"] .twikoo {
-  --tw-primary: #9AB0BF;
+  --tw-theme: #9AB0BF;
   --tw-pc: #354A54;
   --tw-opc: #BFCDD5;
   --tw-surface: #191B1D;
   --tw-sc-low: #1E2022;
   --tw-sc: #1E2022;
   --tw-sc-high: #282A2D;
-  --tw-sc-highest: #333538;
   --tw-onsurface: #E3E3E6;
   --tw-osv: #A0A3A8;
   --tw-outline: #6B6F73;
