@@ -155,9 +155,7 @@ a{color:var(--primary);text-decoration:none}
 .article-view.open{transform:translateY(0)}
 .av-bar{position:sticky;top:0;z-index:10;height:56px;display:flex;align-items:center;padding:0 4px;background:var(--surface);transition:background-color 200ms,box-shadow 200ms}
 .av-bar.scrolled{box-shadow:var(--e1)}
-.av-bar-title{flex:1;min-width:0;font-family:'LXGW WenKai','Noto Serif SC','Songti SC','SimSun',serif;font-size:16px;font-weight:400;letter-spacing:.08em;color:var(--on-surface);opacity:0;transition:opacity .3s .25s;text-align:center}
-.article-view.open .av-bar-title{opacity:1}
-.av-bar-title-text{display:inline-block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;vertical-align:bottom}
+
 .toc-toggle{display:none}
 .rprog{height:2px;background:var(--primary);width:100%;transform:scaleX(0);transform-origin:left;position:sticky;top:56px;z-index:9;will-change:transform}
 .av-content{max-width:720px;margin:0 auto;padding:0 24px 120px}
