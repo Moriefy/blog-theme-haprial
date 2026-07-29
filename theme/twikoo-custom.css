@@ -1,24 +1,25 @@
-/* ── Twikoo 微调 ── */
+/* ── Twikoo 评论区微调 ── */
+/* 只作用于评论列表和提交框，不动管理面板 */
 
 /* 博主昵称 */
-.twikoo .tk-master .tk-nick {
+.tk-comments .tk-master .tk-nick {
   color: var(--on-surface-variant);
 }
 
 /* 评论内容 */
-.twikoo .tk-content {
+.tk-comments .tk-content {
   line-height: 1.75;
 }
 
 /* 回复区 */
-.twikoo .tk-replies {
+.tk-comments .tk-replies {
   margin-left: 46px;
   padding-left: 14px;
   border-left: 2px solid var(--outline-variant);
 }
 
 /* 展开按钮 */
-.twikoo .tk-expand {
+.tk-comments .tk-expand {
   border-radius: 18px;
   border: 1px solid var(--outline-variant);
   background: none;
@@ -26,13 +27,13 @@
   font-size: 12px;
   color: var(--on-surface-variant);
 }
-.twikoo .tk-expand:hover {
+.tk-comments .tk-expand:hover {
   border-color: var(--on-surface);
   color: var(--on-surface);
 }
 
 /* 输入框 */
-.twikoo .el-textarea__inner {
+.tk-comments .el-textarea__inner {
   background: none;
   border: none;
   border-bottom: 2px solid var(--outline-variant);
@@ -46,13 +47,13 @@
   resize: none;
   transition: border-color 200ms;
 }
-.twikoo .el-textarea__inner:focus {
+.tk-comments .el-textarea__inner:focus {
   border-bottom-color: var(--on-surface);
   box-shadow: none;
 }
 
 /* 昵称/邮箱 */
-.twikoo .el-input__inner {
+.tk-comments .el-input__inner {
   background: none;
   border: none;
   border-bottom: 1.5px solid var(--outline-variant);
@@ -63,12 +64,12 @@
   box-shadow: none;
   transition: border-color 200ms;
 }
-.twikoo .el-input__inner:focus {
+.tk-comments .el-input__inner:focus {
   border-bottom-color: var(--on-surface);
   box-shadow: none;
 }
-.twikoo .el-input-group__prepend,
-.twikoo .el-input-group__append {
+.tk-comments .el-input-group__prepend,
+.tk-comments .el-input-group__append {
   background: none;
   border: none;
   border-bottom: 1.5px solid var(--outline-variant);
@@ -78,94 +79,94 @@
 }
 
 /* 发送按钮 */
-.twikoo .el-button--primary {
+.tk-comments .el-button--primary {
   background: var(--on-surface-variant);
   color: var(--surface);
   border: none;
   border-radius: 20px;
   box-shadow: none;
 }
-.twikoo .el-button--primary:hover {
+.tk-comments .el-button--primary:hover {
   background: var(--on-surface);
 }
-.twikoo .el-button--primary.is-disabled {
+.tk-comments .el-button--primary.is-disabled {
   background: var(--outline-variant);
   color: var(--outline);
 }
 
 /* 取消/预览 */
-.twikoo .tk-cancel.el-button--default,
-.twikoo .tk-preview.el-button--default {
+.tk-comments .tk-cancel.el-button--default,
+.tk-comments .tk-preview.el-button--default {
   background: none;
   border: none;
   border-radius: 20px;
   color: var(--on-surface-variant);
   box-shadow: none;
 }
-.twikoo .tk-cancel.el-button--default:hover,
-.twikoo .tk-preview.el-button--default:hover {
+.tk-comments .tk-cancel.el-button--default:hover,
+.tk-comments .tk-preview.el-button--default:hover {
   background: var(--surface-container-high);
 }
 
 /* 操作图标 */
-.twikoo .tk-action-icon,
-.twikoo .tk-action-icon-solid {
+.tk-comments .tk-action-icon,
+.tk-comments .tk-action-icon-solid {
   color: var(--outline);
 }
-.twikoo .tk-action-icon:hover,
-.twikoo .tk-action-icon-solid:hover {
+.tk-comments .tk-action-icon:hover,
+.tk-comments .tk-action-icon-solid:hover {
   color: var(--on-surface);
   background: var(--surface-container-high);
 }
-.twikoo .tk-action-count {
+.tk-comments .tk-action-count {
   color: var(--outline);
 }
 
 /* 评论链接 */
-.twikoo .tk-content a {
+.tk-comments .tk-content a {
   color: var(--on-surface-variant);
   border-bottom: 1px solid var(--outline-variant);
   text-decoration: none;
 }
-.twikoo .tk-content a:hover {
+.tk-comments .tk-content a:hover {
   color: var(--on-surface);
   border-bottom-color: var(--on-surface);
 }
 
 /* 回复@用户 */
-.twikoo .tk-ruser {
+.tk-comments .tk-ruser {
   color: var(--on-surface-variant);
 }
 
 /* 标签 */
-.twikoo .tk-tag-green,
-.twikoo .tk-tag-red,
-.twikoo .tk-tag-yellow {
+.tk-comments .tk-tag-green,
+.tk-comments .tk-tag-red,
+.tk-comments .tk-tag-yellow {
   background: var(--surface-container-high);
   color: var(--on-surface-variant);
   border: none;
 }
 
 /* 评论数 */
-.twikoo .tk-comments-count {
+.tk-comments .tk-comments-count {
   color: var(--outline);
 }
 
 /* 图标 */
-.twikoo .tk-icon {
+.tk-comments .tk-icon {
   color: var(--outline);
 }
 
 /* 设备信息 */
-.twikoo .tk-extra {
+.tk-comments .tk-extra {
   font-size: 11px;
   color: var(--outline);
 }
 
 /* 提交区小图标 */
-.twikoo .tk-submit-action-icon {
+.tk-comments .tk-submit-action-icon {
   color: var(--outline);
 }
-.twikoo .tk-submit-action-icon:hover {
+.tk-comments .tk-submit-action-icon:hover {
   color: var(--on-surface);
 }

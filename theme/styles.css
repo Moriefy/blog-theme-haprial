@@ -283,6 +283,10 @@ a{color:var(--primary);text-decoration:none}
 .toc-drawer-item.active{color:var(--primary);font-weight:600}
 .fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:16px;border:none;background:var(--surface-container-high);color:var(--on-surface);cursor:pointer;z-index:250;display:flex;align-items:center;justify-content:center;box-shadow:var(--e3);transform:scale(0) rotate(-90deg);opacity:0;transition:transform 350ms cubic-bezier(.34,1.56,.64,1),opacity 200ms,background 150ms,color 200ms}
 .fab.visible{transform:scale(1) rotate(0deg);opacity:1}
+.fab-comment{bottom:92px;background:var(--primary-container);color:var(--on-primary-container)}
+.fab-comment:hover{background:var(--surface-container-highest)}
+.fab-comment.visible{animation:fabBreathe 3s ease-in-out infinite}
+@keyframes fabBreathe{0%,100%{box-shadow:var(--e2)}50%{box-shadow:var(--e3)}}
 .fab:hover{background:var(--surface-container-highest)}
 .fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ripple{position:absolute;border-radius:50%;background:var(--ripple);pointer-events:none;z-index:2;animation:ripExpand .5s cubic-bezier(0,0,.2,1) forwards}
