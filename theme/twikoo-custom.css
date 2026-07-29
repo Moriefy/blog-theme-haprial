@@ -1,197 +1,191 @@
-/* ── Twikoo MD3 Theme Override ── */
-/* Target: #tcomment (article) and #tcomment-friends (friends page) */
+/* ── Twikoo MD3 Override ── */
+/* ID selector wins over Element UI's class-only selectors */
 
-/* ── Reset & Container ── */
 #tcomment,
 #tcomment-friends {
+  /* MD3 color tokens */
+  --tw-primary: var(--primary, #3D5A6E);
+  --tw-pc: var(--primary-container, #D4DDE3);
+  --tw-opc: var(--on-primary-container, #1B2A33);
+  --tw-surface: var(--surface, #FFFFFF);
+  --tw-sc-low: var(--surface-container-low, #F8F9FA);
+  --tw-sc: var(--surface-container, #F2F3F5);
+  --tw-sc-high: var(--surface-container-high, #ECEDEF);
+  --tw-sc-highest: var(--surface-container-highest, #E6E7E9);
+  --tw-onsurface: var(--on-surface, #1C1C1E);
+  --tw-osv: var(--on-surface-variant, #5C5F63);
+  --tw-outline: var(--outline, #8E9196);
+  --tw-ov: var(--outline-variant, #E0E1E3);
+  --tw-e1: var(--e1);
+  --tw-e2: var(--e2);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  --tk-primary: var(--primary, #3D5A6E);
-  --tk-primary-container: var(--primary-container, #D4DDE3);
-  --tk-on-primary-container: var(--on-primary-container, #1B2A33);
-  --tk-surface: var(--surface, #FFFFFF);
-  --tk-surface-container-lowest: var(--surface-container-lowest, #FFFFFF);
-  --tk-surface-container-low: var(--surface-container-low, #F8F9FA);
-  --tk-surface-container: var(--surface-container, #F2F3F5);
-  --tk-surface-container-high: var(--surface-container-high, #ECEDEF);
-  --tk-surface-container-highest: var(--surface-container-highest, #E6E7E9);
-  --tk-on-surface: var(--on-surface, #1C1C1E);
-  --tk-on-surface-variant: var(--on-surface-variant, #5C5F63);
-  --tk-outline: var(--outline, #8E9196);
-  --tk-outline-variant: var(--outline-variant, #E0E1E3);
-  --tk-e1: var(--e1, 0 1px 2px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.03));
-  --tk-e2: var(--e2, 0 2px 6px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.04));
 }
 
-/* ── Comments Section ── */
-.tk-comments {
-  border-top: 1px solid var(--tk-outline-variant);
-  padding-top: 28px;
-}
-.tk-comments-container {
-  padding: 0 !important;
-  background: var(--tk-surface-container-low);
-  border-radius: 16px;
-  padding: 4px 20px 4px 20px !important;
+/* ── 容器 ── */
+#tcomment .tk-comments-container,
+#tcomment-friends .tk-comments-container {
+  background: var(--tw-sc-low) !important;
+  border-radius: 16px !important;
+  padding: 4px 20px !important;
 }
 
-/* ── Comment Item ── */
-.tk-comment {
+/* ── 单条评论 ── */
+#tcomment .tk-comment,
+#tcomment-friends .tk-comment {
   padding: 16px 12px !important;
   margin: 0 !important;
   border: none !important;
-  border-bottom: 1px solid var(--tk-outline-variant) !important;
+  border-bottom: 1px solid var(--tw-ov) !important;
+  border-left: 3px solid transparent !important;
   border-radius: 0 !important;
   background: none !important;
   box-shadow: none !important;
-  border-left: 3px solid transparent !important;
   transition: border-left-color 200ms, background 200ms !important;
 }
-.tk-comment:hover {
-  box-shadow: none !important;
-  border-left-color: var(--tk-primary-container) !important;
-  background: var(--tk-surface-container-lowest) !important;
-}
-.tk-comment:last-child {
+#tcomment .tk-comment:last-child,
+#tcomment-friends .tk-comment:last-child {
   border-bottom: none !important;
 }
+#tcomment .tk-comment:hover,
+#tcomment-friends .tk-comment:hover {
+  border-left-color: var(--tw-pc) !important;
+  background: var(--tw-surface) !important;
+  box-shadow: none !important;
+}
 
-/* ── Master Comment ── */
-.tk-comment.tk-master {
-  background: var(--tk-primary-container) !important;
-  border-left: 3px solid var(--tk-primary) !important;
+/* ── 博主评论 ── */
+#tcomment .tk-master,
+#tcomment-friends .tk-master {
+  background: var(--tw-pc) !important;
+  border-left: 3px solid var(--tw-primary) !important;
   border-radius: 8px !important;
   margin: 4px 0 !important;
 }
-.tk-comment.tk-master:hover {
-  background: var(--tk-primary-container) !important;
-  border-left-color: var(--tk-primary) !important;
+#tcomment .tk-master:hover,
+#tcomment-friends .tk-master:hover {
+  background: var(--tw-pc) !important;
 }
-.tk-comment.tk-master .tk-nick,
-.tk-comment.tk-master .tk-nick-link strong {
-  color: var(--tk-on-primary-container) !important;
+#tcomment .tk-master .tk-nick,
+#tcomment-friends .tk-master .tk-nick,
+#tcomment .tk-master .tk-nick-link strong,
+#tcomment-friends .tk-master .tk-nick-link strong {
+  color: var(--tw-opc) !important;
 }
 
-/* ── Avatar ── */
-.tk-avatar {
+/* ── 头像 ── */
+#tcomment .tk-avatar,
+#tcomment-friends .tk-avatar {
   width: 36px !important;
   height: 36px !important;
   border-radius: 50% !important;
-  overflow: hidden;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 2px var(--tk-surface-container-low);
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
 }
-.tk-avatar img,
-.tk-avatar svg {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
+#tcomment .tk-avatar img,
+#tcomment-friends .tk-avatar img,
+#tcomment .tk-avatar svg,
+#tcomment-friends .tk-avatar svg {
   border-radius: 50% !important;
 }
 
-/* ── Meta (nick, time, tag) ── */
-.tk-meta {
+/* ── 昵称 / 时间 / 标签 ── */
+#tcomment .tk-meta,
+#tcomment-friends .tk-meta {
   display: flex !important;
   align-items: center !important;
   flex-wrap: wrap !important;
   gap: 6px !important;
-  font-size: 14px !important;
 }
-.tk-nick,
-.tk-nick-link {
+#tcomment .tk-nick,
+#tcomment-friends .tk-nick,
+#tcomment .tk-nick-link,
+#tcomment-friends .tk-nick-link {
   font-size: 14px !important;
   font-weight: 600 !important;
-  color: var(--tk-on-surface) !important;
+  color: var(--tw-onsurface) !important;
   margin: 0 !important;
 }
-.tk-nick-link:hover {
-  color: var(--tk-primary) !important;
-}
-.tk-time {
+#tcomment .tk-time,
+#tcomment-friends .tk-time {
   font-size: 12px !important;
-  color: var(--tk-outline) !important;
+  color: var(--tw-outline) !important;
 }
-.tk-time time {
-  font-size: 12px !important;
-}
-
-/* ── Tags (master, pinned, reviewing) ── */
-.tk-tag {
-  display: inline-block !important;
+#tcomment .tk-tag,
+#tcomment-friends .tk-tag {
   font-size: 10px !important;
-  font-weight: 400 !important;
   padding: 1px 8px !important;
   border-radius: 4px !important;
   margin: 0 !important;
-  vertical-align: middle;
 }
-.tk-tag-green {
-  color: var(--tk-primary) !important;
-  background: var(--tk-primary-container) !important;
-}
-.tk-tag-red {
-  color: #C62828 !important;
-  background: #FFCDD2 !important;
-}
-.tk-tag-yellow {
-  color: #E65100 !important;
-  background: #FFE0B2 !important;
+#tcomment .tk-tag-green,
+#tcomment-friends .tk-tag-green {
+  color: var(--tw-primary) !important;
+  background: var(--tw-pc) !important;
 }
 
-/* ── Comment Content ── */
-.tk-content {
+/* ── 评论内容 ── */
+#tcomment .tk-content,
+#tcomment-friends .tk-content {
   font-size: 14px !important;
   line-height: 1.75 !important;
-  color: var(--tk-on-surface) !important;
+  color: var(--tw-onsurface) !important;
   padding: 8px 0 4px !important;
-  margin: 0 !important;
 }
-.tk-content p {
-  margin-bottom: 8px !important;
-  line-height: 1.75 !important;
-}
-.tk-content p:last-child {
-  margin-bottom: 0 !important;
-}
-.tk-content code {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+#tcomment .tk-content code,
+#tcomment-friends .tk-content code {
+  font-family: 'JetBrains Mono', monospace !important;
   font-size: .85em !important;
-  background: var(--tk-surface-container-high) !important;
-  color: var(--tk-primary) !important;
+  background: var(--tw-sc-high) !important;
+  color: var(--tw-primary) !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
-.tk-content a {
-  color: var(--tk-primary) !important;
+#tcomment .tk-content a,
+#tcomment-friends .tk-content a {
+  color: var(--tw-primary) !important;
   text-decoration: none !important;
-  border-bottom: 1.5px solid var(--tk-primary-container) !important;
+  border-bottom: 1.5px solid var(--tw-pc) !important;
   padding-bottom: 1px !important;
-  transition: border-color 200ms !important;
 }
-.tk-content a:hover {
-  border-bottom-color: var(--tk-primary) !important;
+#tcomment .tk-content a:hover,
+#tcomment-friends .tk-content a:hover {
+  border-bottom-color: var(--tw-primary) !important;
 }
-.tk-content img {
+#tcomment .tk-content img,
+#tcomment-friends .tk-content img {
   max-width: 100% !important;
   border-radius: 12px !important;
   margin: 8px 0 !important;
-  box-shadow: var(--tk-e2) !important;
-  border: 1px solid var(--tk-outline-variant) !important;
+  box-shadow: var(--tw-e2) !important;
 }
 
-/* ── Reply User Link ── */
-.tk-ruser {
-  color: var(--tk-primary) !important;
-  font-weight: 500 !important;
+/* ── 回复区 ── */
+#tcomment .tk-replies,
+#tcomment-friends .tk-replies {
+  margin-left: 46px !important;
+  padding-left: 14px !important;
+  border-left: 2px solid var(--tw-ov) !important;
+  background: var(--tw-sc-low) !important;
+  border-radius: 8px !important;
+  padding: 4px 4px 4px 14px !important;
+  margin-top: 4px !important;
+}
+#tcomment .tk-replies .tk-comment,
+#tcomment-friends .tk-replies .tk-comment {
+  padding: 12px 8px !important;
+  border-bottom: none !important;
 }
 
-/* ── Action Buttons (like, reply, delete) ── */
-.tk-action {
+/* ── 操作按钮 ── */
+#tcomment .tk-action,
+#tcomment-friends .tk-action {
   display: flex !important;
   align-items: center !important;
   gap: 2px !important;
   margin-top: 6px !important;
 }
-.tk-action-icon {
+#tcomment .tk-action-icon,
+#tcomment-friends .tk-action-icon {
   display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
@@ -199,327 +193,192 @@
   border-radius: 14px !important;
   border: none !important;
   background: none !important;
-  font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 12px !important;
-  color: var(--tk-on-surface-variant) !important;
-  cursor: pointer !important;
+  color: var(--tw-osv) !important;
   transition: background 150ms, color 150ms !important;
 }
-.tk-action-icon:hover {
-  background: var(--tk-surface-container-high) !important;
-  color: var(--tk-primary) !important;
+#tcomment .tk-action-icon:hover,
+#tcomment-friends .tk-action-icon:hover {
+  background: var(--tw-sc-high) !important;
+  color: var(--tw-primary) !important;
 }
-.tk-action-icon svg {
+#tcomment .tk-action-icon svg,
+#tcomment-friends .tk-action-icon svg {
   width: 14px !important;
   height: 14px !important;
 }
-.tk-action-icon.__active {
-  color: #E57373 !important;
-}
-.tk-action-icon.__active svg {
-  fill: #E57373 !important;
-}
-.tk-action-count {
-  font-size: 12px !important;
-  margin: 0 !important;
-}
 
-/* ── Replies ── */
-.tk-replies {
-  margin-left: 46px !important;
-  padding-left: 14px !important;
-  border-left: 2px solid var(--tk-outline-variant) !important;
-  background: var(--tk-surface-container-low);
-  border-radius: 8px;
-  padding: 4px 4px 4px 14px !important;
-  margin-top: 4px !important;
-}
-.tk-replies .tk-comment {
-  padding: 12px 8px !important;
-  border-bottom: none !important;
-  border-left: 3px solid transparent !important;
-}
-
-/* ── Expand/Collapse Buttons ── */
-.tk-expand-wrap {
-  padding: 4px 0 !important;
-}
-.tk-expand {
-  display: inline-block !important;
+/* ── 展开按钮 ── */
+#tcomment .tk-expand,
+#tcomment-friends .tk-expand {
   padding: 4px 14px !important;
   border-radius: 14px !important;
-  border: 1px solid var(--tk-outline-variant) !important;
-  background: var(--tk-surface-container-lowest) !important;
-  font-family: 'Noto Sans SC', sans-serif !important;
+  border: 1px solid var(--tw-ov) !important;
+  background: var(--tw-surface) !important;
   font-size: 12px !important;
-  color: var(--tk-on-surface-variant) !important;
-  cursor: pointer !important;
-  transition: background 200ms, border-color 200ms, color 200ms, box-shadow 200ms !important;
-  box-shadow: var(--tk-e1) !important;
+  color: var(--tw-osv) !important;
+  box-shadow: var(--tw-e1) !important;
+  transition: background 200ms, border-color 200ms, color 200ms !important;
 }
-.tk-expand:hover {
-  background: var(--tk-surface-container) !important;
-  border-color: var(--tk-primary) !important;
-  color: var(--tk-primary) !important;
-  box-shadow: var(--tk-e2) !important;
+#tcomment .tk-expand:hover,
+#tcomment-friends .tk-expand:hover {
+  background: var(--tw-sc) !important;
+  border-color: var(--tw-primary) !important;
+  color: var(--tw-primary) !important;
 }
 
-/* ── Submit Area ── */
-.tk-submit {
+/* ── 提交区域 ── */
+#tcomment .tk-submit,
+#tcomment-friends .tk-submit {
   padding: 20px 16px !important;
-  background: var(--tk-surface-container-low);
-  border-radius: 16px;
-  margin-bottom: 16px;
-  border: 1px solid var(--tk-outline-variant);
-}
-.tk-submit .tk-row {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 12px !important;
-}
-.tk-submit .tk-col {
-  flex: 1 !important;
-  min-width: 0 !important;
+  background: var(--tw-sc-low) !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--tw-ov) !important;
+  margin-bottom: 16px !important;
 }
 
-/* ── Input Textarea ── */
-.tk-input .el-textarea__inner {
-  background: var(--tk-surface-container-lowest) !important;
+/* ── 输入框 ── */
+#tcomment .el-textarea__inner,
+#tcomment-friends .el-textarea__inner {
+  background: var(--tw-surface) !important;
   border: none !important;
-  border-bottom: 2px solid var(--tk-outline-variant) !important;
+  border-bottom: 2px solid var(--tw-ov) !important;
   border-radius: 8px 8px 0 0 !important;
   padding: 14px 12px !important;
   font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 14px !important;
   line-height: 1.75 !important;
-  color: var(--tk-on-surface) !important;
+  color: var(--tw-onsurface) !important;
   box-shadow: none !important;
   resize: none !important;
-  transition: border-color 200ms, background 200ms !important;
+  transition: border-color 200ms !important;
 }
-.tk-input .el-textarea__inner:focus {
-  border-bottom-color: var(--tk-primary) !important;
-  background: var(--tk-surface-container-lowest) !important;
+#tcomment .el-textarea__inner:focus,
+#tcomment-friends .el-textarea__inner:focus {
+  border-bottom-color: var(--tw-primary) !important;
   box-shadow: none !important;
 }
-.tk-input .el-textarea__inner::placeholder {
-  color: var(--tk-outline) !important;
-}
 
-/* ── Meta Input (nick, mail, link) ── */
-.tk-meta-input .el-input__inner {
-  background: var(--tk-surface-container-lowest) !important;
+/* ── 昵称/邮箱输入 ── */
+#tcomment .el-input__inner,
+#tcomment-friends .el-input__inner {
+  background: var(--tw-surface) !important;
   border: none !important;
-  border-bottom: 1.5px solid var(--tk-outline-variant) !important;
+  border-bottom: 1.5px solid var(--tw-ov) !important;
   border-radius: 0 !important;
   padding: 6px 4px !important;
   font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 13px !important;
-  color: var(--tk-on-surface) !important;
+  color: var(--tw-onsurface) !important;
   box-shadow: none !important;
   transition: border-color 200ms !important;
 }
-.tk-meta-input .el-input__inner:focus {
-  border-bottom-color: var(--tk-primary) !important;
+#tcomment .el-input__inner:focus,
+#tcomment-friends .el-input__inner:focus {
+  border-bottom-color: var(--tw-primary) !important;
   box-shadow: none !important;
 }
-.tk-meta-input .el-input__inner::placeholder {
-  color: var(--tk-outline) !important;
-}
-.tk-meta-input .el-input-group__prepend,
-.tk-meta-input .el-input-group__append {
+#tcomment .el-input-group__prepend,
+#tcomment-friends .el-input-group__prepend,
+#tcomment .el-input-group__append,
+#tcomment-friends .el-input-group__append {
   background: none !important;
   border: none !important;
-  border-bottom: 1.5px solid var(--tk-outline-variant) !important;
+  border-bottom: 1.5px solid var(--tw-ov) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  padding: 6px 8px !important;
-  color: var(--tk-outline) !important;
+  color: var(--tw-outline) !important;
 }
 
-/* ── Action Row (emotions, images, send) ── */
-.tk-row.actions {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
+/* ── 操作行 ── */
+#tcomment .tk-row.actions,
+#tcomment-friends .tk-row.actions {
   margin-top: 12px !important;
   padding-top: 12px !important;
-  border-top: 1px solid var(--tk-outline-variant) !important;
+  border-top: 1px solid var(--tw-ov) !important;
 }
-.tk-row-actions-start {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-.tk-submit-action-icon {
+#tcomment .tk-submit-action-icon,
+#tcomment-friends .tk-submit-action-icon {
   width: 32px !important;
   height: 32px !important;
   border-radius: 16px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: var(--tk-outline) !important;
-  cursor: pointer !important;
+  color: var(--tw-outline) !important;
   transition: background 150ms, color 150ms !important;
 }
-.tk-submit-action-icon:hover {
-  background: var(--tk-surface-container-high) !important;
-  color: var(--tk-primary) !important;
-}
-.tk-submit-action-icon svg {
-  width: 16px !important;
-  height: 16px !important;
+#tcomment .tk-submit-action-icon:hover,
+#tcomment-friends .tk-submit-action-icon:hover {
+  background: var(--tw-sc-high) !important;
+  color: var(--tw-primary) !important;
 }
 
-/* ── Send Button ── */
-.tk-send.el-button--primary {
+/* ── 发送按钮 ── */
+#tcomment .tk-send.el-button--primary,
+#tcomment-friends .tk-send.el-button--primary {
   height: 36px !important;
   padding: 0 24px !important;
   border-radius: 18px !important;
   border: none !important;
-  background: var(--tk-primary) !important;
+  background: var(--tw-primary) !important;
   color: #fff !important;
   font-family: 'Noto Sans SC', sans-serif !important;
   font-size: 13px !important;
   font-weight: 600 !important;
-  cursor: pointer !important;
+  box-shadow: var(--tw-e1) !important;
   transition: background 200ms, box-shadow 200ms !important;
-  box-shadow: var(--tk-e1) !important;
 }
-.tk-send.el-button--primary:hover {
-  background: #2F4A5C !important;
-  box-shadow: var(--tk-e2) !important;
-}
-.tk-send.el-button--primary:active {
-  background: #243B4A !important;
-  box-shadow: none !important;
-}
-.tk-send.el-button--primary.is-disabled {
-  opacity: .4 !important;
-  cursor: default !important;
-  box-shadow: none !important;
+#tcomment .tk-send.el-button--primary:hover,
+#tcomment-friends .tk-send.el-button--primary:hover {
+  box-shadow: var(--tw-e2) !important;
 }
 
-/* ── Preview / Cancel Buttons ── */
-.tk-preview.el-button--default,
-.tk-cancel.el-button--default {
+/* ── 预览/取消按钮 ── */
+#tcomment .tk-preview.el-button--default,
+#tcomment-friends .tk-preview.el-button--default,
+#tcomment .tk-cancel.el-button--default,
+#tcomment-friends .tk-cancel.el-button--default {
   height: 36px !important;
   padding: 0 18px !important;
   border-radius: 18px !important;
-  border: 1px solid var(--tk-outline-variant) !important;
-  background: var(--tk-surface-container-lowest) !important;
-  font-family: 'Noto Sans SC', sans-serif !important;
+  border: 1px solid var(--tw-ov) !important;
+  background: var(--tw-surface) !important;
   font-size: 13px !important;
-  color: var(--tk-on-surface-variant) !important;
-  box-shadow: var(--tk-e1) !important;
-  transition: background 200ms, border-color 200ms, color 200ms, box-shadow 200ms !important;
-}
-.tk-preview.el-button--default:hover,
-.tk-cancel.el-button--default:hover {
-  background: var(--tk-surface-container) !important;
-  border-color: var(--tk-primary) !important;
-  color: var(--tk-primary) !important;
-  box-shadow: var(--tk-e2) !important;
+  color: var(--tw-osv) !important;
+  box-shadow: var(--tw-e1) !important;
 }
 
-/* ── Preview Container ── */
-.tk-preview-container {
-  background: var(--tk-surface-container-low) !important;
-  border: 1px solid var(--tk-outline-variant) !important;
+/* ── 预览容器 ── */
+#tcomment .tk-preview-container,
+#tcomment-friends .tk-preview-container {
+  background: var(--tw-sc-low) !important;
+  border: 1px solid var(--tw-ov) !important;
   border-radius: 12px !important;
   padding: 16px !important;
-  margin-top: 12px !important;
-  box-shadow: var(--tk-e1) !important;
 }
 
-/* ── Extras (location, OS, browser) ── */
-.tk-extras {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  margin-top: 6px !important;
-  flex-wrap: wrap !important;
-}
-.tk-extra {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 3px !important;
+/* ── 设备信息 ── */
+#tcomment .tk-extra,
+#tcomment-friends .tk-extra {
   font-size: 11px !important;
-  color: var(--tk-outline) !important;
-  background: var(--tk-surface-container);
-  padding: 2px 8px;
-  border-radius: 8px;
-}
-.tk-extra svg {
-  width: 12px !important;
-  height: 12px !important;
-  fill: var(--tk-outline) !important;
-}
-
-/* ── Error Message ── */
-.tk-error-message {
-  font-size: 12px !important;
-  color: #C62828 !important;
-  margin-left: 8px !important;
-}
-
-/* ── Loading ── */
-.tk-loading {
-  text-align: center !important;
-  padding: 24px 0 !important;
-  color: var(--tk-outline) !important;
-  font-size: 13px !important;
-}
-
-/* ── OwO Emoji Panel ── */
-.OwO .OwO-body {
-  background: var(--tk-surface-container-low) !important;
-  border: 1px solid var(--tk-outline-variant) !important;
-  border-radius: 16px !important;
-  box-shadow: var(--tk-e2) !important;
-}
-.OwO .OwO-body .OwO-items {
-  border-radius: 12px !important;
-}
-.OwO .OwO-body .OwO-item {
+  color: var(--tw-outline) !important;
+  background: var(--tw-sc) !important;
+  padding: 2px 8px !important;
   border-radius: 8px !important;
 }
-.OwO .OwO-body .OwO-item:hover {
-  background: var(--tk-surface-container-high) !important;
-}
 
-/* ── Dark Mode Overrides ── */
+/* ── 暗色模式 ── */
 [data-theme="dark"] #tcomment,
-[data-theme="dark"] #tcomment-friends {
-  --tk-primary: #9AB0BF;
-  --tk-primary-container: #354A54;
-  --tk-on-primary-container: #BFCDD5;
-  --tk-surface: #191B1D;
-  --tk-surface-container-lowest: #0C0D0F;
-  --tk-surface-container-low: #1E2022;
-  --tk-surface-container: #1E2022;
-  --tk-surface-container-high: #282A2D;
-  --tk-surface-container-highest: #333538;
-  --tk-on-surface: #E3E3E6;
-  --tk-on-surface-variant: #A0A3A8;
-  --tk-outline: #6B6F73;
-  --tk-outline-variant: #333739;
-}
-[data-theme="dark"] .tk-tag-red {
-  color: #EF9A9A !important;
-  background: #4A1C1C !important;
-}
-[data-theme="dark"] .tk-tag-yellow {
-  color: #FFCC80 !important;
-  background: #4A3219 !important;
-}
-[data-theme="dark"] .tk-send.el-button--primary:hover {
-  background: #AABCC8 !important;
-}
-[data-theme="dark"] .tk-send.el-button--primary:active {
-  background: #C4D6E0 !important;
-}
-[data-theme="dark"] .OwO .OwO-body {
-  background: #1E2022 !important;
-  border-color: #333739 !important;
+[data-theme="dark"] #tcomment-friends,
+[data-theme="dark"] .twikoo {
+  --tw-primary: #9AB0BF;
+  --tw-pc: #354A54;
+  --tw-opc: #BFCDD5;
+  --tw-surface: #191B1D;
+  --tw-sc-low: #1E2022;
+  --tw-sc: #1E2022;
+  --tw-sc-high: #282A2D;
+  --tw-sc-highest: #333538;
+  --tw-onsurface: #E3E3E6;
+  --tw-osv: #A0A3A8;
+  --tw-outline: #6B6F73;
+  --tw-ov: #333739;
 }
