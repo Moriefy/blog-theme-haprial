@@ -55,10 +55,10 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Page Transitions ── */
 .page{display:none;padding-bottom:40px;contain:content}.page.active{display:block}
-@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideInLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
-.page.slide-in-right{animation:slideInRight .25s cubic-bezier(0,0,.2,1) both}
-.page.slide-in-left{animation:slideInLeft .25s cubic-bezier(0,0,.2,1) both}
+@keyframes slideInRight{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+.page.slide-in-right{animation:slideInRight .18s cubic-bezier(0,0,.2,1) both}
+.page.slide-in-left{animation:slideInLeft .18s cubic-bezier(0,0,.2,1) both}
 
 /* ── Hero ── */
 @keyframes heroReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
@@ -79,9 +79,9 @@ a{color:var(--primary);text-decoration:none}
 /* ── Article Cards ── */
 #articleList{scroll-margin-top:104px}
 .article-list{padding-bottom:8px}
-@keyframes cardShow{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px)}
-.card.show{animation:cardShow .25s cubic-bezier(0,0,.2,1) calc(var(--ci,0)*25ms) both}
+@keyframes cardShow{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(4px)}
+.card.show{animation:cardShow .15s cubic-bezier(0,0,.2,1) calc(var(--ci,0)*10ms) both}
 .card+.card{border-top:1px solid var(--outline-variant)}
 .card:hover{background:var(--surface-container-low)}
 [data-theme="dark"] .card:hover{background:var(--surface-container-high)}
