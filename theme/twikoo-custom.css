@@ -110,3 +110,55 @@
 .twikoo .tk-preview.el-button--default:hover {
   background: var(--primary-container);
 }
+
+/* 操作图标（点赞/踩/回复） */
+.twikoo .tk-action-icon,
+.twikoo .tk-action-icon-solid {
+  color: var(--on-surface-variant);
+}
+.twikoo .tk-action-icon:hover,
+.twikoo .tk-action-icon-solid:hover {
+  color: var(--on-surface);
+  background: var(--surface-container-high);
+}
+.twikoo .tk-action-count {
+  color: var(--on-surface-variant);
+}
+
+/* 管理面板 */
+.twikoo .tk-admin {
+  background: var(--surface);
+  color: var(--on-surface);
+}
+.twikoo .tk-admin-actions button {
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  border: none;
+  border-radius: 8px;
+}
+.twikoo .tk-admin-actions button:hover {
+  background: var(--surface-container-highest);
+  color: var(--on-surface);
+}
+.twikoo .tk-admin-comment-item {
+  border-bottom: 1px solid var(--outline-variant);
+}
+.twikoo .tk-admin-comment-meta {
+  color: var(--outline);
+}
+.twikoo .tk-admin-close {
+  color: var(--on-surface-variant);
+}
+.twikoo .tk-admin-close:hover {
+  color: var(--on-surface);
+}
+
+/* 图标 */
+.twikoo .tk-icon {
+  color: var(--outline);
+}
+
+/* 评论数 */
+.twikoo .tk-comments-count {
+  color: var(--on-surface-variant);
+}
