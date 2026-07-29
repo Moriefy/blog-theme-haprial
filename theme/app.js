@@ -132,9 +132,11 @@ function switchPageVisual(name,dir){pageScrollPos[currentPage]=window.scrollY;if
 articleView.addEventListener('scroll',function(){if(artScrollRaf)return;artScrollRaf=requestAnimationFrame(function(){artScrollRaf=null;var s=articleView.scrollTop,m=articleView.scrollHeight-articleView.clientHeight;rprog.style.transform=m>0?'scaleX('+s/m+')':'scaleX(0)';var sc=s>0;if(sc!==_lastArtScrolled){avBar.classList.toggle('scrolled',sc);_lastArtScrolled=sc}var fv=s>400;if(fv!==_lastArtFab){fab.classList.toggle('visible',fv);fabComment.classList.toggle('shifted',fv);_lastArtFab=fv}
     clearTimeout(_fabIdleTimer);
     fab.classList.remove('idle');fabComment.classList.remove('idle');
-    _fabIdleTimer=setTimeout(function(){
-      if(articleView.classList.contains('open')){fab.classList.add('idle');fabComment.classList.add('idle')}
-    },1000);
+    if(innerWidth<=768){
+      _fabIdleTimer=setTimeout(function(){
+        if(articleView.classList.contains('open')){fab.classList.add('idle');fabComment.classList.add('idle')}
+      },1000);
+    }
     updateTOCHighlight()})},{passive:true});
 
 function handleMainScroll(){var y=window.scrollY,el=y>0;if(el!==_lastElevated){topAppBar.classList.toggle('elevated',el);_lastElevated=el}if(!articleView.classList.contains('open')){var fv=y>400;if(fv!==_lastFab){fab.classList.toggle('visible',fv);_lastFab=fv}}}
