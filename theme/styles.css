@@ -9,7 +9,7 @@
   --secondary:#5C6B5E;--on-secondary:#fff;--secondary-container:#D9E8D6;--on-secondary-container:#1A2B1D;
   --tertiary:#6B5E6E;--on-tertiary:#fff;--tertiary-container:#F0D4FF;--on-tertiary-container:#2A1D2E;
   --error:#BA1A1A;--on-error:#fff;--error-container:#FFDAD6;--on-error-container:#410002;
-  --surface:#FEFBFF;--surface-dim:#DBD9DD;--surface-bright:#FEFBFF;
+  --surface:#FFFFFF;--surface-dim:#DBD9DD;--surface-bright:#FFFFFF;
   --surface-container-lowest:#FFFFFF;--surface-container-low:#F7F5F9;
   --surface-container:#F1EFF3;--surface-container-high:#EBE9ED;--surface-container-highest:#E5E3E7;
   --on-surface:#1C1B1F;--on-surface-variant:#44464F;--outline:#757780;--outline-variant:#C5C6D0;
@@ -27,7 +27,7 @@
   --secondary:#A4C0A0;--on-secondary:#1A2B1D;--secondary-container:#314833;--on-secondary-container:#C0D9BC;
   --tertiary:#CEB6DE;--on-tertiary:#3B2D41;--tertiary-container:#524359;--on-tertiary-container:#EDDAFE;
   --error:#FFB4AB;--on-error:#690005;--error-container:#93000A;--on-error-container:#FFDAD6;
-  --surface:#131316;--surface-dim:#131316;--surface-bright:#3A3940;
+  --surface:#191B1D;--surface-dim:#131316;--surface-bright:#3A3940;
   --surface-container-lowest:#0E0E11;--surface-container-low:#1C1B1F;
   --surface-container:#201F23;--surface-container-high:#2B2A2E;--surface-container-highest:#353438;
   --on-surface:#E5E1E6;--on-surface-variant:#C5C6D0;--outline:#8F9099;--outline-variant:#44464F;
@@ -60,7 +60,7 @@ a{color:var(--primary);text-decoration:none}
 .spacer{flex:1}.container{max-width:860px;margin:0 auto;padding:0 24px}
 
 /* ── Top App Bar (MD3: 64h → 56 compact) ── */
-.top-app-bar{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 4px 0 16px;background:var(--surface);contain:layout style}
+.top-app-bar{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 4px 0 16px;background:var(--surface)}
 .top-app-bar::after{content:'';position:absolute;inset:0;box-shadow:var(--e2);opacity:0;transition:opacity var(--motion-duration-short4) var(--motion-standard);pointer-events:none;z-index:-1}
 .top-app-bar.elevated::after{opacity:1}
 .logo{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:300;letter-spacing:.12em;color:var(--on-surface);cursor:pointer;user-select:none;padding:8px 12px;border-radius:var(--shape-s);flex-shrink:0}
