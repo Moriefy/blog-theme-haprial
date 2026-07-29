@@ -105,12 +105,17 @@ function __initTwikoo(path){
   if(!envId)return;
   var el=document.getElementById('tcomment');
   if(!el)return;
+  var oldPath=el.dataset.path;
   el.dataset.path=path;
   function doInit(){
     if(typeof twikoo!=='undefined'){
       el.innerHTML='';
       try{twikoo.init({envId:envId,el:'#tcomment',path:path})}catch(e){}
     }
+  }
+  if(__twikooLoaded&&oldPath!==path){
+    doInit();
+    return;
   }
   if(!__twikooLoaded){
     __twikooLoaded=true;
