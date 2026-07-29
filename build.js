@@ -487,7 +487,7 @@ const articleCardsHtml = articleOrder.map(id => articleCardHtml(id, articles[id]
 // Create lightweight articles (without content) for embedded data
 const articlesMeta = {};
 Object.entries(articles).forEach(([id, a]) => {
-  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category };
+  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category, content: a.content };
 });
 
 const dataObj = {
