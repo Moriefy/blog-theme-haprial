@@ -105,7 +105,7 @@ a{color:var(--primary);text-decoration:none}
 .archive-year-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(32px,6vw,48px);font-weight:300;color:var(--on-surface);letter-spacing:.02em;padding:24px 0 16px 12px;line-height:1.1;border-bottom:1px solid var(--outline-variant);margin-bottom:12px;display:flex;align-items:baseline;gap:12px}
 .archive-year-count{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--outline)}
 @keyframes archiveReveal{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.archive-card{display:flex;align-items:center;gap:16px;padding:14px 16px;cursor:pointer;border-radius:12px;opacity:0;contain:layout style;transition:background 150ms,border-color 150ms;border:1px solid transparent;margin-bottom:4px}
+.archive-card{display:flex;align-items:center;gap:16px;padding:14px 16px;cursor:pointer;border-radius:12px;opacity:0;position:relative;overflow:hidden;contain:layout style;transition:background 150ms,border-color 150ms;border:1px solid transparent;margin-bottom:4px}
 .archive-timeline::before{content:'';position:absolute;left:18px;top:0;bottom:0;width:1px;background:var(--outline-variant)}
 #pageArchive.active .archive-card{animation:archiveReveal .3s cubic-bezier(0,0,.2,1) var(--arch-d,0ms) both}
 .archive-card:hover{background:var(--surface-container-low);border-color:var(--outline-variant)}
