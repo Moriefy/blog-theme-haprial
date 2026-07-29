@@ -77,7 +77,7 @@
   color: var(--outline);
 }
 
-/* 发送按钮 — 灰色 */
+/* 发送按钮 */
 .twikoo .el-button--primary {
   background: var(--on-surface-variant);
   color: var(--surface);
@@ -107,7 +107,7 @@
   background: var(--surface-container-high);
 }
 
-/* 操作图标（点赞/踩/回复） */
+/* 操作图标 */
 .twikoo .tk-action-icon,
 .twikoo .tk-action-icon-solid {
   color: var(--outline);
@@ -121,7 +121,7 @@
   color: var(--outline);
 }
 
-/* 评论内容链接 — 灰色下划线 */
+/* 评论链接 */
 .twikoo .tk-content a {
   color: var(--on-surface-variant);
   border-bottom: 1px solid var(--outline-variant);
@@ -138,7 +138,9 @@
 }
 
 /* 标签 */
-.twikoo .tk-tag-green {
+.twikoo .tk-tag-green,
+.twikoo .tk-tag-red,
+.twikoo .tk-tag-yellow {
   background: var(--surface-container-high);
   color: var(--on-surface-variant);
   border: none;
@@ -160,52 +162,10 @@
   color: var(--outline);
 }
 
-/* 管理面板 */
-.twikoo .tk-admin {
-  background: var(--surface);
-  color: var(--on-surface);
-}
-.twikoo .tk-admin-actions button {
-  background: var(--surface-container-high);
-  color: var(--on-surface-variant);
-  border: none;
-  border-radius: 8px;
-}
-.twikoo .tk-admin-actions button:hover {
-  background: var(--surface-container-highest);
-  color: var(--on-surface);
-}
-.twikoo .tk-admin-comment-item {
-  border-bottom: 1px solid var(--outline-variant);
-}
-.twikoo .tk-admin-comment-meta {
-  color: var(--outline);
-}
-.twikoo .tk-admin-close {
-  color: var(--on-surface-variant);
-}
-.twikoo .tk-admin-close:hover {
-  color: var(--on-surface);
-}
-
-/* Markdown 图标、表情按钮等小图标 */
+/* 提交区小图标 */
 .twikoo .tk-submit-action-icon {
   color: var(--outline);
 }
 .twikoo .tk-submit-action-icon:hover {
   color: var(--on-surface);
-}
-
-/* 置顶标签 */
-.twikoo .tk-tag-red {
-  background: var(--surface-container-high);
-  color: var(--on-surface-variant);
-  border: none;
-}
-
-/* 审核中标签 */
-.twikoo .tk-tag-yellow {
-  background: var(--surface-container-high);
-  color: var(--on-surface-variant);
-  border: none;
 }
