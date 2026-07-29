@@ -103,19 +103,14 @@ function __initFriendsTwikoo(){
 function __initTwikoo(path){
   var envId=window.__HAPRIAL_DATA__.twikooEnvId;
   if(!envId)return;
-  var el=document.getElementById('tcomment');
-  if(!el)return;
-  var oldPath=el.dataset.path;
-  el.dataset.path=path;
+  var section=document.getElementById('commentSection');
+  if(!section)return;
+  // 销毁旧实例：替换整个容器
+  section.innerHTML='<div id="tcomment"></div>';
   function doInit(){
     if(typeof twikoo!=='undefined'){
-      el.innerHTML='';
       try{twikoo.init({envId:envId,el:'#tcomment',path:path})}catch(e){}
     }
-  }
-  if(__twikooLoaded&&oldPath!==path){
-    doInit();
-    return;
   }
   if(!__twikooLoaded){
     __twikooLoaded=true;
@@ -128,7 +123,7 @@ function __initTwikoo(path){
         document.head.appendChild(s);
       }
     },{rootMargin:'200px'});
-    obs.observe(el);
+    obs.observe(section);
   }else{doInit()}
 }
 function loadArticleMeta(id){var art=articles[id];if(!art)return;currentArticleId=id;$('artMeta').innerHTML='<span>'+art.date+'</span><span style="color:var(--outline-variant)"> · </span><span>'+art.wc+' 字</span><span style="color:var(--outline-variant)"> · </span><span>'+art.rt+'</span>';$('artTitle').textContent=art.title;$('artTags').innerHTML=art.tags.map(function(t){return'<span class="tag" data-tagname="'+escHtml(t)+'">'+escHtml(t)+'</span>'}).join('');renderArticleNav(id);setTimeout(function(){__initTwikoo('/posts/'+id+'/')},100)}
