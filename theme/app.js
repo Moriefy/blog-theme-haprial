@@ -134,7 +134,7 @@ articleView.addEventListener('scroll',function(){if(artScrollRaf)return;artScrol
     fab.classList.remove('idle');fabComment.classList.remove('idle');
     _fabIdleTimer=setTimeout(function(){
       if(articleView.classList.contains('open')){fab.classList.add('idle');fabComment.classList.add('idle')}
-    },3000);
+    },1000);
     updateTOCHighlight()})},{passive:true});
 
 function handleMainScroll(){var y=window.scrollY,el=y>0;if(el!==_lastElevated){topAppBar.classList.toggle('elevated',el);_lastElevated=el}if(!articleView.classList.contains('open')){var fv=y>400;if(fv!==_lastFab){fab.classList.toggle('visible',fv);_lastFab=fv}}}
