@@ -181,8 +181,8 @@ a{color:var(--primary);text-decoration:none}
 .article-body ul,.article-body ol{margin:10px 0 16px;padding-left:22px}
 .article-body li{font-family:'Noto Sans SC','PingFang SC',sans-serif;margin-bottom:4px;font-size:clamp(15px,1.05vw + 10px,17px);line-height:1.8}.article-body li::marker{color:var(--primary)}
 .article-body hr{border:none;height:1px;background:var(--outline-variant);margin:28px 0}
-.article-body a:not(.toc-link):not(.toc-drawer-item){color:var(--primary);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--primary-container)}
-.article-body a:not(.toc-link):not(.toc-drawer-item):hover{text-decoration-color:var(--primary)}
+.article-body a:not(.toc-link):not(.toc-drawer-item){color:var(--primary);text-decoration:none;border-bottom:1.5px solid var(--primary-container);padding-bottom:1px;transition:border-color 200ms}
+.article-body a:not(.toc-link):not(.toc-drawer-item):hover{border-bottom-color:var(--primary)}
 .article-body table{width:100%;border-collapse:collapse;margin:18px 0;border-radius:12px;overflow:hidden;box-shadow:var(--e1);border:1px solid var(--outline-variant);font-size:14px}
 .article-body th,.article-body td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--outline-variant)}
 .article-body th:not(:last-child),.article-body td:not(:last-child){border-right:1px solid var(--outline-variant)}
@@ -423,4 +423,7 @@ a{color:var(--primary);text-decoration:none}
 .article-body img{cursor:zoom-in;opacity:0;transform:scale(1.02);transition:opacity .4s cubic-bezier(0,0,.2,1),transform .4s cubic-bezier(0,0,.2,1);display:block;max-width:100%;height:auto;background:var(--surface-container-high);border-radius:12px;margin:18px 0;box-shadow:var(--e2);border:1px solid var(--outline-variant)}
 .article-body img.revealed{opacity:1;transform:scale(1)}
 .article-body img:hover{box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.img-figure{margin:18px 0;text-align:center}
+.img-figure img{margin:0 auto}
+.img-figure figcaption{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:var(--outline);line-height:1.6;margin-top:8px;padding:0 8px}
 
