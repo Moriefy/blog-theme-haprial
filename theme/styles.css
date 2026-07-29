@@ -81,7 +81,7 @@ a{color:var(--primary);text-decoration:none}
 .tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;will-change:transform;transition:transform var(--motion-duration-medium1) var(--motion-emphasized),width var(--motion-duration-medium1) var(--motion-emphasized)}
 
 /* ── Page Transitions ── */
-.page{display:none;padding-bottom:40px;contain:layout style paint}.page.active{display:block}
+.page{display:none;padding-bottom:40px}.page.active{display:block}
 @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 .page.slide-in-right{animation:slideInRight var(--motion-duration-medium1) var(--motion-emphasized-decelerate) both}
@@ -119,7 +119,7 @@ a{color:var(--primary);text-decoration:none}
 .card-meta{display:flex;align-items:center;gap:8px}
 
 /* ── Chips (MD3: Assist Chip) ── */
-.tag{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:500;color:var(--on-secondary-container);background:var(--secondary-container);padding:4px 12px;border-radius:var(--shape-s);transition:background var(--motion-duration-short3);cursor:pointer;contain:layout style;line-height:1.5}
+.tag{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:500;color:var(--on-primary-container);background:var(--primary-container);padding:4px 12px;border-radius:var(--shape-s);transition:background var(--motion-duration-short3);cursor:pointer;contain:layout style;line-height:1.5}
 .tag:hover{background:var(--state-hover)}
 .reading-time{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:500;color:var(--on-surface-variant);letter-spacing:.04em}
 
@@ -172,7 +172,7 @@ a{color:var(--primary);text-decoration:none}
 .archive-card-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;font-weight:500;color:var(--on-surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color var(--motion-duration-short3);line-height:1.4}
 .archive-card:hover .archive-card-title{color:var(--primary)}
 .archive-card-meta{display:flex;align-items:center;gap:8px;margin-top:4px}
-.archive-card-tag{font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;font-weight:500;color:var(--on-secondary-container);background:var(--secondary-container);padding:2px 8px;border-radius:var(--shape-xs);letter-spacing:.04em}
+.archive-card-tag{font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;font-weight:500;color:var(--on-primary-container);background:var(--primary-container);padding:2px 8px;border-radius:var(--shape-xs);letter-spacing:.04em}
 .archive-card-rt{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:500;color:var(--on-surface-variant);letter-spacing:.04em}
 
 /* ── Friends Grid (MD3: Outlined Card) ── */
@@ -199,7 +199,7 @@ a{color:var(--primary);text-decoration:none}
 .about-divider{width:36px;height:1px;background:var(--outline-variant);margin:24px auto}
 .about-section-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--on-surface-variant);margin-bottom:14px}
 .about-skill-list{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
-.about-skill{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:500;padding:6px 16px;border-radius:var(--shape-s);border:1px solid var(--outline-variant);color:var(--on-surface-variant);background:var(--surface-container-lowest);transition:border-color var(--motion-duration-short3),background var(--motion-duration-short3);cursor:default;contain:layout style}
+.about-skill{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:500;padding:6px 16px;border-radius:var(--shape-s);border:1px solid var(--outline-variant);color:var(--on-surface-variant);background:var(--surface-container-lowest);transition:border-color var(--motion-duration-short3),background var(--motion-duration-short3);cursor:default;position:relative;overflow:hidden}
 .about-skill:hover{border-color:var(--primary);color:var(--primary);background:var(--state-hover)}
 .about-stats{display:flex;justify-content:center;gap:40px}
 .about-stat{text-align:center}
@@ -358,11 +358,11 @@ a{color:var(--primary);text-decoration:none}
 .fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:var(--shape-l);border:none;background:var(--primary-container);color:var(--on-primary-container);cursor:pointer;z-index:250;display:flex;align-items:center;justify-content:center;box-shadow:var(--e3);transform:scale(0) rotate(-90deg);opacity:0;transition:transform var(--motion-duration-medium2) var(--motion-emphasized),opacity var(--motion-duration-short4),background var(--motion-duration-short3);will-change:transform,opacity}
 .fab.visible{transform:scale(1) rotate(0deg);opacity:1}
 .fab-comment{bottom:24px;background:var(--primary-container);color:var(--on-primary-container);transition:transform var(--motion-duration-medium2) var(--motion-emphasized),opacity var(--motion-duration-short4),background var(--motion-duration-short3),bottom var(--motion-duration-medium2) var(--motion-standard);will-change:transform,opacity}
-.fab-comment:hover{background:var(--secondary-container);color:var(--on-secondary-container)}
+.fab-comment:hover{background:var(--surface-container-highest)}
 .fab-comment.shifted{bottom:92px}
 .fab.idle{opacity:0;pointer-events:none;transition:opacity var(--motion-duration-medium1) var(--motion-standard)}
 @media(max-width:768px){.fab-comment{bottom:20px;width:48px;height:48px;border-radius:var(--shape-m)}.fab-comment.shifted{bottom:80px}}
-.fab:hover{background:var(--secondary-container);color:var(--on-secondary-container)}
+.fab:hover{background:var(--surface-container-highest)}
 .fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Ripple (MD3: State Layer) ── */
@@ -374,7 +374,7 @@ a{color:var(--primary);text-decoration:none}
 .comment-section:empty{display:none}
 .site-footer{border-top:1px solid var(--outline-variant);padding:24px 24px 16px;text-align:center;background:var(--surface-container-low);margin-top:auto;contain:layout style}
 .footer-nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.footer-link{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;font-weight:500;color:var(--on-surface-variant);cursor:pointer;transition:color var(--motion-duration-short3),background var(--motion-duration-short3);padding:8px 16px;min-height:40px;display:inline-flex;align-items:center;border-radius:var(--shape-full)}
+.footer-link{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;font-weight:500;color:var(--on-surface-variant);cursor:pointer;transition:color var(--motion-duration-short3),background var(--motion-duration-short3);padding:8px 16px;min-height:40px;display:inline-flex;align-items:center;border-radius:var(--shape-full);position:relative;overflow:hidden}
 .footer-link:hover{color:var(--primary);background:var(--state-hover)}
 .footer-copy{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:500;color:var(--on-surface-variant);letter-spacing:.04em}
 
