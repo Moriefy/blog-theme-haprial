@@ -375,6 +375,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <link rel="stylesheet" href="/theme/styles.css">
+<link rel="stylesheet" href="/theme/twikoo-custom.css">
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
 
@@ -429,7 +430,7 @@ const cats = computeCats(articles, SITE_CONFIG);
 const catMap = computeCatMap(articles);
 
 // Read CSS for inlining (full CSS inline eliminates async flicker)
-const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8');
+const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8') + '\n' + fs.readFileSync(path.join(THEME_DIR, 'twikoo-custom.css'), 'utf8');
 
 // Add theme transition CSS — target only key elements (not *) to avoid mobile jank
 const themeTransition = `
@@ -569,6 +570,7 @@ fs.mkdirSync(themeOut, { recursive: true });
 fs.copyFileSync(path.join(THEME_DIR, 'styles.css'), path.join(themeOut, 'styles.css'));
 fs.copyFileSync(path.join(THEME_DIR, 'app.js'), path.join(themeOut, 'app.js'));
 fs.copyFileSync(path.join(THEME_DIR, 'lightbox.js'), path.join(themeOut, 'lightbox.js'));
+fs.copyFileSync(path.join(THEME_DIR, 'twikoo-custom.css'), path.join(themeOut, 'twikoo-custom.css'));
 console.log('  ✓ theme/');
 
 // Copy static assets
