@@ -1,6 +1,14 @@
 /* ── Twikoo 微调 ── */
 
+/* 评论条目背景统一 */
+.twikoo .tk-comment {
+  background: none;
+}
+
 /* 博主评论 */
+.twikoo .tk-master {
+  background: none;
+}
 .twikoo .tk-master .tk-nick {
   color: var(--primary);
 }
