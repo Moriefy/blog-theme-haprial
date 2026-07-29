@@ -394,7 +394,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
     <div class="art-tags">${tagsHtml}</div>
     <div class="art-div"></div>
   </header>
-  <div class="article-body">${art.content}</div>
+  <div class="article-body revealed">${art.content}</div>
   <div class="art-nav revealed">${navHtml}</div>
   <section class="comment-section" id="commentSection"><div id="tcomment"></div></section>
 </main>
