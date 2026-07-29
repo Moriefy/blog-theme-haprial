@@ -15,7 +15,7 @@ window.__initLightbox = function(articleBody) {
   // Create caption element
   var lbCaption=document.createElement('div');
   lbCaption.className='lightbox-caption';
-  lbCaption.style.cssText='position:absolute;bottom:52px;left:50%;transform:translateX(-50%);max-width:600px;width:calc(100% - 32px);text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.9);padding:10px 16px;background:rgba(0,0,0,.55);border-radius:12px;z-index:35;display:none;line-height:1.5;pointer-events:none;word-break:break-word;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)';
+  lbCaption.style.cssText='position:absolute;bottom:0;left:0;right:0;text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.95);padding:12px 20px 60px;background:linear-gradient(0deg,rgba(0,0,0,.6) 0%,rgba(0,0,0,0) 100%);z-index:35;display:none;line-height:1.5;pointer-events:none;word-break:break-word';
   lb.appendChild(lbCaption);
   if(!lb||!lbImg||!lbClose)return;
 
@@ -52,7 +52,7 @@ window.__initLightbox = function(articleBody) {
     showSpinner();lbImg.src=images[idx].src;lbImg.alt=images[idx].alt||'';
     // Show caption if alt text exists
     var alt=images[idx].alt||'';
-    if(alt&&alt!==images[idx].src){lbCaption.textContent=alt;lbCaption.style.display='block'}else{lbCaption.style.display='none'}
+    if(alt){lbCaption.textContent=alt;lbCaption.style.display='block'}else{lbCaption.style.display='none'}
     lbImg.style.animation='';lbImg.classList.remove('lb-closing');lbImg.style.transform='';lbImg.style.opacity='';
     lb.classList.add('open');document.body.style.overflow='hidden';
     if(_origImg){_origRect=_origImg.getBoundingClientRect()}
@@ -88,7 +88,7 @@ window.__initLightbox = function(articleBody) {
       currentIdx=newIdx;showSpinner();lbImg.src=images[currentIdx].src;lbImg.alt=images[currentIdx].alt||'';updateNav();
       // Update caption
       var alt=images[currentIdx].alt||'';
-      if(alt&&alt!==images[currentIdx].src){lbCaption.textContent=alt;lbCaption.style.display='block'}else{lbCaption.style.display='none'}
+      if(alt){lbCaption.textContent=alt;lbCaption.style.display='block'}else{lbCaption.style.display='none'}
       waitImgLoad(function(){lbImg.style.animation=inAnim;setTimeout(function(){lbImg.style.animation='';switching=false},290)});
     },210);
   }
