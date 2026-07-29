@@ -43,7 +43,7 @@ window.__initLightbox = function(articleBody) {
 
   function openLb(idx){
     if(idx<0||idx>=images.length)return;
-    collectImages();currentIdx=idx;resetZoom();updateNav();
+    if(!images.length)collectImages();currentIdx=idx;resetZoom();updateNav();
     showSpinner();lbImg.src=images[idx].src;lbImg.alt=images[idx].alt||'';
     lbImg.style.animation='';lbImg.classList.remove('lb-closing');lbImg.style.transform='';lbImg.style.opacity='';
     lb.classList.add('open');document.body.style.overflow='hidden';
