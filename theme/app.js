@@ -168,7 +168,7 @@ function updateSearchHighlight(){var items=svResults.querySelectorAll('.sv-item'
 svInput.addEventListener('input',function(){clearTimeout(searchTimer);searchActiveIdx=-1;var v=this.value;searchTimer=setTimeout(function(){filterSearch(v)},350)});
 
 var _tabCache=null;
-function updateTabIndicator(){var a=document.querySelector('.tab.active');if(a&&tabBar){var l=a.offsetLeft,w=a.offsetWidth;if(!_tabCache||_tabCache.l!==l||_tabCache.w!==w){_tabCache={l:l,w:w};tabBar.style.transform='translateX('+l+'px) scaleX('+w+')'}}}
+function updateTabIndicator(){var a=document.querySelector('.tab.active');if(a&&tabBar){var l=a.offsetLeft,w=a.offsetWidth;if(!_tabCache||_tabCache.l!==l||_tabCache.w!==w){_tabCache={l:l,w:w};tabBar.style.width=w+'px';tabBar.style.transform='translateX('+l+'px)'}}}
 function syncTabs(n){document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.page===n)});updateTabIndicator()}
 function applyFilterDirect(label,fn){var all=getAllCards();for(var i=0;i<all.length;i++){var c=all[i];if(!fn(c)){c.dataset._filtered='1';c.style.display='none';c.classList.remove('show')}else{c.dataset._filtered='';c.style.display=''}};filterLabel.textContent=label;filterBar.classList.add('on');paginationPage=0;renderPaginationPage()}
 function instantScroll(y){document.documentElement.style.scrollBehavior='auto';window.scrollTo(0,y);document.documentElement.style.scrollBehavior='';_lastElevated=null;_lastFab=null;handleMainScroll()}
