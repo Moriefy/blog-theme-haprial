@@ -15,8 +15,8 @@ window.__initLightbox = function(articleBody) {
   // Create caption element
   var lbCaption=document.createElement('div');
   lbCaption.className='lightbox-caption';
-  lbCaption.style.cssText='position:absolute;bottom:56px;left:50%;transform:translateX(-50%);max-width:600px;width:calc(100% - 32px);text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.85);padding:8px 16px;background:rgba(0,0,0,.45);border-radius:8px;z-index:25;display:none;line-height:1.5;pointer-events:none;word-break:break-word';
-  if(lbStage)lbStage.appendChild(lbCaption);
+  lbCaption.style.cssText='position:absolute;bottom:52px;left:50%;transform:translateX(-50%);max-width:600px;width:calc(100% - 32px);text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.9);padding:10px 16px;background:rgba(0,0,0,.55);border-radius:12px;z-index:35;display:none;line-height:1.5;pointer-events:none;word-break:break-word;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)';
+  lb.appendChild(lbCaption);
   if(!lb||!lbImg||!lbClose)return;
 
   var images=[],currentIdx=0,scale=1,panOX=50,panOY=50;
