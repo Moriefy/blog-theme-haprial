@@ -1,16 +1,8 @@
 /* ── Twikoo 微调 ── */
 
-/* 评论条目背景统一 */
-.twikoo .tk-comment {
-  background: none;
-}
-
-/* 博主评论 */
-.twikoo .tk-master {
-  background: none;
-}
+/* 博主昵称 */
 .twikoo .tk-master .tk-nick {
-  color: var(--primary);
+  color: var(--on-surface-variant);
 }
 
 /* 评论内容 */
@@ -35,8 +27,8 @@
   color: var(--on-surface-variant);
 }
 .twikoo .tk-expand:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--on-surface);
+  color: var(--on-surface);
 }
 
 /* 输入框 */
@@ -55,7 +47,7 @@
   transition: border-color 200ms;
 }
 .twikoo .el-textarea__inner:focus {
-  border-bottom-color: var(--primary);
+  border-bottom-color: var(--on-surface);
   box-shadow: none;
 }
 
@@ -72,7 +64,7 @@
   transition: border-color 200ms;
 }
 .twikoo .el-input__inner:focus {
-  border-bottom-color: var(--primary);
+  border-bottom-color: var(--on-surface);
   box-shadow: none;
 }
 .twikoo .el-input-group__prepend,
@@ -85,16 +77,20 @@
   color: var(--outline);
 }
 
-/* 发送按钮 */
+/* 发送按钮 — 灰色 */
 .twikoo .el-button--primary {
-  background: var(--primary);
-  color: #fff;
+  background: var(--on-surface-variant);
+  color: var(--surface);
   border: none;
   border-radius: 20px;
   box-shadow: none;
 }
 .twikoo .el-button--primary:hover {
-  filter: brightness(1.1);
+  background: var(--on-surface);
+}
+.twikoo .el-button--primary.is-disabled {
+  background: var(--outline-variant);
+  color: var(--outline);
 }
 
 /* 取消/预览 */
@@ -103,18 +99,18 @@
   background: none;
   border: none;
   border-radius: 20px;
-  color: var(--primary);
+  color: var(--on-surface-variant);
   box-shadow: none;
 }
 .twikoo .tk-cancel.el-button--default:hover,
 .twikoo .tk-preview.el-button--default:hover {
-  background: var(--primary-container);
+  background: var(--surface-container-high);
 }
 
 /* 操作图标（点赞/踩/回复） */
 .twikoo .tk-action-icon,
 .twikoo .tk-action-icon-solid {
-  color: var(--on-surface-variant);
+  color: var(--outline);
 }
 .twikoo .tk-action-icon:hover,
 .twikoo .tk-action-icon-solid:hover {
@@ -122,7 +118,46 @@
   background: var(--surface-container-high);
 }
 .twikoo .tk-action-count {
+  color: var(--outline);
+}
+
+/* 评论内容链接 — 灰色下划线 */
+.twikoo .tk-content a {
   color: var(--on-surface-variant);
+  border-bottom: 1px solid var(--outline-variant);
+  text-decoration: none;
+}
+.twikoo .tk-content a:hover {
+  color: var(--on-surface);
+  border-bottom-color: var(--on-surface);
+}
+
+/* 回复@用户 */
+.twikoo .tk-ruser {
+  color: var(--on-surface-variant);
+}
+
+/* 标签 */
+.twikoo .tk-tag-green {
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  border: none;
+}
+
+/* 评论数 */
+.twikoo .tk-comments-count {
+  color: var(--outline);
+}
+
+/* 图标 */
+.twikoo .tk-icon {
+  color: var(--outline);
+}
+
+/* 设备信息 */
+.twikoo .tk-extra {
+  font-size: 11px;
+  color: var(--outline);
 }
 
 /* 管理面板 */
@@ -153,12 +188,24 @@
   color: var(--on-surface);
 }
 
-/* 图标 */
-.twikoo .tk-icon {
+/* Markdown 图标、表情按钮等小图标 */
+.twikoo .tk-submit-action-icon {
   color: var(--outline);
 }
+.twikoo .tk-submit-action-icon:hover {
+  color: var(--on-surface);
+}
 
-/* 评论数 */
-.twikoo .tk-comments-count {
+/* 置顶标签 */
+.twikoo .tk-tag-red {
+  background: var(--surface-container-high);
   color: var(--on-surface-variant);
+  border: none;
+}
+
+/* 审核中标签 */
+.twikoo .tk-tag-yellow {
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  border: none;
 }
