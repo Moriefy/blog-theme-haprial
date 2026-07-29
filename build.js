@@ -638,22 +638,7 @@ fs.writeFileSync(path.join(OUT_DIR, 'rss.xml'), rss);
 console.log('  ✓ rss.xml');
 
 // Generate 404 page
-const notFoundHtml = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 | ${escHtml(SITE_CONFIG.title)}</title>
-<link rel="stylesheet" href="/theme/styles.css">
-</head>
-<body style="background:var(--surface);color:var(--on-surface);font-family:'Noto Sans SC','PingFang SC',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
-<div style="text-align:center;padding:24px">
-<h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:72px;font-weight:300;color:var(--on-surface);margin-bottom:8px">404</h1>
-<p style="font-size:15px;color:var(--on-surface-variant);margin-bottom:24px">页面不存在</p>
-<a href="/" style="color:var(--primary);font-size:14px">返回首页</a>
-</div>
-</body>
-</html>`;
+const notFoundHtml = fs.readFileSync(path.join(ROOT, 'src', '404.html'), 'utf8');
 fs.writeFileSync(path.join(OUT_DIR, '404.html'), notFoundHtml);
 console.log('  ✓ 404.html');
 
