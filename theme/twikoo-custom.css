@@ -1,28 +1,23 @@
 /* ── Twikoo 微调 ── */
 
-/* 博主评论底色 */
-.twikoo .tk-master {
-  background: var(--primary-container);
-  border-radius: 8px;
-  padding: 14px 12px;
-}
+/* 博主评论 */
 .twikoo .tk-master .tk-nick {
-  color: var(--on-primary-container);
+  color: var(--primary);
 }
 
-/* 评论内容行高 */
+/* 评论内容 */
 .twikoo .tk-content {
   line-height: 1.75;
 }
 
-/* 回复区缩进 */
+/* 回复区 */
 .twikoo .tk-replies {
   margin-left: 46px;
   padding-left: 14px;
   border-left: 2px solid var(--outline-variant);
 }
 
-/* 展开按钮 — MD3 outlined */
+/* 展开按钮 */
 .twikoo .tk-expand {
   border-radius: 18px;
   border: 1px solid var(--outline-variant);
@@ -30,29 +25,19 @@
   padding: 6px 16px;
   font-size: 12px;
   color: var(--on-surface-variant);
-  transition: background 200ms, border-color 200ms;
 }
 .twikoo .tk-expand:hover {
-  background: var(--surface-container);
   border-color: var(--primary);
   color: var(--primary);
 }
 
-/* 提交区 — 无边框，纯背景 */
-.twikoo .tk-submit {
-  padding: 16px;
-  background: var(--surface-container-low);
-  border-radius: 12px;
-  border: none;
-}
-
-/* 输入框 — MD3 filled text field */
+/* 输入框 */
 .twikoo .el-textarea__inner {
-  background: var(--surface-container);
+  background: none;
   border: none;
   border-bottom: 2px solid var(--outline-variant);
-  border-radius: 8px 8px 0 0;
-  padding: 14px 12px;
+  border-radius: 0;
+  padding: 12px 0;
   font-family: 'Noto Sans SC', sans-serif;
   font-size: 14px;
   line-height: 1.75;
@@ -66,9 +51,9 @@
   box-shadow: none;
 }
 
-/* 昵称/邮箱输入 */
+/* 昵称/邮箱 */
 .twikoo .el-input__inner {
-  background: var(--surface-container);
+  background: none;
   border: none;
   border-bottom: 1.5px solid var(--outline-variant);
   border-radius: 0;
@@ -92,51 +77,28 @@
   color: var(--outline);
 }
 
-/* 发送按钮 — MD3 filled button */
+/* 发送按钮 */
 .twikoo .el-button--primary {
   background: var(--primary);
   color: #fff;
   border: none;
   border-radius: 20px;
-  font-family: 'Noto Sans SC', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
   box-shadow: none;
 }
 .twikoo .el-button--primary:hover {
   filter: brightness(1.1);
 }
-.twikoo .el-button--primary.is-disabled {
-  opacity: .38;
-}
 
-/* 取消/预览按钮 — MD3 text button */
+/* 取消/预览 */
 .twikoo .tk-cancel.el-button--default,
 .twikoo .tk-preview.el-button--default {
   background: none;
   border: none;
   border-radius: 20px;
   color: var(--primary);
-  font-family: 'Noto Sans SC', sans-serif;
-  font-size: 14px;
   box-shadow: none;
 }
 .twikoo .tk-cancel.el-button--default:hover,
 .twikoo .tk-preview.el-button--default:hover {
   background: var(--primary-container);
-}
-
-/* 操作按钮 hover */
-.twikoo .tk-action-icon:hover {
-  background: var(--surface-container-high);
-  color: var(--primary);
-}
-
-/* 设备信息 */
-.twikoo .tk-extra {
-  font-size: 11px;
-  color: var(--outline);
-  background: var(--surface-container);
-  padding: 2px 8px;
-  border-radius: 8px;
 }
