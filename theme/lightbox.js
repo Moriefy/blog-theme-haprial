@@ -12,6 +12,11 @@ window.__initLightbox = function(articleBody) {
   var lbScrim=document.getElementById('lbScrim');
   var lbLocate=document.getElementById('lbLocate');
   var lbDownload=document.getElementById('lbDownload');
+  // Create caption element
+  var lbCaption=document.createElement('div');
+  lbCaption.className='lightbox-caption';
+  lbCaption.style.cssText='position:absolute;bottom:56px;left:50%;transform:translateX(-50%);max-width:600px;width:calc(100% - 32px);text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.85);padding:8px 16px;background:rgba(0,0,0,.45);border-radius:8px;z-index:25;display:none;line-height:1.5;pointer-events:none;word-break:break-word';
+  if(lbStage)lbStage.appendChild(lbCaption);
   if(!lb||!lbImg||!lbClose)return;
 
   var images=[],currentIdx=0,scale=1,panOX=50,panOY=50;
@@ -45,6 +50,9 @@ window.__initLightbox = function(articleBody) {
     if(idx<0||idx>=images.length)return;
     if(!images.length)collectImages();currentIdx=idx;resetZoom();updateNav();
     showSpinner();lbImg.src=images[idx].src;lbImg.alt=images[idx].alt||'';
+    // Show caption if alt text exists
+    var alt=images[idx].alt||'';
+    if(alt&&alt!==images[idx].src){lbCaption.textContent=alt;lbCaption.style.display='block'}else{lbCaption.style.display='none'}
     lbImg.style.animation='';lbImg.classList.remove('lb-closing');lbImg.style.transform='';lbImg.style.opacity='';
     lb.classList.add('open');document.body.style.overflow='hidden';
     if(_origImg){_origRect=_origImg.getBoundingClientRect()}
@@ -65,9 +73,9 @@ window.__initLightbox = function(articleBody) {
       lbImg.style.transform='translate('+dx+'px,'+dy+'px) scale('+s+')';
       lbImg.style.opacity='0';
       lbImg.style.transformOrigin='50% 50%';
-      setTimeout(function(){lb.classList.remove('open');document.body.style.overflow='';lbImg.classList.remove('lb-closing');lbImg.style.transform='';lbImg.style.opacity='';lbImg.src='';_origImg=null;_origRect=null},340);
+      setTimeout(function(){lb.classList.remove('open');document.body.style.overflow='';lbImg.classList.remove('lb-closing');lbImg.style.transform='';lbImg.style.opacity='';lbImg.src='';lbCaption.style.display='none';_origImg=null;_origRect=null},340);
     }else{
-      lb.classList.remove('open');document.body.style.overflow='';setTimeout(function(){lbImg.src=''},300)
+      lb.classList.remove('open');document.body.style.overflow='';lbCaption.style.display='none';setTimeout(function(){lbImg.src=''},300)
     }
   }
 
@@ -78,6 +86,9 @@ window.__initLightbox = function(articleBody) {
     lbImg.style.animation=outAnim;
     setTimeout(function(){
       currentIdx=newIdx;showSpinner();lbImg.src=images[currentIdx].src;lbImg.alt=images[currentIdx].alt||'';updateNav();
+      // Update caption
+      var alt=images[currentIdx].alt||'';
+      if(alt&&alt!==images[currentIdx].src){lbCaption.textContent=alt;lbCaption.style.display='block'}else{lbCaption.style.display='none'}
       waitImgLoad(function(){lbImg.style.animation=inAnim;setTimeout(function(){lbImg.style.animation='';switching=false},290)});
     },210);
   }
