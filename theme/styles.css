@@ -455,6 +455,10 @@ a{color:var(--primary);text-decoration:none}
 .lightbox-btn:hover{background:rgba(255,255,255,.12);opacity:1}
 .lightbox-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .lightbox-bottombar .spacer{flex:1}
+/* Lightbox caption — sits above bottombar, always visible */
+.lb-caption{position:absolute;left:0;right:0;bottom:48px;z-index:35;pointer-events:none;display:none;text-align:center;padding:6px 20px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.95);background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 70%,rgba(0,0,0,0) 100%);font-family:'Noto Sans SC','PingFang SC',sans-serif;word-break:break-word}
+.lb-caption:empty{display:none!important}
+@media(max-width:640px){.lb-caption{bottom:44px;font-size:13px;padding:4px 12px}}
 @keyframes fbSlideOutL{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-25%)}}
 @keyframes fbSlideOutR{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(25%)}}
 @keyframes fbSlideInR{from{opacity:0;transform:translateX(25%)}to{opacity:1;transform:translateX(0)}}
