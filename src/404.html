@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 | Moriefy</title>
+<meta name="description" content="页面未找到">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Sans+SC:wght@400;600&display=swap" media="print" onload="this.media='all'">
+<style>
+[data-theme="light"]{--primary:#3D5A6E;--on-primary:#fff;--primary-container:#D4DDE3;--on-primary-container:#1B2A33;--surface:#FFFFFF;--surface-container-lowest:#FFFFFF;--surface-container-low:#F8F9FA;--surface-container:#F2F3F5;--surface-container-high:#ECEDEF;--on-surface:#1C1C1E;--on-surface-variant:#5C5F63;--outline:#8E9196;--outline-variant:#E0E1E3;--e1:0 1px 2px rgba(0,0,0,.05),0 1px 3px rgba(0,0,0,.03);--e2:0 2px 6px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);--ripple:rgba(0,0,0,.08)}
+[data-theme="dark"]{--primary:#9AB0BF;--on-primary:#1B2A33;--primary-container:#354A54;--on-primary-container:#BFCDD5;--surface:#191B1D;--surface-container-lowest:#0C0D0F;--surface-container-low:#1E2022;--surface-container:#1E2022;--surface-container-high:#282A2D;--on-surface:#E3E3E6;--on-surface-variant:#A0A3A8;--outline:#6B6F73;--outline-variant:#333739;--e1:0 1px 3px rgba(0,0,0,.2),0 1px 2px rgba(0,0,0,.15);--e2:0 2px 6px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);--ripple:rgba(255,255,255,.08)}
+@media(prefers-color-scheme:dark){html:not([data-theme="light"]){--primary:#9AB0BF;--on-primary:#1B2A33;--primary-container:#354A54;--on-primary-container:#BFCDD5;--surface:#191B1D;--surface-container-lowest:#0C0D0F;--surface-container-low:#1E2022;--surface-container:#1E2022;--surface-container-high:#282A2D;--on-surface:#E3E3E6;--on-surface-variant:#A0A3A8;--outline:#6B6F73;--outline-variant:#333739;--e1:0 1px 3px rgba(0,0,0,.2),0 1px 2px rgba(0,0,0,.15);--e2:0 2px 6px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);--ripple:rgba(255,255,255,.08)}}
+*,:before,:after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden}
+body{font-family:'Noto Sans SC','PingFang SC',Georgia,serif;background:var(--surface);color:var(--on-surface);line-height:1.75;font-size:16px;display:flex;flex-direction:column;min-height:100vh;transition:background-color 200ms,color 200ms}
+
+/* ── Top Bar ── */
+.top-app-bar{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 8px 0 24px;background:var(--surface);transition:background-color 200ms}
+.logo{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:300;letter-spacing:.12em;color:var(--on-surface);cursor:pointer;user-select:none;padding:4px 8px;border-radius:8px}
+.spacer{flex:1}
+.icon-btn{width:40px;height:40px;border-radius:20px;border:none;background:none;color:var(--on-surface-variant);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:background 150ms,color 200ms}
+.icon-btn:hover{background:var(--surface-container-high)}
+.icon-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.theme-wrap{position:relative;width:22px;height:22px}
+.theme-ico{position:absolute;inset:0;transition:transform 350ms cubic-bezier(.2,0,0,1),opacity 250ms}
+.theme-ico.off{transform:rotate(-90deg) scale(0);opacity:0}
+
+/* ── Error Page ── */
+.error-page{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.error-code{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(96px,18vw,160px);font-weight:300;color:var(--on-surface);line-height:1;letter-spacing:.04em;opacity:.08;margin-bottom:24px;animation:fadeInUp .6s cubic-bezier(0,0,.2,1) both}
+.error-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:clamp(18px,3vw,24px);font-weight:600;color:var(--on-surface);margin-bottom:10px;animation:fadeInUp .6s cubic-bezier(0,0,.2,1) .08s both}
+.error-desc{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;color:var(--on-surface-variant);max-width:360px;margin-bottom:36px;line-height:1.75;animation:fadeInUp .6s cubic-bezier(0,0,.2,1) .16s both}
+
+/* ── MD3 Filled Button ── */
+.error-btn{display:inline-flex;align-items:center;gap:8px;padding:0 24px;height:40px;border-radius:20px;border:none;background:var(--primary);color:var(--on-primary);font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;font-weight:500;cursor:pointer;position:relative;overflow:hidden;box-shadow:var(--e1);transition:box-shadow 200ms;background 200ms;animation:fadeInUp .6s cubic-bezier(0,0,.2,1) .24s both;text-decoration:none}
+.error-btn:hover{box-shadow:var(--e2)}
+.error-btn:active{box-shadow:none}
+.error-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Ripple ── */
+.ripple{position:absolute;border-radius:50%;background:var(--ripple);pointer-events:none;z-index:1;animation:ripExpand .5s cubic-bezier(0,0,.2,1) forwards}
+@keyframes ripExpand{0%{transform:scale(0);opacity:1}100%{transform:scale(4);opacity:0}}
+
+/* ── Footer ── */
+.site-footer{border-top:1px solid var(--outline-variant);padding:16px 24px;text-align:center;background:var(--surface-container-low);transition:background-color 200ms,color 200ms}
+.footer-copy{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;color:var(--outline)}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.top-app-bar{padding:0 4px 0 16px}.error-code{font-size:96px}}
+@media(prefers-reduced-motion:reduce){.error-code,.error-title,.error-desc,.error-btn{animation:none}.ripple{display:none}}
+</style>
+</head>
+<body>
+<header class="top-app-bar">
+  <span class="logo" onclick="location.href='/'">Moriefy</span>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" aria-label="切换主题"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
+</header>
+<main class="error-page">
+  <div class="error-code">404</div>
+  <h1 class="error-title">页面未找到</h1>
+  <p class="error-desc">你访问的页面不存在或已被移除。</p>
+  <a class="error-btn" href="/" id="backBtn"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>返回首页</a>
+</main>
+<footer class="site-footer">
+  <p class="footer-copy">&copy; 2026 Moriefy</p>
+</footer>
+<script>
+(function(){
+  var th=null;try{th=localStorage.getItem('th')}catch(e){}
+  if(!th)th=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  document.documentElement.setAttribute('data-theme',th);
+  var wrap=document.querySelector('.theme-wrap');
+  var s=wrap.querySelector('.sun'),m=wrap.querySelector('.moon');
+  if(th==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}
+  document.getElementById('themeBtn').addEventListener('click',function(){
+    var c=document.documentElement.getAttribute('data-theme')||'light';
+    var t=c==='light'?'dark':'light';
+    document.documentElement.setAttribute('data-theme',t);
+    try{localStorage.setItem('th',t)}catch(e){}
+    if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}
+  });
+  var btn=document.getElementById('backBtn');
+  btn.addEventListener('pointerdown',function(e){
+    var r=this.getBoundingClientRect(),sz=Math.max(r.width,r.height)*2;
+    var sp=document.createElement('span');sp.className='ripple';
+    sp.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+(e.clientX-r.left-sz/2)+'px;top:'+(e.clientY-r.top-sz/2)+'px';
+    this.appendChild(sp);sp.addEventListener('animationend',function(){sp.remove()});
+  });
+})();
+</script>
+</body>
+</html>
