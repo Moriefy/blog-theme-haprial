@@ -15,7 +15,7 @@ window.__initLightbox = function(articleBody) {
   // Create caption element
   var lbCaption=document.createElement('div');
   lbCaption.className='lightbox-caption';
-  lbCaption.style.cssText='position:absolute;bottom:48px;left:50%;transform:translateX(-50%);max-width:90%;width:600px;text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.95);padding:10px 16px;background:rgba(0,0,0,.5);border-radius:10px;z-index:40;display:none;line-height:1.5;pointer-events:none;word-break:break-word';
+  lbCaption.style.cssText='position:absolute;bottom:4px;left:50%;transform:translateX(-50%);max-width:calc(100% - 120px);width:600px;text-align:center;font-family:"Noto Sans SC","PingFang SC",sans-serif;font-size:14px;color:rgba(255,255,255,.95);padding:10px 16px;background:rgba(0,0,0,.65);border-radius:10px;z-index:40;display:none;line-height:1.5;pointer-events:none;word-break:break-word;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
   lb.appendChild(lbCaption);
   if(!lb||!lbImg||!lbClose)return;
 
@@ -48,7 +48,12 @@ window.__initLightbox = function(articleBody) {
 
   function openLb(idx){
     if(idx<0||idx>=images.length)return;
-    if(!images.length)collectImages();currentIdx=idx;resetZoom();updateNav();
+    // Always re-collect images to ensure freshness (SPA article switches)
+    collectImages();
+    // Re-validate index after re-collect
+    if(idx>=images.length)idx=images.length-1;
+    if(idx<0)return;
+    currentIdx=idx;resetZoom();updateNav();
     showSpinner();lbImg.src=images[idx].src;lbImg.alt=images[idx].alt||'';
     // Show caption
     var alt=images[idx].alt||'';
