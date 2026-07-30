@@ -107,6 +107,8 @@ window.__initLightbox = function(articleBody) {
   }
 
   // ── Open lightbox at index ────────────────────────────────────────────────
+  var _lbPushed = false;  // tracks whether we pushed a history state
+
   function open(idx) {
     collect();                          // always fresh
     if (idx < 0 || idx >= images.length) idx = 0;
@@ -127,6 +129,12 @@ window.__initLightbox = function(articleBody) {
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
 
+    // Push history state so back button closes lightbox
+    if (!_lbPushed) {
+      history.pushState({ _lb: true }, '');
+      _lbPushed = true;
+    }
+
     if (origImgEl) origRect = origImgEl.getBoundingClientRect();
     waitLoad(function() {
       lbImg.style.animation = 'lbEnterAnim .3s cubic-bezier(0,0,.2,1) both';
@@ -138,6 +146,13 @@ window.__initLightbox = function(articleBody) {
   function close() {
     if (switching) return;
     if (scale > 1) resetZoom(true);
+
+    // Pop history state if we pushed one
+    if (_lbPushed) {
+      _lbPushed = false;
+      history.back();
+      return;
+    }
 
     if (origRect && lbImg.naturalWidth) {
       var r = lbImg.getBoundingClientRect();
@@ -155,6 +170,28 @@ window.__initLightbox = function(articleBody) {
       finishClose();
     }
   }
+
+  // ── Back button (popstate) closes lightbox instead of navigating ───────────
+  window.addEventListener('popstate', function(e) {
+    if (lb.classList.contains('open')) {
+      _lbPushed = false;
+      if (origRect && lbImg.naturalWidth) {
+        var r = lbImg.getBoundingClientRect();
+        var sx = origRect.width / r.width;
+        var sy = origRect.height / r.height;
+        var s = Math.min(sx, sy);
+        var dx = origRect.left + origRect.width / 2 - (r.left + r.width / 2);
+        var dy = origRect.top + origRect.height / 2 - (r.top + r.height / 2);
+        lbImg.classList.add('lb-closing');
+        lbImg.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')';
+        lbImg.style.opacity = '0';
+        lbImg.style.transformOrigin = '50% 50%';
+        setTimeout(finishClose, 340);
+      } else {
+        finishClose();
+      }
+    }
+  });
 
   function finishClose() {
     lb.classList.remove('open');
