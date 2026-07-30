@@ -480,8 +480,7 @@ a{color:var(--primary);text-decoration:none}
 }
 
 /* ── Article Images ── */
-.article-body img{cursor:zoom-in;opacity:0;transform:scale(1.01);transition:opacity .3s cubic-bezier(0,0,.2,1),transform .3s cubic-bezier(0,0,.2,1);display:block;max-width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant)}
-.article-body img.revealed{opacity:1;transform:scale(1)}
+.article-body img{cursor:zoom-in;display:block;max-width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant)}
 .img-figure{margin:18px 0;text-align:center}
 .img-figure img{margin:0 auto}
 .img-figure figcaption{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:var(--outline);line-height:1.6;margin-top:8px;padding:0 8px}
