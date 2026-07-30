@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { escHtml, parseFrontMatter, mdInline, mdToHtml } = require('./lib/markdown');
 
 // ── Config ──────────────────────────────────────────────────────────────────
@@ -11,19 +12,72 @@ const CONTENT_DIR = path.join(ROOT, 'content', 'blog');
 const THEME_DIR = path.join(ROOT, 'theme');
 const STATIC_DIR = path.join(ROOT, 'static');
 const OUT_DIR = path.join(ROOT, 'dist');
+const CACHE_FILE = path.join(ROOT, '.build-cache.json');
 const SITE_CONFIG = JSON.parse(fs.readFileSync(path.join(ROOT, 'site.config.json'), 'utf8'));
 
-// ── Read & Parse Articles ───────────────────────────────────────────────────
-function loadArticles() {
+// ── Build Cache ─────────────────────────────────────────────────────────────
+function fileHash(filePath) {
+  const buf = fs.readFileSync(filePath);
+  return crypto.createHash('md5').update(buf).digest('hex');
+}
+
+function loadCache() {
+  try { return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); } catch (e) { return {}; }
+}
+
+function saveCache(cache) {
+  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
+}
+
+function getGlobalFingerprint() {
+  // Hash files that affect every page: theme, config, build script itself
+  const files = [
+    path.join(ROOT, 'site.config.json'),
+    path.join(THEME_DIR, 'styles.css'),
+    path.join(THEME_DIR, 'app.js'),
+    path.join(THEME_DIR, 'lightbox.js'),
+    path.join(THEME_DIR, 'post-init.js'),
+    path.join(THEME_DIR, 'twikoo-custom.css'),
+    path.join(ROOT, 'build.js'),
+    path.join(ROOT, 'lib', 'markdown.js'),
+    path.join(ROOT, 'src', '404.html'),
+  ];
+  const h = crypto.createHash('md5');
+  files.forEach(f => { try { h.update(fs.readFileSync(f)); } catch (e) { /* skip missing */ } });
+  return h.digest('hex');
+}
+
+// ── Read & Parse Articles (with incremental cache) ────────────────────────
+function loadArticles(prevCache, globalFp) {
   const files = fs.readdirSync(CONTENT_DIR).filter(f => f.endsWith('.md')).sort();
   const articles = {};
   const articleOrder = [];
+  let cacheHits = 0;
+  const newCache = {};
 
   files.forEach(file => {
-    const raw = fs.readFileSync(path.join(CONTENT_DIR, file), 'utf8');
+    const filePath = path.join(CONTENT_DIR, file);
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const hash = crypto.createHash('md5').update(raw).digest('hex');
+    const id_guess = file.replace('.md', '');
+    const cacheKey = file;
+    const cached = prevCache.articles && prevCache.articles[cacheKey];
+
+    // Check if this article + global context are unchanged
+    if (cached && cached.hash === hash && cached.globalFp === globalFp) {
+      // Cache hit — reuse parsed result
+      cacheHits++;
+      const art = cached.article;
+      articles[art._id] = art;
+      articleOrder.push(art._id);
+      newCache[cacheKey] = { hash, globalFp, article: art };
+      return;
+    }
+
+    // Cache miss — parse fresh
     const [meta, body] = parseFrontMatter(raw);
     const dateVal = meta.date || meta.dateISO || '';
-    const slug = dateVal ? dateVal.replace(/-/g, '') : file.replace('.md', '');
+    const slug = dateVal ? dateVal.replace(/-/g, '') : id_guess;
     const id = slug;
     const content = mdToHtml(body);
 
@@ -39,7 +93,8 @@ function loadArticles() {
     const readingTime = (totalMin < 1 ? 1 : totalMin) + ' 分钟';
     const wordCount = cnChars + enWords;
 
-    articles[id] = {
+    const article = {
+      _id: id,
       date: dateVal,
       dateISO: dateISO,
       rt: readingTime,
@@ -50,8 +105,16 @@ function loadArticles() {
       category: meta.category || '',
       content: content
     };
+
+    articles[id] = article;
     articleOrder.push(id);
+    newCache[cacheKey] = { hash, globalFp, article };
   });
+
+  if (cacheHits > 0) console.log(`  ⚡ Cache hit: ${cacheHits}/${files.length} articles unchanged`);
+
+  // Store for later saving
+  loadArticles._newArticleCache = newCache;
 
   // Post-process: build [TOC] for articles that have it
   Object.values(articles).forEach(a => {
@@ -425,10 +488,20 @@ window.__initLightbox(document.querySelector('.article-body'));
 // ── Build ───────────────────────────────────────────────────────────────────
 console.log('🔨 Building Haprial...');
 
-const { articles, articleOrder } = loadArticles();
+// Load cache and compute fingerprints
+const prevCache = loadCache();
+const globalFp = getGlobalFingerprint();
+const globalChanged = prevCache.globalFp !== globalFp;
+if (globalChanged) console.log('  🔄 Global config/theme changed, full rebuild');
+
+const { articles, articleOrder } = loadArticles(prevCache, globalFp);
 const allTags = computeTags(articles);
 const cats = computeCats(articles, SITE_CONFIG);
 const catMap = computeCatMap(articles);
+
+// Check if we can skip HTML generation (cache hit + no global change)
+const cachedOutput = prevCache.outputHashes || {};
+const newOutputHashes = {};
 
 // Read CSS for inlining (full CSS inline eliminates async flicker)
 const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8') + '\n' + fs.readFileSync(path.join(THEME_DIR, 'twikoo-custom.css'), 'utf8');
@@ -529,41 +602,122 @@ articleOrder.forEach(id => {
   console.log('  ✓ posts/' + id + '/index.html');
 });
 
-// Write standalone pages (redirect to SPA tabs)
-const standalonePages = [
-  { slug: 'tags', title: '标签', tab: 'tags' },
-  { slug: 'categories', title: '分类', tab: 'categories' },
-  { slug: 'archive', title: '归档', tab: 'archive' },
-  { slug: 'friends', title: '友链', tab: 'friends' },
-  { slug: 'about', title: '关于', tab: 'about' }
-];
-
-standalonePages.forEach(pg => {
-  const dir = path.join(OUT_DIR, pg.slug);
-  fs.mkdirSync(dir, { recursive: true });
-  // These pages redirect to the SPA with the right hash
-  // But for SEO, they have actual content
-  const content = `<!DOCTYPE html>
+// ── SEO-friendly standalone pages (real content, not just redirects) ────────
+function seoPageHead(title, description) {
+  return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${escHtml(pg.title)} | ${escHtml(SITE_CONFIG.title)}</title>
-<meta name="description" content="${escHtml(SITE_CONFIG.description)}">
-<link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/#${pg.tab}">
+<title>${escHtml(title)} | ${escHtml(SITE_CONFIG.title)}</title>
+<meta name="description" content="${escHtml(description)}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/theme/styles.css">
 </head>
-<body style="background:var(--surface);color:var(--on-surface);font-family:'Noto Sans SC','PingFang SC',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
-<div style="text-align:center;padding:24px">
-<p style="font-size:15px;color:var(--on-surface-variant);margin-bottom:16px">正在跳转…</p>
-<a href="/#${pg.tab}" style="color:var(--primary);font-size:14px">如果未自动跳转，请点击此处</a>
-</div>
-<script>location.href='/${pg.tab === 'articles' ? '' : '#' + pg.tab}'</script>
-</body>
-</html>`;
-  fs.writeFileSync(path.join(dir, 'index.html'), content);
-  console.log('  ✓ ' + pg.slug + '/index.html');
-});
+<body>
+<header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
+<main style="max-width:960px;margin:0 auto;padding:80px 24px 120px">
+`;
+}
+
+function seoPageFoot() {
+  return `</main>
+<footer class="site-footer"><nav class="footer-nav"><a class="footer-link" href="/">文章</a><a class="footer-link" href="/tags/">标签</a><a class="footer-link" href="/categories/">分类</a><a class="footer-link" href="/archive/">归档</a><a class="footer-link" href="/friends/">友链</a><a class="footer-link" href="/about/">关于</a></nav><p class="footer-copy">© ${new Date().getFullYear()} ${escHtml(SITE_CONFIG.title)}</p></footer>
+</body></html>`;
+}
+
+// Tags page
+{
+  const dir = path.join(OUT_DIR, 'tags');
+  fs.mkdirSync(dir, { recursive: true });
+  let body = `<section class="page-hero"><h1>标签</h1><p>${allTags.length} 个标签</p></section><div class="tags-grid">`;
+  allTags.forEach(t => {
+    body += `<div class="tag-card" onclick="location.href='/#tags'"><span class="tag-name">${escHtml(t.n)}</span><span class="tag-count">${t.c} 篇</span></div>`;
+  });
+  body += '</div>';
+  // Add article list by tag for SEO
+  allTags.forEach(t => {
+    body += `<section style="margin-top:32px"><h2 style="font-size:18px;margin-bottom:12px">${escHtml(t.n)}</h2>`;
+    articleOrder.forEach(id => {
+      if (articles[id].tags.includes(t.n)) {
+        body += `<article style="margin-bottom:8px"><a href="/posts/${id}/" style="color:var(--on-surface);text-decoration:none">${escHtml(articles[id].title)}</a><span style="color:var(--on-surface-variant);margin-left:8px;font-size:13px">${escHtml(articles[id].date)}</span></article>`;
+      }
+    });
+    body += '</section>';
+  });
+  fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('标签', SITE_CONFIG.description) + body + seoPageFoot());
+  console.log('  ✓ tags/index.html');
+}
+
+// Categories page
+{
+  const dir = path.join(OUT_DIR, 'categories');
+  fs.mkdirSync(dir, { recursive: true });
+  let body = `<section class="page-hero"><h1>分类</h1><p>${cats.length} 个分类</p></section><div class="cats-grid">`;
+  cats.forEach(c => {
+    body += `<div class="cat-card" style="border-left:4px solid ${c.col}" onclick="location.href='/#categories'"><div class="cat-name">${escHtml(c.n)}</div><div class="cat-desc">${escHtml(c.d)}</div><div class="cat-count">${c.c} 篇</div></div>`;
+  });
+  body += '</div>';
+  // Article list by category
+  cats.forEach(c => {
+    body += `<section style="margin-top:32px"><h2 style="font-size:18px;margin-bottom:12px">${escHtml(c.n)}</h2>`;
+    articleOrder.forEach(id => {
+      if (articles[id].category === c.f) {
+        body += `<article style="margin-bottom:8px"><a href="/posts/${id}/" style="color:var(--on-surface);text-decoration:none">${escHtml(articles[id].title)}</a><span style="color:var(--on-surface-variant);margin-left:8px;font-size:13px">${escHtml(articles[id].date)}</span></article>`;
+      }
+    });
+    body += '</section>';
+  });
+  fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('分类', SITE_CONFIG.description) + body + seoPageFoot());
+  console.log('  ✓ categories/index.html');
+}
+
+// Archive page
+{
+  const dir = path.join(OUT_DIR, 'archive');
+  fs.mkdirSync(dir, { recursive: true });
+  // Group by year
+  const byYear = {};
+  articleOrder.forEach(id => {
+    const a = articles[id];
+    const year = (a.dateISO || a.date || '').slice(0, 4) || '未知';
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push({ id, ...a });
+  });
+  let body = `<section class="page-hero"><h1>归档</h1><p>共 ${articleOrder.length} 篇文章</p></section>`;
+  Object.keys(byYear).sort((a, b) => b.localeCompare(a)).forEach(year => {
+    body += `<h2 style="font-size:20px;margin:24px 0 12px">${escHtml(year)}</h2>`;
+    byYear[year].forEach(a => {
+      body += `<article style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--outline-variant)"><span style="color:var(--on-surface-variant);font-size:13px;white-space:nowrap">${escHtml(a.date)}</span><a href="/posts/${a.id}/" style="color:var(--on-surface);text-decoration:none;flex:1">${escHtml(a.title)}</a></article>`;
+    });
+  });
+  fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('归档', SITE_CONFIG.description) + body + seoPageFoot());
+  console.log('  ✓ archive/index.html');
+}
+
+// Friends page
+{
+  const dir = path.join(OUT_DIR, 'friends');
+  fs.mkdirSync(dir, { recursive: true });
+  let body = `<section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid">`;
+  SITE_CONFIG.friends.forEach(f => {
+    body += `<a class="fl-card" href="${escHtml(f.url)}" target="_blank" rel="noopener"><img class="fl-avatar" src="${escHtml(f.avatar)}" alt="${escHtml(f.name)}" width="48" height="48"><div class="fl-info"><div class="fl-name">${escHtml(f.name)}</div><div class="fl-desc">${escHtml(f.desc)}</div></div></a>`;
+  });
+  body += '</div>';
+  fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('友链', '这些站点值得关注。') + body + seoPageFoot());
+  console.log('  ✓ friends/index.html');
+}
+
+// About page
+{
+  const dir = path.join(OUT_DIR, 'about');
+  fs.mkdirSync(dir, { recursive: true });
+  let body = `<div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="${escHtml(SITE_CONFIG.author)}" width="72" height="72"></div><h1>${escHtml(SITE_CONFIG.author)}</h1><p class="about-tagline">${escHtml(SITE_CONFIG.tagline)}</p><div class="about-divider"></div><div class="about-bio">${SITE_CONFIG.bio.split('\n').filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">技术栈</h3><div class="about-skill-list">${SITE_CONFIG.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${articleOrder.length}</span><span class="about-stat-label">篇文章</span></div><div class="about-stat"><span class="about-stat-num">${cats.length}</span><span class="about-stat-label">个分类</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">个标签</span></div></div><div class="about-divider"></div><div class="about-links">${SITE_CONFIG.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div></div>`;
+  fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('关于', SITE_CONFIG.description) + body + seoPageFoot());
+  console.log('  ✓ about/index.html');
+}
 
 // Copy theme assets
 const themeOut = path.join(OUT_DIR, 'theme');
@@ -646,3 +800,12 @@ console.log('\n✅ Build complete! Output: dist/');
 console.log('   Articles: ' + articleOrder.length);
 console.log('   Tags: ' + allTags.length);
 console.log('   Categories: ' + cats.length);
+
+// Save build cache for next incremental run
+saveCache({
+  globalFp,
+  articles: loadArticles._newArticleCache || {},
+  outputHashes: newOutputHashes,
+  lastBuild: new Date().toISOString()
+});
+console.log('   Cache saved for next build');
