@@ -3,10 +3,11 @@ title: 爱在西元前
 description: 
 date: 2026-07-30
 category: 
-tags: "[\\"音乐\\", [\\\"音乐\\\""
+tags: 音乐
 draft: false
 remark: love-before-bc
 ---
+
 
 
 古巴比伦王颁布了汉谟拉比法典
