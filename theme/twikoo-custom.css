@@ -104,27 +104,27 @@
   box-shadow: none;
 }
 
-/* ── 预览/取消按钮 — 深灰色描边风格 ── */
+/* ── 预览/取消按钮 — 与发送按钮统一风格 ── */
 .tk-comments .tk-cancel.el-button--default,
 .tk-comments .tk-preview.el-button--default {
-  background: none;
-  border: 1.5px solid #454746;
+  background: #454746;
+  color: #fff;
+  border: none;
   border-radius: 20px;
-  color: #454746;
-  box-shadow: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.14);
   font-weight: 700;
   letter-spacing: .02em;
-  transition: background 200ms, border-color 200ms, color 200ms, transform 100ms;
+  transition: background 200ms, box-shadow 200ms, transform 100ms;
 }
 .tk-comments .tk-cancel.el-button--default:hover,
 .tk-comments .tk-preview.el-button--default:hover {
-  background: rgba(69,71,70,.08);
-  border-color: #565856;
-  color: #565856;
+  background: #565856;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.15);
 }
 .tk-comments .tk-cancel.el-button--default:active,
 .tk-comments .tk-preview.el-button--default:active {
   transform: scale(.97);
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
 }
 
 /* ── 排序/设置按钮（最新/最热/最早/刷新/设置） — 深灰色 ── */
@@ -241,14 +241,15 @@
 }
 [data-theme="dark"] .tk-comments .tk-cancel.el-button--default,
 [data-theme="dark"] .tk-comments .tk-preview.el-button--default {
-  border-color: #a8a9a8;
-  color: #a8a9a8;
+  background: #a8a9a8;
+  color: #1c1c1e;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
 }
 [data-theme="dark"] .tk-comments .tk-cancel.el-button--default:hover,
 [data-theme="dark"] .tk-comments .tk-preview.el-button--default:hover {
-  background: rgba(168,169,168,.1);
-  border-color: #bfc0bf;
-  color: #bfc0bf;
+  background: #bfc0bf;
+  box-shadow: 0 2px 6px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
 }
 [data-theme="dark"] .tk-comments .tk-sort,
 [data-theme="dark"] .tk-comments .tk-sort button,
