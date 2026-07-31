@@ -95,6 +95,12 @@
       "url": "https://blog.zhilu.site/",
       "avatar": "https://www.zhilu.site/api/avatar.png",
       "desc": "纸鹿至麓不知路，支炉制露不止漉"
+    },
+    {
+      "name": "优世界",
+      "url": "https://usj.cc",
+      "avatar": "https://usj.cc/favicon.ico",
+      "desc": "不以物喜，不以己悲"
     }
   ]
 }
