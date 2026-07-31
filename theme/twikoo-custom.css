@@ -111,7 +111,7 @@
   color: #fff;
   border: none;
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.14);
+  box-shadow: none;
   font-weight: 700;
   letter-spacing: .02em;
   transition: background 200ms, box-shadow 200ms, transform 100ms;
@@ -119,12 +119,10 @@
 .tk-comments .tk-cancel.el-button--default:hover,
 .tk-comments .tk-preview.el-button--default:hover {
   background: #565856;
-  box-shadow: 0 2px 6px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.15);
 }
 .tk-comments .tk-cancel.el-button--default:active,
 .tk-comments .tk-preview.el-button--default:active {
   transform: scale(.97);
-  box-shadow: 0 1px 2px rgba(0,0,0,.2);
 }
 
 /* ── 排序/设置按钮（最新/最热/最早/刷新/设置） — 深灰色 ── */
@@ -244,12 +242,11 @@
   background: #a8a9a8;
   color: #1c1c1e;
   border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  box-shadow: none;
 }
 [data-theme="dark"] .tk-comments .tk-cancel.el-button--default:hover,
 [data-theme="dark"] .tk-comments .tk-preview.el-button--default:hover {
   background: #bfc0bf;
-  box-shadow: 0 2px 6px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
 }
 [data-theme="dark"] .tk-comments .tk-sort,
 [data-theme="dark"] .tk-comments .tk-sort button,
