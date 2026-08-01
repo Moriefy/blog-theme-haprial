@@ -273,6 +273,8 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 <meta property="og:title" content="${escHtml(config.title)}">
 <meta property="og:description" content="${escHtml(config.description)}">
 <meta property="og:url" content="${escHtml(config.url)}">
+<meta property="og:image" content="${escHtml(config.url)}/avatar.png">
+<meta name="twitter:image" content="${escHtml(config.url)}/avatar.png">
 <link rel="canonical" href="${escHtml(config.url)}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="alternate" type="application/rss+xml" title="${escHtml(config.title)}" href="/rss.xml">
@@ -297,11 +299,12 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 </head>
 <body>
 
+<a href="#articleList" class="skip-link">跳到内容</a>
 <header class="top-app-bar" id="topAppBar">
   <span class="logo" id="logoBtn">Moriefy</span>
   <div class="spacer"></div>
   <button class="icon-btn" id="searchBtn" aria-label="搜索"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
-  <button class="icon-btn" id="themeBtn" aria-label="切换主题"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
+  <button class="icon-btn" id="themeBtn" aria-label="切换主题" aria-pressed="false"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
 </header>
 
 <nav class="page-tabs" id="pageTabs" role="navigation" aria-label="主导航">
@@ -343,7 +346,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 
 <div class="search-view" id="searchView">
   <header class="sv-bar"><button class="icon-btn" id="svBack" aria-label="返回"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><input class="sv-input" id="svInput" type="text" placeholder="搜索文章…" autocomplete="off"><button class="icon-btn" id="svClear" aria-label="清除"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></header>
-  <div class="sv-results" id="svResults"><p class="sv-hint">输入关键词搜索文章、标签和摘要。</p></div>
+  <div class="sv-results" id="svResults" aria-live="polite"><p class="sv-hint">输入关键词搜索文章、标签和摘要。</p></div>
 </div>
 
 <aside class="toc" id="toc"><div class="toc-title">目录</div><ul class="toc-list" id="tocList"></ul></aside>
@@ -433,6 +436,8 @@ function buildPostHtml(id, art, config, opts) {
 <meta property="og:title" content="${escHtml(art.title)}">
 <meta property="og:description" content="${escHtml(art.excerpt)}">
 <meta property="og:url" content="${escHtml(config.url)}/posts/${id}/">
+<meta property="og:image" content="${escHtml(config.url)}/avatar.png">
+<meta name="twitter:image" content="${escHtml(config.url)}/avatar.png">
 <meta property="article:published_time" content="${art.dateISO}">
 <meta property="article:author" content="${escHtml(config.author)}">
 ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">').join('\n')}
@@ -464,7 +469,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 <header class="top-app-bar" id="topAppBar">
   <span class="logo" onclick="location.href='/'" style="cursor:pointer">Moriefy</span>
   <div class="spacer"></div>
-  <button class="icon-btn" aria-label="切换主题" onclick="(function(){var c=document.documentElement.getAttribute('data-theme')||'light';var t=c==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('th',t)}catch(e){};document.querySelectorAll('.theme-wrap').forEach(function(w){var s=w.querySelector('.sun'),m=w.querySelector('.moon');if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}})})()"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
+  <button class="icon-btn" aria-label="切换主题" aria-pressed="false" onclick="(function(){var c=document.documentElement.getAttribute('data-theme')||'light';var t=c==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('th',t)}catch(e){};document.querySelectorAll('.theme-wrap').forEach(function(w){var s=w.querySelector('.sun'),m=w.querySelector('.moon');if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}})})()"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
 </header>
 
 <main style="max-width:720px;margin:0 auto;padding:0 24px 120px">
@@ -534,7 +539,7 @@ const articleCardsHtml = articleOrder.map(id => articleCardHtml(id, articles[id]
 // Create lightweight articles (without content) for embedded data
 const articlesMeta = {};
 Object.entries(articles).forEach(([id, a]) => {
-  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category, content: a.content };
+  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category };
 });
 
 const dataObj = {
@@ -744,7 +749,7 @@ console.log('  ✓ robots.txt');
 
 // Generate RSS feed
 let rss = '<?xml version="1.0" encoding="UTF-8"?>\n';
-rss += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n';
+rss += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">\n';
 rss += '<channel>\n';
 rss += `  <title>${escHtml(SITE_CONFIG.title)}</title>\n`;
 rss += `  <link>${SITE_CONFIG.url}</link>\n`;
@@ -759,6 +764,7 @@ articleOrder.forEach(id => {
   rss += `    <guid>${SITE_CONFIG.url}/posts/${id}/</guid>\n`;
   rss += `    <pubDate>${a.dateISO ? new Date(a.dateISO).toUTCString() : ''}</pubDate>\n`;
   rss += `    <description>${escHtml(a.excerpt)}</description>\n`;
+  rss += `    <content:encoded><![CDATA[${a.content}]]></content:encoded>\n`;
   rss += '  </item>\n';
 });
 rss += '</channel>\n</rss>';
