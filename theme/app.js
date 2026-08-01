@@ -222,7 +222,7 @@ if(tocHz){
   var _tocW=Math.max((window.innerWidth-720)/2,230);
   tocHz.style.width=_tocW+'px';
   tocHz.addEventListener('mouseenter',function(){clearTimeout(tocHideTimer);toc.classList.add('visible')});
-  tocHz.addEventListener('mouseleave',function(){clearTimeout(tocHideTimer);tocHideTimer=setTimeout(function(){toc.classList.remove('visible')},3000)});
+  tocHz.addEventListener('mouseleave',function(){clearTimeout(tocHideTimer);tocHideTimer=setTimeout(function(){toc.classList.remove('visible')},1500)});
 }
 // Initialize lightbox (shared module)
 window.__initLightbox(articleBody);

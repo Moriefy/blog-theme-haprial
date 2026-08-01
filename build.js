@@ -495,7 +495,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 ${themeInitScript()}
 ${postPageScript()}
 window.__initLightbox(document.querySelector('.article-body'));
-(function(){var hz=document.querySelector('.toc-hover-zone'),tc=document.querySelector('.toc'),ht=null;if(!hz||!tc)return;hz.style.width=Math.max((innerWidth-720)/2,230)+'px';hz.addEventListener('mouseenter',function(){clearTimeout(ht);tc.classList.add('visible')});hz.addEventListener('mouseleave',function(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},3000)})})();
+(function(){var hz=document.querySelector('.toc-hover-zone'),tc=document.querySelector('.toc'),ht=null;if(!hz||!tc)return;hz.style.width=Math.max((innerWidth-720)/2,230)+'px';hz.addEventListener('mouseenter',function(){clearTimeout(ht);tc.classList.add('visible')});hz.addEventListener('mouseleave',function(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},1500)})})();
 </script>
 </body>
 </html>`;
