@@ -3,6 +3,7 @@ title: "用 Mermaid 画技术架构图"
 date: "2026-08-02"
 tags: ["工具", "图表", "Mermaid"]
 category: "tech"
+pinned: true
 excerpt: "用 Markdown 写代码就能生成流程图、时序图、甘特图，告别手绘。"
 ---
 

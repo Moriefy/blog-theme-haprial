@@ -193,7 +193,7 @@ function articleCardHtml(id, art) {
   const tagHtml = art.tags.length
     ? '<span class="tag">' + escHtml(art.tags[0]) + '</span>'
     : '';
-  return `<article class="card" data-id="${id}" data-title="${escHtml(art.title)}" data-excerpt="${escHtml(art.excerpt)}" data-tags="${escHtml(art.tags.join('\u001f'))}"><div class="card-date">${escHtml(art.date)}</div><h2 class="card-title">${escHtml(art.title)}</h2><p class="card-excerpt">${escHtml(art.excerpt)}</p><div class="card-meta">${pinHtml}${tagHtml}<span class="reading-time">${escHtml(art.rt)}</span></div></article>`;
+  return `<article class="card" data-id="${id}" data-title="${escHtml(art.title)}" data-excerpt="${escHtml(art.excerpt)}" data-tags="${escHtml(art.tags.join('\u001f'))}"><div class="card-date">${escHtml(art.date)}${pinHtml}</div><h2 class="card-title">${escHtml(art.title)}</h2><p class="card-excerpt">${escHtml(art.excerpt)}</p><div class="card-meta">${tagHtml}<span class="reading-time">${escHtml(art.rt)}</span></div></article>`;
 }
 
 // ── Shared JS Helpers ───────────────────────────────────────────────────────
