@@ -293,6 +293,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id + '/article.json" as="fetch" crossorigin>').join('\n')}
 <style>${cssContent}${themeTransition}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>

@@ -203,6 +203,13 @@ a{color:var(--primary);text-decoration:none}
 .art-tags{display:flex;gap:8px;flex-wrap:wrap}
 .art-div{width:100%;height:1px;background:var(--outline-variant);margin-top:16px}
 
+/* ── Skeleton Loader ── */
+.skel-wrap{padding:28px 0}
+@keyframes skelShimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%) 0}}
+.skel-line{height:14px;border-radius:6px;margin-bottom:12px;background:linear-gradient(90deg,var(--surface-container-high) 0,var(--surface-container) 40%,var(--surface-container-high) 80%);background-size:200px 100%;animation:skelShimmer 1.6s ease-in-out infinite}
+.skel-w60{width:60%}.skel-w70{width:70%}.skel-w75{width:75%}.skel-w80{width:80%}.skel-w85{width:85%}.skel-w90{width:90%}.skel-w95{width:95%}.skel-w100{width:100%}
+.skel-gap{height:24px}
+
 /* ── Article Body ── */
 .article-body{padding-bottom:100px;overflow-x:hidden;opacity:0}
 .article-body.revealed{opacity:1;transition:opacity .3s ease}
