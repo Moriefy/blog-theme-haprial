@@ -374,6 +374,7 @@ a{color:var(--primary);text-decoration:none}
 /* ── Responsive ── */
 @media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
+  .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
   .top-app-bar{padding:0 4px 0 16px}.page-tabs .tab{padding:14px 10px;font-size:12px}
   .container{padding:0 16px}
   .av-content{padding:0 16px 120px}
