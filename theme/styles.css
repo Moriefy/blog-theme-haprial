@@ -26,7 +26,7 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{font-family:'Noto Sans SC','PingFang SC',Georgia,serif;background:var(--surface);color:var(--on-surface);line-height:1.75;font-size:16px;overflow-x:hidden}
+body{font-family:'Noto Sans SC','PingFang SC',Georgia,serif;background:var(--surface);color:var(--on-surface);line-height:1.75;font-size:16px;overflow-x:hidden;transition:background-color 250ms ease,color 250ms ease}
 body.locked{overflow:hidden}
 @media(max-width:768px){body.locked{padding-right:0!important}}
 a{color:var(--primary);text-decoration:none}
@@ -61,8 +61,12 @@ a{color:var(--primary);text-decoration:none}
 .page{display:none;padding-bottom:40px;contain:content}.page.active{display:block}
 @keyframes slideInRight{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideOutLeft{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-16px)}}
+@keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(16px)}}
 .page.slide-in-right{animation:slideInRight .28s cubic-bezier(.4,0,.2,1) both}
 .page.slide-in-left{animation:slideInLeft .28s cubic-bezier(.4,0,.2,1) both}
+.page.slide-out-left{animation:slideOutLeft .15s cubic-bezier(.4,0,1,1) both}
+.page.slide-out-right{animation:slideOutRight .15s cubic-bezier(.4,0,1,1) both}
 
 /* ── Hero ── */
 @keyframes heroReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -75,8 +79,10 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Filter Bar ── */
 @keyframes filterBarIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes filterBarOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
 .filter-bar{display:none;align-items:center;gap:8px;padding:10px 16px;background:var(--primary-container);color:var(--on-primary-container);border-radius:10px;font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;margin-bottom:14px;box-shadow:var(--e1);opacity:0;transform:translateY(-8px)}
 .filter-bar.on{display:flex;animation:filterBarIn .3s cubic-bezier(0,0,.2,1) forwards}
+.filter-bar.out{animation:filterBarOut .2s cubic-bezier(.4,0,1,1) forwards}
 .filter-clear{margin-left:auto;padding:4px 12px;border-radius:var(--shape-full);border:none;background:rgba(0,0,0,.08);color:inherit;font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:400;cursor:pointer;position:relative;overflow:hidden}
 [data-theme="dark"] .filter-clear{background:rgba(255,255,255,.08)}
 
@@ -194,7 +200,7 @@ a{color:var(--primary);text-decoration:none}
 .av-bar{position:sticky;top:0;z-index:10;height:56px;display:flex;align-items:center;padding:0 4px;background:var(--surface)}
 .av-bar.scrolled{box-shadow:var(--e1)}
 .toc-toggle{display:none}
-.rprog{height:2px;background:var(--primary);width:100%;transform:scaleX(0);transform-origin:left;position:sticky;top:56px;z-index:9}
+.rprog{height:2px;background:var(--primary);width:100%;transform:scaleX(0);transform-origin:left;position:sticky;top:56px;z-index:9;transition:transform 200ms ease-out}
 .av-content{max-width:720px;margin:0 auto;padding:0 24px 120px;overflow-x:hidden}
 .article-header{padding:28px 0 16px}
 .si{opacity:1;transform:none}
@@ -350,8 +356,8 @@ a{color:var(--primary);text-decoration:none}
 @keyframes ripExpand{0%{transform:scale(0);opacity:1}100%{transform:scale(4);opacity:0}}
 
 /* ── Comment & Footer ── */
-.comment-section{margin-top:32px;padding-top:24px;border-top:1px solid var(--outline-variant)}
-.comment-section:empty{display:none}
+.comment-section{margin-top:32px;padding-top:24px;border-top:1px solid var(--outline-variant);opacity:0;animation:fadeIn .4s ease .1s forwards}
+.comment-section:empty{display:none;animation:none}
 .site-footer{border-top:1px solid var(--outline-variant);padding:16px 24px;text-align:center;background:var(--surface-container-low)}
 .footer-nav{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px}
 .footer-link{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--on-surface-variant);cursor:pointer;transition:color 200ms;padding:8px 4px;min-height:44px;display:inline-flex;align-items:center;border-radius:var(--shape-full);position:relative;overflow:hidden}
