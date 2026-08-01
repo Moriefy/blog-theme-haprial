@@ -301,14 +301,14 @@ a{color:var(--primary);text-decoration:none}
 .hl-match{background:var(--primary-container);color:var(--on-primary-container);border-radius:2px;padding:0 2px}
 
 /* ── TOC Sidebar ── */
-.toc{position:fixed;top:88px;right:max(calc((100vw - 720px)/2 - 230px),24px);width:190px;max-height:calc(100vh - 140px);overflow-y:auto;z-index:210;opacity:0;transform:translateX(16px);pointer-events:none;scrollbar-width:none;transition:opacity .35s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1)}
+.toc{position:fixed;top:88px;right:max(calc((100vw - 720px)/2 - 230px),24px);width:190px;max-height:calc(100vh - 140px);overflow-y:auto;z-index:210;opacity:0;transform:translateX(24px) scale(.96);filter:blur(2px);pointer-events:none;scrollbar-width:none;transition:opacity .32s cubic-bezier(.2,.9,.3,1),transform .38s cubic-bezier(.175,.885,.32,1.1),filter .28s ease-out}
 .toc::-webkit-scrollbar{display:none}
-/* Hover trigger zone — invisible strip at right edge */
-.toc::before{content:'';position:fixed;top:88px;right:max(calc((100vw - 720px)/2 - 230px),24px);width:40px;height:calc(100vh - 140px);pointer-events:auto;cursor:default}
-/* Show TOC on hover (trigger zone or TOC itself) */
-.toc:hover{opacity:1;transform:translateX(0);pointer-events:auto}
+/* Hover trigger — entire area to the right of article content */
+.toc::before{content:'';position:fixed;top:0;right:0;width:max(calc((100vw - 720px)/2),0px);height:100vh;pointer-events:auto;cursor:default}
+/* Show TOC on hover — Telegram-style spring entrance */
+.toc:hover{opacity:1;transform:translateX(0) scale(1);filter:blur(0);pointer-events:auto}
 /* Visible class for JS fallback */
-.toc.visible{opacity:1;transform:translateX(0);pointer-events:auto}
+.toc.visible{opacity:1;transform:translateX(0) scale(1);filter:blur(0);pointer-events:auto}
 .toc-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--outline);margin-bottom:16px}
 .toc-list{list-style:none;padding:0}
 .toc-item{padding:4px 0;cursor:pointer;font-weight:400;transform-origin:left center}
