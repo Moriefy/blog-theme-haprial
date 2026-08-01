@@ -58,13 +58,13 @@ a{color:var(--primary);text-decoration:none}
 .tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;will-change:transform;transition:transform 300ms cubic-bezier(.4,0,.2,1)}
 
 /* ── Page Transitions ── */
-.page{display:none;padding-bottom:40px;contain:content}.page.active{display:block}
+.page{display:none;padding-bottom:40px;contain:content;will-change:transform,opacity}.page.active{display:block}
 @keyframes slideInRight{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideOutLeft{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-16px)}}
 @keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(16px)}}
-.page.slide-in-right{animation:slideInRight .28s cubic-bezier(.4,0,.2,1) both}
-.page.slide-in-left{animation:slideInLeft .28s cubic-bezier(.4,0,.2,1) both}
+.page.slide-in-right{animation:slideInRight .2s cubic-bezier(.4,0,.2,1) both}
+.page.slide-in-left{animation:slideInLeft .2s cubic-bezier(.4,0,.2,1) both}
 .page.slide-out-left{animation:slideOutLeft .15s cubic-bezier(.4,0,1,1) both}
 .page.slide-out-right{animation:slideOutRight .15s cubic-bezier(.4,0,1,1) both}
 
