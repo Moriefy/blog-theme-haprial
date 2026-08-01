@@ -477,7 +477,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
   <section class="comment-section" id="commentSection"><div id="tcomment"></div></section>
 </main>
 
-<aside class="toc visible" style="position:fixed;top:88px;right:max(calc((100vw - 720px)/2 - 230px),24px);width:190px;max-height:calc(100vh - 140px);overflow-y:auto">
+<aside class="toc">
   <div class="toc-title">目录</div>
   <ul class="toc-list">${tocHtml}</ul>
 </aside>
