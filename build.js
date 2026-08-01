@@ -363,6 +363,7 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 </footer>
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
+<script src="/theme/lightbox.js"></script>
 <script defer src="/theme/app.js"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
