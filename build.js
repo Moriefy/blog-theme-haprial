@@ -522,30 +522,7 @@ const newOutputHashes = {};
 const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8') + '\n' + fs.readFileSync(path.join(THEME_DIR, 'twikoo-custom.css'), 'utf8');
 
 // Add theme transition CSS — target only key elements (not *) to avoid mobile jank
-const themeTransition = `
-html.theme-transitioning body,
-html.theme-transitioning .top-app-bar,
-html.theme-transitioning .page-tabs,
-html.theme-transitioning .av-bar,
-html.theme-transitioning .sv-bar,
-html.theme-transitioning .toc,
-html.theme-transitioning .toc-drawer,
-html.theme-transitioning .card,
-html.theme-transitioning .tag-card,
-html.theme-transitioning .cat-card,
-html.theme-transitioning .fl-card,
-html.theme-transitioning .art-nav-btn,
-html.theme-transitioning .site-footer,
-html.theme-transitioning .hero,
-html.theme-transitioning .search-view,
-html.theme-transitioning .article-view,
-html.theme-transitioning .fab,
-html.theme-transitioning .filter-bar {
-  transition: color 200ms ease;
-}
-@media (prefers-reduced-motion: reduce) {
-  html.theme-transitioning * { transition: none !important; }
-}`;
+const themeTransition = ''; // theme snap — no transition to avoid jank
 
 const jsContent = fs.readFileSync(path.join(THEME_DIR, 'app.js'), 'utf8');
 
