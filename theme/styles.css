@@ -303,10 +303,9 @@ a{color:var(--primary);text-decoration:none}
 /* ── TOC Sidebar ── */
 .toc{position:fixed;top:88px;right:max(calc((100vw - 720px)/2 - 230px),24px);width:190px;max-height:calc(100vh - 140px);overflow-y:auto;z-index:210;opacity:0;transform:translateX(12px);pointer-events:none;scrollbar-width:none;transition:opacity .35s ease,transform .35s ease}
 .toc::-webkit-scrollbar{display:none}
-/* Hover trigger — entire area to the right of article content */
-.toc-hover-zone{position:fixed;top:0;right:0;z-index:209;cursor:default;display:none}
-/* Show TOC via JS hover zone */
-.toc.visible{opacity:1;transform:translateX(0);pointer-events:auto}
+.toc.visible{opacity:1;transform:none;pointer-events:auto}
+/* Hover zone — right side of article */
+.toc-hover-zone{position:fixed;top:0;right:0;z-index:205;height:100vh}
 .toc-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--outline);margin-bottom:16px}
 .toc-list{list-style:none;padding:0}
 .toc-item{padding:4px 0;cursor:pointer;font-weight:400;transform-origin:left center}
@@ -402,7 +401,7 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Print ── */
 @media print{
-  .top-app-bar,.page-tabs,.fab,.site-footer,.toc,.toc-hover-zone,.toc-sheet,.search-view,.art-nav,.rprog,.toc-toggle{display:none!important}
+  .top-app-bar,.page-tabs,.fab,.site-footer,.toc,.toc-sheet,.search-view,.art-nav,.rprog,.toc-toggle{display:none!important}
   .article-view{position:static!important;transform:none!important;overflow:visible!important}
   .article-body>*{opacity:1!important;transform:none!important}
   .si{opacity:1!important;transform:none!important}

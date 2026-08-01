@@ -482,7 +482,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
   <div class="toc-title">目录</div>
   <ul class="toc-list">${tocHtml}</ul>
 </aside>
-<div class="toc-hover-zone" style="display:block"></div>
+<div class="toc-hover-zone"></div>
 
 <div class="lightbox" id="lightbox"><div class="lightbox-scrim" id="lbScrim"></div><div class="lightbox-toolbar"><span class="lightbox-counter" id="lbCounter"></span><button class="lightbox-close" id="lightboxClose" aria-label="关闭"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="lightbox-stage" id="lbStage"><button class="lightbox-nav lightbox-prev" id="lbPrev" aria-label="上一张"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="lightbox-img-wrap" id="lbImgWrap"><img class="lightbox-img" id="lightboxImg" src="" alt=""></div><button class="lightbox-nav lightbox-next" id="lbNext" aria-label="下一张"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div><div class="lightbox-bottombar"><button class="lightbox-btn" id="lbLocate" aria-label="定位"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button><div class="spacer"></div><button class="lightbox-btn" id="lbDownload" aria-label="下载"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button></div></div>
 <footer class="site-footer">
@@ -495,8 +495,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 ${themeInitScript()}
 ${postPageScript()}
 window.__initLightbox(document.querySelector('.article-body'));
-// TOC hover zone
-(function(){var hz=document.querySelector('.toc-hover-zone'),tc=document.querySelector('.toc'),ht=null;if(!hz||!tc)return;function sz(){var av=document.querySelector('.av-content');if(!av)return;var r=av.getBoundingClientRect();hz.style.width=Math.max(innerWidth-r.right,230)+'px'}hz.addEventListener('mouseenter',function(){clearTimeout(ht);tc.classList.add('visible')});hz.addEventListener('mouseleave',function(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},3000)});sz();window.addEventListener('resize',sz)})()
+(function(){var hz=document.querySelector('.toc-hover-zone'),tc=document.querySelector('.toc'),ht=null;if(!hz||!tc)return;hz.style.width=Math.max((innerWidth-720)/2,230)+'px';hz.addEventListener('mouseenter',function(){clearTimeout(ht);tc.classList.add('visible')});hz.addEventListener('mouseleave',function(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},3000)})})();
 </script>
 </body>
 </html>`;
