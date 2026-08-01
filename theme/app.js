@@ -206,6 +206,8 @@ document.addEventListener('keydown',function(e){
   if(e.key==='/'&&!searchView.classList.contains('open')&&!articleView.classList.contains('open')){e.preventDefault();openSearch()}
 });
 window.addEventListener('resize',function(){clearTimeout(resizeTimer);resizeTimer=setTimeout(function(){updateTabIndicator();invalidateHeadingCache()},120)});
+/* Archive timeline grow on page activate */
+(function(){var pg=$('pageArchive');if(!pg)return;var tl=pg.querySelector('.archive-timeline');if(!tl)return;new MutationObserver(function(){if(pg.classList.contains('active')){tl.classList.add('grow')}else{tl.classList.remove('grow')}}).observe(pg,{attributes:true,attributeFilter:['class']})})();
 
 var th=null;try{th=localStorage.getItem('th')}catch(e){}if(!th)th=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
 document.documentElement.setAttribute('data-theme',th);syncAllIcons(th);
