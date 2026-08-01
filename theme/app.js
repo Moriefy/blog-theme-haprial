@@ -36,7 +36,7 @@ var allTags=window.__HAPRIAL_DATA__.allTags;
 var cats=window.__HAPRIAL_DATA__.cats;
 var catMap=window.__HAPRIAL_DATA__.catMap;
 var friends=window.__HAPRIAL_DATA__.friends;
-var articles=window.__HAPRIAL_DATA__.articles;var seriesData=window.__HAPRIAL_DATA__.series||{};
+var articles=window.__HAPRIAL_DATA__.articles;
 var catNameMap={};cats.forEach(function(c){catNameMap[c.f]=c.n});
 
 var slugToId={};
@@ -56,29 +56,105 @@ function observeImages(){if(imgObserver)imgObserver.disconnect();if(reducedMotio
 function processMermaid(){
   var blocks=articleBody.querySelectorAll('.mermaid-block');
   if(!blocks.length)return;
-  function render(blocks){
-    if(typeof mermaid==='undefined')return;
-    blocks.forEach(function(b){
-      var sTag=b.querySelector('script[type="text/mermaid"]');var code=sTag?sTag.textContent:b.getAttribute('data-mermaid');
-      if(!code)return;
-      try{
-        var id='mermaid-'+Math.random().toString(36).substr(2,9);
-        mermaid.run({nodes:[b]}).then(function(){
-          var s=b.querySelector('script[type="text/mermaid"]');if(s)s.remove();
-        }).catch(function(){b.innerHTML='<p style="color:var(--outline)">图表渲染失败</p>'});
-      }catch(e){b.innerHTML='<p style="color:var(--outline)">图表渲染失败</p>'}
+  blocks.forEach(function(b){
+    var sTag=b.querySelector('script[type="text/mermaid"]');
+    var code=sTag?sTag.textContent:'';
+    if(!code)return;
+    try{
+      var svg=renderMermaidFlowchart(code.trim());
+      if(svg){b.innerHTML=svg;if(sTag)sTag.remove()}
+      else{b.innerHTML='<p style="color:var(--outline)">不支持的图表类型</p>'}
+    }catch(e){b.innerHTML='<p style="color:var(--outline)">图表渲染失败</p>'}
+  });
+}
+function renderMermaidFlowchart(code){
+  var lines=code.split('\n').map(function(l){return l.trim()}).filter(Boolean);
+  if(!lines.length)return null;
+  var dir='TD';
+  var first=lines[0].match(/^(graph|flowchart)\s+(TD|LR|RL|BT)/i);
+  if(first){dir=first[2].toUpperCase();lines.shift()}
+  var nodes={},edges=[],nodeOrder=[];
+  function getNode(id){if(!nodes[id])nodes[id]={id:id,label:id,shape:'rect'};return nodes[id]}
+  function ensureNode(id){if(!nodes[id]){getNode(id);nodeOrder.push(id)}}
+  lines.forEach(function(line){
+    var conn=line.match(/^(\w+)(?:\[([^\]]*)\]|\(([^)]*)\)|\{([^}]*)\}|\[\[([^\]]*)\]\]|\(\(([^)]*)\)\))?\s*(-+>|\.-+>|==+>|--[^>]*-->|-+[^>]*->|==[^>]*==>)\s*(\w+)(?:\[([^\]]*)\]|\(([^)]*)\)|\{([^}]*)\}|\[\[([^\]]*)\]\]|\(\(([^)]*)\)\))?(?:\s*\|([^|]*)\|)?$/);
+    if(!conn)return;
+    var src=conn[1],dst=conn[8];
+    ensureNode(src);ensureNode(dst);
+    if(conn[2]!==undefined)nodes[src].label=conn[2];
+    else if(conn[3]!==undefined){nodes[src].label=conn[3];nodes[src].shape='rounded'}
+    else if(conn[4]!==undefined){nodes[src].label=conn[4];nodes[src].shape='diamond'}
+    else if(conn[5]!==undefined){nodes[src].label=conn[5];nodes[src].shape='subprocess'}
+    else if(conn[6]!==undefined){nodes[src].label=conn[6];nodes[src].shape='circle'}
+    if(conn[9]!==undefined)nodes[dst].label=conn[9];
+    else if(conn[10]!==undefined){nodes[dst].label=conn[10];nodes[dst].shape='rounded'}
+    else if(conn[11]!==undefined){nodes[dst].label=conn[11];nodes[dst].shape='diamond'}
+    else if(conn[12]!==undefined){nodes[dst].label=conn[12];nodes[dst].shape='subprocess'}
+    else if(conn[13]!==undefined){nodes[dst].label=conn[13];nodes[dst].shape='circle'}
+    var label=(conn[14]||'').trim();
+    var style=conn[7].indexOf('.')>=0?'dotted':'solid';
+    edges.push({src:src,dst:dst,label:label,style:style});
+  });
+  if(!nodeOrder.length)return null;
+  var children={};nodeOrder.forEach(function(id){children[id]=[]});
+  edges.forEach(function(e){children[e.src].push(e.dst)});
+  var layers=[],visited={},depths={};
+  function getDepth(id,d){if(depths[id]!==undefined)return depths[id];depths[id]=d;var maxD=d;children[id].forEach(function(c){maxD=Math.max(maxD,getDepth(c,d+1))});return maxD}
+  nodeOrder.forEach(function(id){getDepth(id,0)});
+  var maxDepth=0;nodeOrder.forEach(function(id){maxDepth=Math.max(maxDepth,depths[id])});
+  for(var d=0;d<=maxDepth;d++){layers[d]=[];nodeOrder.forEach(function(id){if(depths[id]===d)layers[d].push(id)})}
+  var nodeW=160,nodeH=50,gapX=40,gapY=80,padX=30,padY=30;
+  var positions={};
+  layers.forEach(function(layer,di){
+    var totalW=layer.length*nodeW+(layer.length-1)*gapX;
+    layer.forEach(function(id,li){
+      var x=padX+(totalW>0?(li*(nodeW+gapX)):0)+(nodeW/2);
+      var y=padY+di*(nodeH+gapY)+nodeH/2;
+      positions[id]={x:x,y:y};
     });
-  }
-  if(typeof mermaid!=='undefined'){render(blocks);return}
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-  s.onload=function(){
-    if(typeof mermaid!=='undefined'){
-      mermaid.initialize({startOnLoad:false,theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'default',securityLevel:'loose'});
-      render(blocks);
+  });
+  var maxLayerW=0;layers.forEach(function(l){var w=l.length*nodeW+(l.length-1)*gapX;if(w>maxLayerW)maxLayerW=w});
+  var svgW=maxLayerW+padX*2;
+  var svgH=(maxDepth+1)*(nodeH+gapY)-gapY+padY*2;
+  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  var bg=isDark?'#191B1D':'#FFFFFF';
+  var nodeBg=isDark?'#354A54':'#D4DDE3';
+  var nodeBorder=isDark?'#9AB0BF':'#3D5A6E';
+  var textColor=isDark?'#E3E3E6':'#1C1C1E';
+  var arrowColor=isDark?'#6B6F73':'#75787C';
+  var diamondBg=isDark?'#4A7B6A':'#D4E8DF';
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="'+svgW+'" height="'+svgH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif">';
+  svg+='<defs><marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,3 L0,6" fill="'+arrowColor+'"/></marker></defs>';
+  edges.forEach(function(e){
+    var sx=positions[e.src].x,sy=positions[e.src].y+nodeH/2;
+    var dx=positions[e.dst].x,dy=positions[e.dst].y-nodeH/2;
+    var dash=e.style==='dotted'?' stroke-dasharray="6 4"':'';
+    svg+='<line x1="'+sx+'" y1="'+sy+'" x2="'+dx+'" y2="'+dy+'" stroke="'+arrowColor+'" stroke-width="1.5"'+dash+' marker-end="url(#arrow)"/>';
+    if(e.label){
+      var lx=(sx+dx)/2,ly=(sy+dy)/2-6;
+      svg+='<rect x="'+(lx-e.label.length*5-4)+'" y="'+(ly-10)+'" width="'+(e.label.length*10+8)+'" height="16" rx="3" fill="'+bg+'"/>';
+      svg+='<text x="'+lx+'" y="'+ly+'" text-anchor="middle" font-size="11" fill="'+textColor+'">'+escHtml(e.label)+'</text>';
     }
-  };
-  document.head.appendChild(s);
+  });
+  nodeOrder.forEach(function(id){
+    var n=nodes[id],p=positions[id];
+    var cx=p.x,cy=p.y;
+    if(n.shape==='diamond'){
+      var dw=nodeW*0.7,dh=nodeH*0.9;
+      svg+='<polygon points="'+cx+','+(cy-dh)+' '+(cx+dw)+','+cy+' '+cx+','+(cy+dh)+' '+(cx-dw)+','+cy+'" fill="'+diamondBg+'" stroke="'+nodeBorder+'" stroke-width="1.5"/>';
+      svg+='<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="13" font-weight="600" fill="'+textColor+'">'+escHtml(n.label)+'</text>';
+    }else if(n.shape==='circle'){
+      var r=nodeH*0.45;
+      svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+nodeBg+'" stroke="'+nodeBorder+'" stroke-width="1.5"/>';
+      svg+='<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="12" fill="'+textColor+'">'+escHtml(n.label)+'</text>';
+    }else{
+      var rx=n.shape==='rounded'?10:4;
+      svg+='<rect x="'+(cx-nodeW/2)+'" y="'+(cy-nodeH/2)+'" width="'+nodeW+'" height="'+nodeH+'" rx="'+rx+'" fill="'+nodeBg+'" stroke="'+nodeBorder+'" stroke-width="1.5"/>';
+      svg+='<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="13" fill="'+textColor+'">'+escHtml(n.label)+'</text>';
+    }
+  });
+  svg+='</svg>';
+  return svg;
 }
 function processCodeBlocks(){if(codeProcessed)return;codeProcessed=true;var pres=articleBody.querySelectorAll('pre');if(!pres.length)return;if(!document.querySelector('link[href*="prism-tomorrow"]')){var cb=document.createElement('link');cb.rel='stylesheet';cb.href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';document.head.appendChild(cb)}function highlightAll(pres){for(var i=0;i<pres.length;i++){var pre=pres[i];if(pre.closest('.code-block'))continue;var code=pre.querySelector('code'),text=code?code.textContent:pre.textContent;text=text.replace(/^\n+/,'').replace(/\n+$/,'');var lines=text.split('\n');var lm=code?code.className.match(/language-(\w+)/):null,lang=lm?lm[1]:'code';var w=document.createElement('div');w.className='code-block';var bar=document.createElement('div');bar.className='cb-bar';var ft=code.getAttribute("file-title");bar.innerHTML='<span class="cb-lang">'+lang+'</span>'+(ft?'<span class="cb-file">'+escHtml(ft)+'</span>':'')+'<button class="cb-copy" type="button" aria-label="复制代码">'+icons.copy+'</button>';var body=document.createElement('div');body.className='cb-body';var lnDiv=document.createElement('div');lnDiv.className='cb-lines';var lh='';for(var j=0;j<lines.length;j++)lh+='<span>'+(j+1)+'</span>';lnDiv.innerHTML=lh;var sep=document.createElement('div');sep.className='cb-sep';var preW=document.createElement('div');preW.className='cb-pre-wrap';var np=document.createElement('pre');np.className='language-'+lang;var nc=document.createElement('code');nc.className='language-'+lang;nc.textContent=lines.join('\n');np.appendChild(nc);preW.appendChild(np);body.appendChild(lnDiv);body.appendChild(sep);body.appendChild(preW);w.appendChild(bar);w.appendChild(body);pre.parentNode.replaceChild(w,pre);if(typeof Prism!=='undefined'&&window.Prism)try{Prism.highlightElement(nc)}catch(e){}}}if(lang==="diff"){var dLines=nc.textContent.split("\n");var dlHtml="";for(var dl=0;dl<dLines.length;dl++){var dlt=escHtml(dLines[dl]);if(dlt.charAt(0)==="+")dlHtml+="<span class=\"diff-add\">"+dlt+"</span>\n";else if(dlt.charAt(0)==="-")dlHtml+="<span class=\"diff-del\">"+dlt+"</span>\n";else dlHtml+=dlt+"\n"}nc.innerHTML=dlHtml.trimEnd()}if(prismLoaded){highlightAll(pres);return}prismLoaded=true;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';s.setAttribute('data-manual','');s.onload=function(){if(typeof Prism!=='undefined')highlightAll(pres)};document.head.appendChild(s)}
 function setPageStagger(pid){}
@@ -154,23 +230,8 @@ function __initTwikoo(path){
     document.head.appendChild(s);
   }
 }
-function renderSeriesNav(id){
-  var art=articles[id];if(!art||!art.series){$('artNav').insertAdjacentHTML('beforebegin','');return}
-  var sa=seriesData[art.series];if(!sa||sa.length<2)return;
-  var html='<div class="series-nav"><div class="series-title">📚 '+escHtml(art.series)+'（'+sa.length+' 篇）</div><div class="series-list">';
-  for(var i=0;i<sa.length;i++){
-    var s=sa[i],isCur=s.id===id;
-    html+='<a class="series-item'+(isCur?' current':'')+'" data-series-id="'+s.id+'"><span class="series-num">'+(i+1)+'</span><span class="series-item-title">'+escHtml(s.title)+'</span></a>';
-  }
-  html+='</div></div>';
-  var existing=$('artNav').previousElementSibling;
-  if(existing&&existing.classList.contains('series-nav'))existing.remove();
-  $('artNav').insertAdjacentHTML('beforebegin',html);
-  document.querySelectorAll('.series-item[data-series-id]').forEach(function(el){
-    el.addEventListener('click',function(){var sid=this.dataset.seriesId;if(sid===currentArticleId)return;switchToArticleVisual(sid,articleOrder.indexOf(sid)>articleOrder.indexOf(currentArticleId)?'next':'prev');replaceRoute({type:'article',articleId:sid})});
-  });
-}
-function loadArticleMeta(id){var art=articles[id];if(!art)return;currentArticleId=id;_artScrollMax=articleView.scrollHeight-articleView.clientHeight;$('artMeta').innerHTML='<span>'+art.date+'</span><span style="color:var(--outline-variant)"> · </span><span>'+art.wc+' 字</span><span style="color:var(--outline-variant)"> · </span><span>'+art.rt+'</span>';$('artTitle').textContent=art.title;$('artTags').innerHTML=art.tags.map(function(t){return'<span class="tag" data-tagname="'+escHtml(t)+'">'+escHtml(t)+'</span>'}).join('');renderArticleNav(id);renderSeriesNav(id);}
+
+function loadArticleMeta(id){var art=articles[id];if(!art)return;currentArticleId=id;_artScrollMax=articleView.scrollHeight-articleView.clientHeight;$('artMeta').innerHTML='<span>'+art.date+'</span><span style="color:var(--outline-variant)"> · </span><span>'+art.wc+' 字</span><span style="color:var(--outline-variant)"> · </span><span>'+art.rt+'</span>';$('artTitle').textContent=art.title;$('artTags').innerHTML=art.tags.map(function(t){return'<span class="tag" data-tagname="'+escHtml(t)+'">'+escHtml(t)+'</span>'}).join('');renderArticleNav(id);}
 var _contentCache={};var _cacheOrder=[];var _cacheMax=10;
 var _prefetchInFlight={};
 function prefetchArticle(id){if(_contentCache[id]||_prefetchInFlight[id])return;_prefetchInFlight[id]=true;fetch('/posts/'+id+'/article.json').then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}).then(function(d){cachePut(id,d.content||'')}).catch(function(){}).finally(function(){delete _prefetchInFlight[id]})}
