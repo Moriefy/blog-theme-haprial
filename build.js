@@ -292,7 +292,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <style>${cssContent}${themeTransition}</style>
-<script>if(/^#\/posts\/\d{8}/.test(location.hash))document.write('<style id="anti-fouc">.page.active,.hero,.site-footer,.page-tabs{visibility:hidden!important}</style>')</script>
+<script>if(/^#\/posts\/\d{8}/.test(location.hash))document.write('<style id="anti-fouc">.page.active,.hero{visibility:hidden!important}</style>')</script>
 </head>
 <body>
 
