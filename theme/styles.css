@@ -325,9 +325,9 @@ a{color:var(--primary);text-decoration:none}
 .toc-drawer-item.active{color:var(--primary);font-weight:600}
 
 /* ── FAB ── */
-.fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:var(--shape-l);border:none;background:var(--surface-container-high);color:var(--on-surface);cursor:pointer;z-index:250;display:flex;align-items:center;justify-content:center;box-shadow:var(--e3);transform:scale(0);opacity:0;transition:opacity 200ms,background 200ms;will-change:transform,opacity}
-.fab.visible{transform:scale(1);opacity:1;transition:transform 300ms cubic-bezier(.4,0,.2,1),opacity 200ms,background 200ms}
-.fab-comment{bottom:24px;background:var(--surface-container-high);color:var(--on-surface);transition:opacity 200ms,background 150ms,color 200ms,bottom 300ms cubic-bezier(0,0,.2,1);will-change:transform,opacity}
+.fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:var(--shape-l);border:none;background:var(--surface-container-high);color:var(--on-surface);cursor:pointer;z-index:250;display:flex;align-items:center;justify-content:center;box-shadow:var(--e3);transform:scale(0);opacity:0;transition:transform 300ms cubic-bezier(.4,0,.2,1),opacity 200ms,background 200ms;will-change:transform,opacity}
+.fab.visible{transform:scale(1);opacity:1}
+.fab-comment{bottom:24px;background:var(--surface-container-high);color:var(--on-surface);transition:transform 300ms cubic-bezier(.4,0,.2,1),opacity 200ms,background 150ms,color 200ms,bottom 300ms cubic-bezier(0,0,.2,1);will-change:transform,opacity}
 .fab-comment:hover{background:var(--surface-container-highest)}
 .fab-comment.shifted{bottom:92px}
 .fab.idle{opacity:0;pointer-events:none;transition:opacity .3s ease}
