@@ -48,6 +48,14 @@ window.__initLightbox = function(articleBody) {
     if (spinner && spinner.parentNode) spinner.parentNode.removeChild(spinner);
     lbImg.classList.remove('loading');
   }
+  var zoomIndicator = null;
+  function showZoomLevel(z) {
+    if (!zoomIndicator) { zoomIndicator = document.createElement('div'); zoomIndicator.className = 'zoom-indicator'; lb.appendChild(zoomIndicator); }
+    zoomIndicator.textContent = Math.round(z * 100) + '%';
+    zoomIndicator.classList.add('show');
+    clearTimeout(zoomIndicator._t);
+    zoomIndicator._t = setTimeout(function() { zoomIndicator.classList.remove('show'); }, 800);
+  }
 
   // Wait for image load with timeout fallback
   function waitLoad(cb, ms) {
@@ -87,6 +95,7 @@ window.__initLightbox = function(articleBody) {
     if (instant) { void lbImg.offsetWidth; lbImg.style.transition = ''; }
     scale = 1; panX = 50; panY = 50;
     if (lbWrap) lbWrap.classList.remove('zoomed', 'panning');
+    if (zoomIndicator) showZoomLevel(1);
     setTimeout(function() { lbImg.style.transformOrigin = '50% 50%'; }, instant ? 10 : 360);
   }
 
@@ -262,6 +271,7 @@ window.__initLightbox = function(articleBody) {
     lbImg.style.transform = 'scale(2.5)';
     scale = 2.5; panX = px; panY = py;
     lbWrap.classList.add('zoomed');
+    showZoomLevel(2.5);
   });
 
   // ── Mouse drag (when zoomed) ──────────────────────────────────────────────

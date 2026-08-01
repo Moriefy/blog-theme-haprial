@@ -114,6 +114,9 @@ function loadArticles(prevCache, globalFp) {
       wc: wordCount,
       title: meta.title || '',
       excerpt: meta.excerpt || '',
+      pinned: meta.pinned === 'true' || meta.pinned === true,
+      series: meta.series || '',
+      seriesOrder: parseInt(meta.seriesOrder) || 0,
       tags: Array.isArray(meta.tags) ? meta.tags : (typeof meta.tags === 'string' ? JSON.parse(meta.tags) : []),
       category: meta.category || '',
       content: content
@@ -148,7 +151,7 @@ function loadArticles(prevCache, globalFp) {
   });
 
   // Sort by date descending
-  articleOrder.sort((a, b) => b.localeCompare(a));
+  articleOrder.sort((a, b) => { const pa = articles[a].pinned ? 1 : 0; const pb = articles[b].pinned ? 1 : 0; if (pa !== pb) return pb - pa; return b.localeCompare(a); });
 
   return { articles, articleOrder };
 }
@@ -186,10 +189,11 @@ function computeCatMap(articles) {
 
 // ── Generate article card HTML ──────────────────────────────────────────────
 function articleCardHtml(id, art) {
+  const pinHtml = art.pinned ? '<span class="pin-badge">📌 置顶</span>' : '';
   const tagHtml = art.tags.length
     ? '<span class="tag">' + escHtml(art.tags[0]) + '</span>'
     : '';
-  return `<article class="card" data-id="${id}" data-title="${escHtml(art.title)}" data-excerpt="${escHtml(art.excerpt)}" data-tags="${escHtml(art.tags.join('\u001f'))}"><div class="card-date">${escHtml(art.date)}</div><h2 class="card-title">${escHtml(art.title)}</h2><p class="card-excerpt">${escHtml(art.excerpt)}</p><div class="card-meta">${tagHtml}<span class="reading-time">${escHtml(art.rt)}</span></div></article>`;
+  return `<article class="card" data-id="${id}" data-title="${escHtml(art.title)}" data-excerpt="${escHtml(art.excerpt)}" data-tags="${escHtml(art.tags.join('\u001f'))}"><div class="card-date">${escHtml(art.date)}</div><h2 class="card-title">${escHtml(art.title)}</h2><p class="card-excerpt">${escHtml(art.excerpt)}</p><div class="card-meta">${pinHtml}${tagHtml}<span class="reading-time">${escHtml(art.rt)}</span></div></article>`;
 }
 
 // ── Shared JS Helpers ───────────────────────────────────────────────────────
@@ -400,6 +404,25 @@ function buildPostHtml(id, art, config, opts) {
     tocHtml += `<li class="toc-item" data-target="${hid}"><a class="toc-link${subClass}">${escHtml(text)}</a></li>`;
   }
 
+  // Build series nav for this article
+  var seriesHtml = '';
+  if (art.series) {
+    var seriesArticles = [];
+    Object.entries(articles).forEach(([sid, sa]) => {
+      if (sa.series === art.series) seriesArticles.push({ id: sid, title: sa.title, order: sa.seriesOrder });
+    });
+    seriesArticles.sort((a, b) => a.order - b.order);
+    if (seriesArticles.length > 1) {
+      seriesHtml = '<div class="series-nav"><div class="series-title">📚 ' + escHtml(art.series) + '（' + seriesArticles.length + ' 篇）</div><div class="series-list">';
+      seriesArticles.forEach((sa, si) => {
+        var isCurrent = sa.id === id;
+        var cls = isCurrent ? 'series-item current' : 'series-item';
+        seriesHtml += '<a class="' + cls + '" href="/posts/' + sa.id + '/"><span class="series-num">' + (si + 1) + '</span><span class="series-item-title">' + escHtml(sa.title) + '</span></a>';
+      });
+      seriesHtml += '</div></div>';
+    }
+  }
+
   const jsonLd = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -481,7 +504,8 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
     <div class="art-tags">${tagsHtml}</div>
     <div class="art-div"></div>
   </header>
-  <div class="article-body revealed">${art.content}</div>
+    <div class="article-body revealed">${art.content}</div>
+  ${seriesHtml}
   <div class="art-nav revealed">${navHtml}</div>
   <section class="comment-section" id="commentSection"><div id="tcomment"></div></section>
 </main>
@@ -541,7 +565,7 @@ const articleCardsHtml = articleOrder.map(id => articleCardHtml(id, articles[id]
 // Create lightweight articles (without content) for embedded data
 const articlesMeta = {};
 Object.entries(articles).forEach(([id, a]) => {
-  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category };
+  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category, pinned: a.pinned, series: a.series, seriesOrder: a.seriesOrder };
 });
 
 const dataObj = {
@@ -553,8 +577,16 @@ const dataObj = {
   allTags,
   cats,
   catMap,
-  friends: SITE_CONFIG.friends.map(f => ({n: f.name, u: f.url, a: f.avatar, d: f.desc}))
+  friends: SITE_CONFIG.friends.map(f => ({n: f.name, u: f.url, a: f.avatar, d: f.desc})),
+  series: {}
 };
+// Build series index
+Object.entries(articles).forEach(([id, a]) => {
+  if (!a.series) return;
+  if (!dataObj.series[a.series]) dataObj.series[a.series] = [];
+  dataObj.series[a.series].push({ id, title: a.title, order: a.seriesOrder, date: a.date });
+});
+Object.values(dataObj.series).forEach(s => s.sort((a, b) => a.order - b.order));
 
 // Clean output
 if (fs.existsSync(OUT_DIR)) {
