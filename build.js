@@ -292,7 +292,8 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <style>${cssContent}${themeTransition}</style>
-<script>if(/^#\/posts\/\d{8}/.test(location.hash))document.write('<style id="anti-fouc">.page.active,.hero{visibility:hidden!important}</style>')</script>
+<style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
+<script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
 </head>
 <body>
 
