@@ -81,8 +81,9 @@ a{color:var(--primary);text-decoration:none}
 /* ── Article Cards ── */
 #articleList{scroll-margin-top:104px}
 .article-list{padding-bottom:8px}
-.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(6px);contain:content}
-.card.show{opacity:1;transform:translateY(0);transition:opacity .2s,transform .2s}
+.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:content}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card.show{opacity:1;transform:translateY(0);animation:cardIn .25s cubic-bezier(.4,0,.2,1) both}
 .card+.card{border-top:1px solid var(--outline-variant)}
 .card:hover{background:var(--surface-container-low)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
@@ -350,7 +351,7 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Reduced Motion ── */
 @media(prefers-reduced-motion:reduce){
-  .ripple,.tag-card,.cat-card,.fl-card,.archive-card,.sv-item,.page.slide-in-right,.page.slide-in-left,.hero h1,.hero p,.filter-bar.on,.no-results.show{animation:none!important}
+  .ripple,.card,.tag-card,.cat-card,.fl-card,.archive-card,.sv-item,.page.slide-in-right,.page.slide-in-left,.hero h1,.hero p,.filter-bar.on,.no-results.show{animation:none!important}
   .si,.article-body>*,.toc,.toc-drawer,.toc-scrim,.search-view,.article-view,.fab,.fab-comment,.tab-bar,.rprog,.card,.tag-card,.cat-card,.fl-card,.archive-card,.icon-btn,.art-nav-btn,.pg-btn,.sv-item,.footer-link,.about-link{transition:none!important}
   .lightbox-img,.lightbox{transition:none!important}
 }
