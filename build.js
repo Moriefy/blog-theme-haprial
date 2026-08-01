@@ -297,6 +297,7 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 <style>${cssContent}${themeTransition}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
+<link rel="stylesheet" href="/theme/twikoo-custom.css" media="print" onload="this.media='all'">
 </head>
 <body>
 
@@ -362,11 +363,10 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 </footer>
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
-<script src="/theme/lightbox.js"></script>
+<script defer src="/theme/app.js"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
 </script>
-<script>${jsContent}</script>
 </body>
 </html>`;
 }
@@ -526,7 +526,7 @@ const cachedOutput = prevCache.outputHashes || {};
 const newOutputHashes = {};
 
 // Read CSS for inlining (full CSS inline eliminates async flicker)
-const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8') + '\n' + fs.readFileSync(path.join(THEME_DIR, 'twikoo-custom.css'), 'utf8');
+const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8');
 
 // Add theme transition CSS — target only key elements (not *) to avoid mobile jank
 const themeTransition = ''; // theme snap — no transition to avoid jank
