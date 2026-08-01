@@ -544,26 +544,7 @@ html.theme-transitioning .filter-bar {
   transition: color 200ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  html.theme-transitioning body,
-  html.theme-transitioning .top-app-bar,
-  html.theme-transitioning .page-tabs,
-  html.theme-transitioning .av-bar,
-  html.theme-transitioning .sv-bar,
-  html.theme-transitioning .toc,
-  html.theme-transitioning .toc-drawer,
-  html.theme-transitioning .card,
-  html.theme-transitioning .tag-card,
-  html.theme-transitioning .cat-card,
-  html.theme-transitioning .fl-card,
-  html.theme-transitioning .art-nav-btn,
-  html.theme-transitioning .site-footer,
-  html.theme-transitioning .hero,
-  html.theme-transitioning .search-view,
-  html.theme-transitioning .article-view,
-  html.theme-transitioning .fab,
-  html.theme-transitioning .filter-bar {
-    transition: none !important;
-  }
+  html.theme-transitioning * { transition: none !important; }
 }`;
 
 const jsContent = fs.readFileSync(path.join(THEME_DIR, 'app.js'), 'utf8');
