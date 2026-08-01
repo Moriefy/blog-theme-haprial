@@ -42,8 +42,8 @@ a{color:var(--primary);text-decoration:none}
 .top-app-bar.elevated::after{opacity:1}
 .logo{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:300;letter-spacing:.12em;color:var(--on-surface);cursor:pointer;user-select:none;padding:4px 8px;border-radius:8px;flex-shrink:0}
 .icon-btn{width:40px;height:40px;border-radius:var(--shape-full);border:none;background:none;color:var(--on-surface-variant);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:background 200ms cubic-bezier(.4,0,.2,1),transform 200ms cubic-bezier(.4,0,.2,1);flex-shrink:0}
-.icon-btn:hover{background:var(--surface-container-high);transform:scale(1.04)}
-.icon-btn:active{background:var(--surface-container-highest);transform:scale(.9);transition-duration:60ms}
+.icon-btn:hover{background:var(--surface-container-high)}
+.icon-btn:active{background:var(--surface-container-highest);transform:scale(.92)}
 .icon-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .theme-wrap{position:relative;width:22px;height:22px}
 .theme-ico{position:absolute;inset:0;transition:transform 350ms cubic-bezier(.2,0,0,1),opacity 250ms}
@@ -55,7 +55,7 @@ a{color:var(--primary);text-decoration:none}
 .tab{flex:1;min-width:0;padding:8px 12px;border:none;background:none;font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--on-surface-variant);cursor:pointer;text-align:center;white-space:nowrap;transition:color 250ms cubic-bezier(.4,0,.2,1),background 200ms;position:relative;overflow:hidden}
 .tab:hover{color:var(--on-surface);background:var(--surface-container-low)}
 .tab.active{color:var(--primary)}
-.tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;will-change:transform;transition:transform 350ms var(--motion-spring),width 350ms var(--motion-spring)}
+.tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;will-change:transform;transition:transform 300ms cubic-bezier(.4,0,.2,1),width 300ms cubic-bezier(.4,0,.2,1)}
 
 /* ── Page Transitions ── */
 .page{display:none;padding-bottom:40px;contain:content}.page.active{display:block}
@@ -311,8 +311,6 @@ a{color:var(--primary);text-decoration:none}
 .toc{position:fixed;top:88px;right:max(calc((100vw - 720px)/2 - 230px),24px);width:190px;max-height:calc(100vh - 140px);overflow-y:auto;z-index:210;opacity:0;transform:translateX(12px);pointer-events:none;scrollbar-width:none;transition:opacity .35s ease,transform .35s ease}
 .toc::-webkit-scrollbar{display:none}
 .toc.visible{opacity:1;transform:none;pointer-events:auto}
-/* Hover zone — right side of article */
-.toc-hover-zone{position:fixed;top:0;right:0;z-index:205;height:100vh}
 .toc-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--outline);margin-bottom:16px}
 .toc-list{list-style:none;padding:0}
 .toc-item{padding:4px 0;cursor:pointer;font-weight:400;transform-origin:left center}
@@ -369,7 +367,7 @@ a{color:var(--primary);text-decoration:none}
 }
 
 /* ── Responsive ── */
-@media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}.toc-hover-zone{display:none}}
+@media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
   .top-app-bar{padding:0 4px 0 16px}.page-tabs .tab{padding:14px 10px;font-size:12px}
   .container{padding:0 16px}
