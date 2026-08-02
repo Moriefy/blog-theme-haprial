@@ -330,7 +330,6 @@ function processCodeBlocks(){
   if(codeProcessed)return;codeProcessed=true;
   var pres=articleBody.querySelectorAll('pre');
   if(!pres.length)return;
-  // Load Prism CSS once
   if(!document.querySelector('link[href*="prism-tomorrow"]')){
     var cb=document.createElement('link');cb.rel='stylesheet';
     cb.href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';
@@ -339,48 +338,35 @@ function processCodeBlocks(){
   function processOne(pre){
     if(pre.closest('.code-block'))return;
     var code=pre.querySelector('code');
-    // Get raw text — textContent returns plain text with real < > characters
-    var rawText=code?code.textContent:pre.textContent;
-    // Trim leading/trailing newlines only
-    rawText=rawText.replace(/^\n+/,'').replace(/\n+$/,'');
-    // Split into lines for line numbering
-    var lines=rawText.split('\n');
-    var lineCount=lines.length;
-    // Detect language from class
+    // textContent: browser decodes &lt; → <, then auto-escapes on assignment
+    var text=code?code.textContent:pre.textContent;
+    text=text.replace(/^\n+/,'').replace(/\n+$/,'');
+    var lines=text.split('\n');
     var lm=code?code.className.match(/language-(\w+)/):null;
     var lang=lm?lm[1]:'code';
     var ft=code?code.getAttribute('file-title'):null;
-    // Build the wrapper element
     var w=document.createElement('div');w.className='code-block';
-    // Bar: language label + optional file name + copy button
     var bar=document.createElement('div');bar.className='cb-bar';
     bar.innerHTML='<span class="cb-lang">'+lang+'</span>'
       +(ft?'<span class="cb-file">'+escHtml(ft)+'</span>':'')
       +'<button class="cb-copy" type="button" aria-label="复制代码">'+icons.copy+'</button>';
-    // Body: line numbers | separator | code
     var body=document.createElement('div');body.className='cb-body';
-    // Line numbers — one span per line, same count as code lines
     var lnDiv=document.createElement('div');lnDiv.className='cb-lines';
     var lnHtml='';
-    for(var j=0;j<lineCount;j++) lnHtml+='<span>'+(j+1)+'</span>';
+    for(var j=0;j<lines.length;j++) lnHtml+='<span>'+(j+1)+'</span>';
     lnDiv.innerHTML=lnHtml;
-    // Separator line
     var sep=document.createElement('div');sep.className='cb-sep';
-    // Code area
     var preW=document.createElement('div');preW.className='cb-pre-wrap';
     var np=document.createElement('pre');np.className='language-'+lang;
     var nc=document.createElement('code');nc.className='language-'+lang;
-    // Use innerHTML with escaped text — NOT textContent
-    // This ensures <p> etc. are displayed as literal characters, not rendered as HTML
-    nc.innerHTML=escHtml(rawText);
+    // textContent auto-escapes: < → &lt; in DOM, displayed as literal <
+    nc.textContent=text;
     np.appendChild(nc);preW.appendChild(np);
-    // Assemble
     body.appendChild(lnDiv);body.appendChild(sep);body.appendChild(preW);
     w.appendChild(bar);w.appendChild(body);
     pre.parentNode.replaceChild(w,pre);
-    // Diff highlighting
     if(lang==='diff'){
-      var dLines=rawText.split('\n');var dlHtml='';
+      var dLines=text.split('\n');var dlHtml='';
       for(var dl=0;dl<dLines.length;dl++){
         var dlt=escHtml(dLines[dl]);
         if(dlt.charAt(0)==='+')dlHtml+='<span class="diff-add">'+dlt+'</span>\n';
@@ -389,7 +375,6 @@ function processCodeBlocks(){
       }
       nc.innerHTML=dlHtml.trimEnd();
     }
-    // Prism syntax highlighting
     if(typeof Prism!=='undefined'&&window.Prism){
       try{Prism.highlightElement(nc)}catch(e){}
     }
