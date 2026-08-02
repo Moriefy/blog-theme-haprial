@@ -258,6 +258,9 @@ a{color:var(--primary);text-decoration:none}
 .mermaid-block.zoomed .mermaid-zoom-btn{opacity:1}
 .mermaid-block.zoomed svg{cursor:grab}
 .mermaid-block.zoomed svg.panning{cursor:grabbing}
+.mermaid-block.mod-ctrl svg{cursor:zoom-in}
+.mermaid-block.mod-shift svg{cursor:zoom-out}
+.mermaid-block.mod-alt svg,.mermaid-block.mod-alt svg text{cursor:text;-webkit-user-select:text;user-select:text}
 [data-theme="dark"] .mermaid-block::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.18);border-radius:var(--shape-m);pointer-events:none}
 .mermaid-loading{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:#8E9196;padding:20px 0}
 
@@ -399,6 +402,7 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
   .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
+  .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text}
   .top-app-bar{padding:0 4px 0 16px}.page-tabs .tab{padding:14px 10px;font-size:12px}
   .container{padding:0 16px}
   .av-content{padding:0 16px 120px}

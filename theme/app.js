@@ -514,6 +514,30 @@ var _moveBound=false;
   openArticleVisualImmediate=function(id){artOpen=true;thresholdDirty=true;bindMove();_origImm(id)};
   window.addEventListener('resize',function(){thresholdDirty=true});
 })();
+// Mermaid modifier keys
+(function(){
+  var blocks=function(){return articleBody.querySelectorAll('.mermaid-block')};
+  function setMod(cls,on){blocks().forEach(function(b){b.classList.toggle(cls,on)})}
+  document.addEventListener('keydown',function(e){
+    if(e.ctrlKey)setMod('mod-ctrl',true);
+    if(e.shiftKey)setMod('mod-shift',true);
+    if(e.altKey)setMod('mod-alt',true);
+  });
+  document.addEventListener('keyup',function(e){
+    if(!e.ctrlKey)setMod('mod-ctrl',false);
+    if(!e.shiftKey)setMod('mod-shift',false);
+    if(!e.altKey)setMod('mod-alt',false);
+  });
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.mermaid-block');
+    if(!b||e.target.closest('.mermaid-zoom-btn')||e.target.closest('.pie-chart'))return;
+    var svg=b.querySelector('svg');
+    if(!svg)return;
+    if(e.altKey)return;
+    if(e.ctrlKey){e.preventDefault();var btn=b.querySelector('.mermaid-zoom-btn');if(btn)btn.click();return}
+    if(e.shiftKey){e.preventDefault();var btns=b.querySelectorAll('.mermaid-zoom-btn');if(btns.length>1)btns[1].click();return}
+  });
+})();
 // Initialize lightbox (shared module)
 window.__initLightbox(articleBody);
 
