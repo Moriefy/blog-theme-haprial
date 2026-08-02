@@ -506,7 +506,7 @@ a{color:var(--primary);text-decoration:none}
 [data-theme="dark"] .lightbox-nav:hover{background:rgba(255,255,255,.15);color:rgba(255,255,255,.95)}
 [data-theme="dark"] .lightbox-nav:active{background:rgba(255,255,255,.2)}
 @media(max-width:768px){
-.lightbox-img{max-width:calc(100vw - 16px);max-height:calc(100vh - 56px)}
+.lightbox-img{max-width:calc(100vw - 80px);max-height:calc(100vh - 56px);width:auto;height:auto;object-fit:contain}
 .lightbox-nav{width:40px;height:40px}.lightbox-nav svg{width:20px;height:20px}
 .lightbox-prev{left:4px}.lightbox-next{right:4px}
 .lightbox-close{width:44px;height:44px}
