@@ -110,7 +110,7 @@ function renderFlowGraph(lines){
   var maxLW=0;layers.forEach(function(l){var w=l.length*nW+(l.length-1)*gX;if(w>maxLW)maxLW=w});
   var sW=maxLW+pX*2,sH=(maxD+1)*(nH+gY)-gY+pY*2;
   var dk=document.documentElement.getAttribute('data-theme')==='dark';
-  var bg=dk?'#191B1D':'#FFF',nBg=dk?'#354A54':'#D4DDE3',nBd=dk?'#9AB0BF':'#3D5A6E',tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#9AB0BF':'#75787C',dBg=dk?'#4A7B6A':'#D4E8DF';
+  var bg=dk?'#191B1D':'#FFF',nBg=dk?'#354A54':'#D4DDE3',nBd=dk?'#B0BEC5':'#3D5A6E',tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#B0BEC5':'#75787C',dBg=dk?'#4A7B6A':'#D4E8DF';
   var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
   s+='<defs><marker id="ah" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto"><path d="M0,0L10,3L0,6" fill="'+ac+'"/></marker></defs>';
   edges.forEach(function(e){var sx=positions[e.src].x,sy=positions[e.src].y+nH/2,dx=positions[e.dst].x,dy=positions[e.dst].y-nH/2;var dash=e.style==='dotted'?' stroke-dasharray="6 4"':'';s+='<line x1="'+sx+'" y1="'+sy+'" x2="'+dx+'" y2="'+dy+'" stroke="'+ac+'" stroke-width="1.5"'+dash+' marker-end="url(#ah)"/>';if(e.label){var lx=(sx+dx)/2,ly=(sy+dy)/2-6;s+='<rect x="'+(lx-e.label.length*5-4)+'" y="'+(ly-10)+'" width="'+(e.label.length*10+8)+'" height="16" rx="3" fill="'+bg+'"/><text x="'+lx+'" y="'+ly+'" text-anchor="middle" font-size="11" fill="'+tc+'">'+escHtml(e.label)+'</text>'}});
@@ -134,7 +134,7 @@ function renderSequenceDiagram(lines){
   var sW=pList.length*colW+(pList.length-1)*colGap+padX*2;
   var sH=padY*2+60+messages.length*rowH;
   var dk=document.documentElement.getAttribute('data-theme')==='dark';
-  var tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#9AB0BF':'#75787C',lc=dk?'#9AB0BF':'#3D5A6E';
+  var tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#B0BEC5':'#75787C',lc=dk?'#B0BEC5':'#3D5A6E';
   var bg=dk?'#354A54':'#D4DDE3';
   var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
   s+='<defs><marker id="sa" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0L10,3L0,6" fill="'+ac+'"/></marker></defs>';
@@ -165,7 +165,7 @@ function renderPieChart(lines){
   var titleH=title?40:0;
   var sH=titleH+cy+r+legendGap+legendH+20;
   var dk=document.documentElement.getAttribute('data-theme')==='dark';
-  var tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#9AB0BF':'#8E9196',lb=dk?'#E3E3E6':'#1C1C1E';
+  var tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#B0BEC5':'#8E9196',lb=dk?'#E3E3E6':'#1C1C1E';
   var bg=dk?'#191B1D':'#FFFFFF';
   var s='<svg class="pie-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
   s+='<rect width="'+sW+'" height="'+sH+'" fill="transparent"/>';
