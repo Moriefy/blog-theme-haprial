@@ -62,9 +62,30 @@ function processMermaid(){
     if(!code)return;
     try{
       var svg=renderMermaidFlowchart(code.trim());
-      if(svg)b.innerHTML=svg
+      if(svg){b.innerHTML=svg;bindPieEvents(b)}
       else{b.innerHTML='<p style="color:var(--outline)">不支持的图表类型</p>'}
     }catch(e){b.innerHTML='<p style="color:var(--outline)">图表渲染失败</p>'}
+  });
+}
+function bindPieEvents(block){
+  var hits=block.querySelectorAll('.pie-hit');
+  if(!hits.length)return;
+  var labels=block.querySelectorAll('.pie-label');
+  var slices=block.querySelectorAll('[class^="ps"]');
+  hits.forEach(function(hit){
+    hit.addEventListener('click',function(){
+      var idx=parseInt(hit.getAttribute('data-idx'));
+      var cur=labels[idx];if(!cur)return;
+      var shown=cur.style.display!=='none';
+      for(var j=0;j<labels.length;j++){
+        labels[j].style.display='none';
+        if(slices[j])slices[j].style.transform='';
+      }
+      if(!shown){
+        cur.style.display='block';
+        if(slices[idx])slices[idx].style.transform='scale(1.06)';
+      }
+    });
   });
 }
 function renderMermaidFlowchart(code){
@@ -160,12 +181,14 @@ function renderPieChart(lines){
   if(!slices.length)return null;
   var total=0;slices.forEach(function(s){total+=s.value});if(!total)return null;
   var colors=['#3D5A6E','#4A7B6A','#8E6B9E','#B07D56','#5C7A3D','#6B5B8A','#8B6B4A','#4A6B8A','#7A5B6B','#5B7A6A'];
-  var cx=200,cy=170,r=120,padX=20,padY=20;
-  var sW=440+padX*2;var legendH=slices.length*24;var sH=Math.max(400,padY*2+340+legendH);
+  var cx=200,cy=190,r=120,padX=20,padTop=40,padBot=20;
+  var sW=440+padX*2;
+  var legendTop=cy+r+40;
+  var sH=legendTop+slices.length*24+padBot;
   var dk=document.documentElement.getAttribute('data-theme')==='dark';
   var tc=dk?'#E3E3E6':'#1C1C1E',ac=dk?'#9AB0BF':'#3D5A6E',lb=dk?'rgba(25,27,29,0.92)':'rgba(255,255,255,0.95)';
-  var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto;cursor:default">';
-  if(title)s+='<text x="'+(sW/2)+'" y="'+(padY+16)+'" text-anchor="middle" font-size="16" font-weight="600" fill="'+tc+'">'+escHtml(title)+'</text>';
+  var s='<svg class="pie-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
+  if(title)s+='<text x="'+(sW/2)+'" y="'+(padTop)+'" text-anchor="middle" font-size="16" font-weight="600" fill="'+tc+'">'+escHtml(title)+'</text>';
   var startAngle=-Math.PI/2;
   var sliceData=[];
   slices.forEach(function(sl,i){
@@ -191,7 +214,7 @@ function renderPieChart(lines){
     var anchor=Math.cos(sd.midAngle)>0?'start':'end';
     var tw=sd.label.length*13+30;
     var rx=Math.cos(sd.midAngle)>0?tx-4:tx-tw+4;
-    s+='<g class="pie-label" data-i="'+sd.i+'" style="display:none;pointer-events:none">';
+    s+='<g class="pie-label" style="display:none;pointer-events:none">';
     s+='<line x1="'+lx1+'" y1="'+ly1+'" x2="'+lx2+'" y2="'+ly2+'" stroke="'+ac+'" stroke-width="1.5"/>';
     s+='<circle cx="'+lx1+'" cy="'+ly1+'" r="3" fill="'+ac+'"/>';
     s+='<rect x="'+rx+'" y="'+(ly2-12)+'" width="'+tw+'" height="22" rx="6" fill="'+lb+'" stroke="'+ac+'" stroke-width="1"/>';
@@ -200,9 +223,9 @@ function renderPieChart(lines){
     var hitR=r+20;
     var hx1=cx+hitR*Math.cos(sd.midAngle-Math.PI/slices.length*0.8);
     var hy1=cy+hitR*Math.sin(sd.midAngle-Math.PI/slices.length*0.8);
-    s+='<path d="M'+cx+','+cy+' L'+lx1+','+ly1+' A'+hitR+','+hitR+' 0 0,1 '+hx1+','+hy1+' Z" fill="transparent" style="cursor:pointer" onclick="var svg=this.parentNode;var labels=svg.querySelectorAll(\".pie-label\");var slices=svg.querySelectorAll(\"[class^=ps]\");var cur=labels['+sd.i+'];if(!cur)return;var shown=cur.style.display!==\"none\";for(var j=0;j<labels.length;j++){labels[j].style.display=\"none\";if(slices[j])slices[j].style.transform=\"\"}if(!shown){cur.style.display=\"block\";var sl=svg.querySelector(\".ps'+sd.i+'\");if(sl)sl.style.transform=\"scale(1.06)\"}"/>';
+    s+='<path class="pie-hit" data-idx="'+sd.i+'" d="M'+cx+','+cy+' L'+lx1+','+ly1+' A'+hitR+','+hitR+' 0 0,1 '+hx1+','+hy1+' Z" fill="transparent" style="cursor:pointer"/>';
   });
-  var ly=cy+r+30;
+  var ly=legendTop;
   slices.forEach(function(sl,i){
     var col=colors[i%colors.length];
     s+='<rect x="'+(cx-80)+'" y="'+ly+'" width="12" height="12" rx="2" fill="'+col+'"/>';
