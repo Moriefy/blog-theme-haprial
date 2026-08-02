@@ -21,6 +21,14 @@ function fileHash(filePath) {
   return crypto.createHash('md5').update(buf).digest('hex');
 }
 
+// Theme file version hashes (for cache busting)
+const THEME_V = {
+  css: fileHash(path.join(THEME_DIR, 'styles.css')).slice(0, 8),
+  app: fileHash(path.join(THEME_DIR, 'app.js')).slice(0, 8),
+  lightbox: fileHash(path.join(THEME_DIR, 'lightbox.js')).slice(0, 8),
+  twikoo: fileHash(path.join(THEME_DIR, 'twikoo-custom.css')).slice(0, 8)
+};
+
 function loadCache() {
   try { return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); } catch (e) { return {}; }
 }
@@ -299,7 +307,7 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 <style>${cssContent}${themeTransition}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
-<link rel="stylesheet" href="/theme/twikoo-custom.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="/theme/twikoo-custom.css?v=${THEME_V.twikoo}" media="print" onload="this.media='all'">
 </head>
 <body>
 
@@ -365,8 +373,8 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 </footer>
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
-<script src="/theme/lightbox.js"></script>
-<script defer src="/theme/app.js"></script>
+<script src="/theme/lightbox.js?v=${THEME_V.lightbox}"></script>
+<script defer src="/theme/app.js?v=${THEME_V.app}"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
 </script>
@@ -463,8 +471,8 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-<link rel="stylesheet" href="/theme/styles.css">
-<link rel="stylesheet" href="/theme/twikoo-custom.css">
+<link rel="stylesheet" href="/theme/styles.css?v=${THEME_V.css}">
+<link rel="stylesheet" href="/theme/twikoo-custom.css?v=${THEME_V.twikoo}">
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
 
@@ -500,7 +508,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
   <p class="footer-copy">&copy; ${new Date().getFullYear()} ${escHtml(config.title)}</p>
 </footer>
 
-<script src="/theme/lightbox.js"></script>
+<script src="/theme/lightbox.js?v=${THEME_V.lightbox}"></script>
 <script>
 ${themeInitScript()}
 ${postPageScript()}
@@ -598,7 +606,7 @@ function seoPageHead(title, description) {
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/theme/styles.css">
+<link rel="stylesheet" href="/theme/styles.css?v=${THEME_V.css}">
 </head>
 <body>
 <header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
