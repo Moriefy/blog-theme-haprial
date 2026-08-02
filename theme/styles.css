@@ -81,7 +81,7 @@ a{color:var(--primary);text-decoration:none}
 @keyframes filterBarIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes filterBarOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
 .filter-bar{display:none;align-items:center;gap:8px;padding:10px 16px;background:var(--primary-container);color:var(--on-primary-container);border-radius:10px;font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;margin-bottom:14px;box-shadow:var(--e1);opacity:0;transform:translateY(-8px)}
-.filter-bar.on{display:flex;animation:filterBarIn .3s cubic-bezier(0,0,.2,1) forwards}
+.filter-bar.on{display:flex;opacity:1;transform:translateY(0)}
 .filter-bar.out{animation:filterBarOut .2s cubic-bezier(.4,0,1,1) forwards}
 .filter-clear{margin-left:auto;padding:4px 12px;border-radius:var(--shape-full);border:none;background:rgba(0,0,0,.08);color:inherit;font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;font-weight:400;cursor:pointer;position:relative;overflow:hidden}
 [data-theme="dark"] .filter-clear{background:rgba(255,255,255,.08)}
@@ -249,9 +249,10 @@ a{color:var(--primary);text-decoration:none}
 .mermaid-block svg{max-width:100%;height:auto;display:inline-block}
 .mermaid-block svg text{-webkit-user-select:text;user-select:text;cursor:text}
 .mermaid-block{position:relative;overflow:hidden}
-.mermaid-zoom-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--outline-variant);background:var(--surface);color:var(--on-surface-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;opacity:0.7;transition:opacity 200ms;font-size:0}
+.mermaid-zoom-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--outline-variant);background:var(--surface);color:var(--on-surface-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;opacity:0.7;transition:opacity 200ms;font-size:0;flex-direction:column;gap:0}
 .mermaid-zoom-btn:hover{opacity:1}
-.mermaid-zoom-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mermaid-zoom-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.zoom-level{font-family:'JetBrains Mono',monospace;font-size:9px;line-height:1;color:var(--on-surface-variant);opacity:0;transition:opacity 200ms}
 .mermaid-block.zoomed{overflow:visible;z-index:10}
 .mermaid-block.zoomed .mermaid-zoom-btn{opacity:1}
 .mermaid-block.zoomed svg{cursor:grab}
