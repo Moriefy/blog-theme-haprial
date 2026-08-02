@@ -20,9 +20,7 @@
 }
 :root{
   --shape-xs:4px;--shape-s:8px;--shape-m:12px;--shape-l:16px;--shape-xl:28px;--shape-full:9999px;
-  --motion-emphasized:cubic-bezier(.175,.885,.32,1.275);--motion-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);
   --motion-standard:cubic-bezier(.4,0,.2,1);--motion-standard-decelerate:cubic-bezier(0,0,.2,1);
-  --motion-duration-micro:120ms;--motion-duration-short:180ms;--motion-duration-medium:280ms;--motion-duration-long:380ms;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
