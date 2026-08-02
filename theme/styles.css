@@ -248,8 +248,14 @@ a{color:var(--primary);text-decoration:none}
 .mermaid-block{margin:18px 0;padding:16px;background:#fff;border:1px solid #E0E1E3;border-radius:var(--shape-m);overflow-x:auto;text-align:center;-webkit-overflow-scrolling:touch;position:relative}
 .mermaid-block svg{max-width:100%;height:auto;display:inline-block}
 .mermaid-block svg text{-webkit-user-select:text;user-select:text;cursor:text}
-.mermaid-block .mermaid-zoom{cursor:zoom-in;transition:transform .3s ease}
-.mermaid-block .mermaid-zoom.zoomed{cursor:zoom-out;transform:scale(1.8);position:relative;z-index:10}
+.mermaid-block{position:relative;overflow:hidden}
+.mermaid-zoom-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--outline-variant);background:var(--surface);color:var(--on-surface-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;opacity:0.7;transition:opacity 200ms;font-size:0}
+.mermaid-zoom-btn:hover{opacity:1}
+.mermaid-zoom-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mermaid-block.zoomed{overflow:visible;z-index:10}
+.mermaid-block.zoomed .mermaid-zoom-btn{opacity:1}
+.mermaid-block.zoomed svg{cursor:grab}
+.mermaid-block.zoomed svg.panning{cursor:grabbing}
 [data-theme="dark"] .mermaid-block::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.18);border-radius:var(--shape-m);pointer-events:none}
 .mermaid-loading{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:#8E9196;padding:20px 0}
 
