@@ -243,27 +243,25 @@ a{color:var(--primary);text-decoration:none}
 .article-body del{color:var(--outline);text-decoration:line-through}
 
 /* ── Mermaid ── */
-.mermaid-block{margin:18px 0;padding:16px;background:#fff;border:1px solid #E0E1E3;border-radius:var(--shape-m);overflow-x:auto;text-align:center;-webkit-overflow-scrolling:touch;position:relative}
-.mermaid-block svg{max-width:100%;height:auto;display:inline-block}
-.mermaid-block svg text{-webkit-user-select:text;user-select:text;cursor:text}
-.mermaid-block{position:relative;overflow:hidden}
-.mermaid-block svg{cursor:pointer}
+.mermaid-block{margin:18px 0;padding:16px;background:#fff;border:1px solid #E0E1E3;border-radius:var(--shape-m);overflow:hidden;text-align:center;-webkit-overflow-scrolling:touch;position:relative}
+.mermaid-block svg{max-width:100%;height:auto;display:inline-block;cursor:pointer;touch-action:auto}
+.mermaid-block svg text{-webkit-user-select:text;user-select:text;cursor:text;-webkit-tap-highlight-color:transparent}
+.mermaid-block svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
+.mermaid-block svg text::-moz-selection{background:var(--primary-container);color:var(--on-primary-container)}
+.mermaid-block.zoomed svg{touch-action:none;cursor:grab}
 .mermaid-zoom-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--outline-variant);background:var(--surface);color:var(--on-surface-variant);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0.7;transition:opacity 200ms,transform 100ms}
 .mermaid-zoom-btn:hover{opacity:1}
 .mermaid-zoom-btn:active{transform:scale(.9)}
 .mermaid-zoom-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .mermaid-zoom-panel{position:absolute;top:8px;right:8px;z-index:5;display:flex;flex-direction:column;gap:4px;opacity:0.5;transition:opacity 200ms}
 .mermaid-zoom-panel:hover{opacity:1}
-.mermaid-block.zoomed{overflow:visible;z-index:10}
+.mermaid-block.zoomed{overflow:hidden}
 .mermaid-block.zoomed .mermaid-zoom-btn{opacity:1}
-.mermaid-block.zoomed svg{cursor:grab}
 .mermaid-block.zoomed svg.panning{cursor:grabbing}
 .mermaid-block.mod-ctrl svg{cursor:zoom-in}
 .mermaid-block.mod-shift svg{cursor:zoom-out}
 .mermaid-block.mod-alt svg,.mermaid-block.mod-alt svg text{cursor:text;-webkit-user-select:text;user-select:text}
-.mermaid-block.mod-alt svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
-.mermaid-block.mod-alt svg text::-moz-selection{background:var(--primary-container);color:var(--on-primary-container)}
-.mermaid-block.mod-alt{user-select:text;-webkit-user-select:text}
+.mermaid-block.mod-alt,.mermaid-block:not(.zoomed){user-select:text;-webkit-user-select:text}
 [data-theme="dark"] .mermaid-block::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.18);border-radius:var(--shape-m);pointer-events:none}
 .mermaid-loading{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:#8E9196;padding:20px 0}
 
@@ -405,7 +403,10 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
   .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
-  .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text}
+  .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text;touch-action:auto}
+  .mermaid-block svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
+  .mermaid-block svg text::-moz-selection{background:var(--primary-container);color:var(--on-primary-container)}
+  .mermaid-block:not(.zoomed){-webkit-user-select:text;user-select:text}
   .top-app-bar{padding:0 4px 0 16px}.page-tabs .tab{padding:14px 10px;font-size:12px}
   .container{padding:0 16px}
   .av-content{padding:0 16px 120px}
