@@ -338,13 +338,15 @@ function processCodeBlocks(){
   function processOne(pre){
     if(pre.closest('.code-block'))return;
     var code=pre.querySelector('code');
-    // textContent: browser decodes &lt; → <, then auto-escapes on assignment
+    // Count lines from textContent (decoded text, for line numbers only)
     var text=code?code.textContent:pre.textContent;
     text=text.replace(/^\n+/,'').replace(/\n+$/,'');
-    var lines=text.split('\n');
+    var lineCount=text.split('\n').length;
+    // Detect language
     var lm=code?code.className.match(/language-(\w+)/):null;
     var lang=lm?lm[1]:'code';
     var ft=code?code.getAttribute('file-title'):null;
+    // Build wrapper AROUND the existing pre (don't replace it)
     var w=document.createElement('div');w.className='code-block';
     var bar=document.createElement('div');bar.className='cb-bar';
     bar.innerHTML='<span class="cb-lang">'+lang+'</span>'
@@ -353,30 +355,17 @@ function processCodeBlocks(){
     var body=document.createElement('div');body.className='cb-body';
     var lnDiv=document.createElement('div');lnDiv.className='cb-lines';
     var lnHtml='';
-    for(var j=0;j<lines.length;j++) lnHtml+='<span>'+(j+1)+'</span>';
+    for(var j=0;j<lineCount;j++) lnHtml+='<span>'+(j+1)+'</span>';
     lnDiv.innerHTML=lnHtml;
     var sep=document.createElement('div');sep.className='cb-sep';
     var preW=document.createElement('div');preW.className='cb-pre-wrap';
-    var np=document.createElement('pre');np.className='language-'+lang;
-    var nc=document.createElement('code');nc.className='language-'+lang;
-    // textContent auto-escapes: < → &lt; in DOM, displayed as literal <
-    nc.textContent=text;
-    np.appendChild(nc);preW.appendChild(np);
+    // Move the ORIGINAL pre into the wrapper — no textContent→innerHTML conversion
+    pre.parentNode.insertBefore(w,pre);
+    preW.appendChild(pre);
     body.appendChild(lnDiv);body.appendChild(sep);body.appendChild(preW);
     w.appendChild(bar);w.appendChild(body);
-    pre.parentNode.replaceChild(w,pre);
-    if(lang==='diff'){
-      var dLines=text.split('\n');var dlHtml='';
-      for(var dl=0;dl<dLines.length;dl++){
-        var dlt=escHtml(dLines[dl]);
-        if(dlt.charAt(0)==='+')dlHtml+='<span class="diff-add">'+dlt+'</span>\n';
-        else if(dlt.charAt(0)==='-')dlHtml+='<span class="diff-del">'+dlt+'</span>\n';
-        else dlHtml+=dlt+'\n';
-      }
-      nc.innerHTML=dlHtml.trimEnd();
-    }
     if(typeof Prism!=='undefined'&&window.Prism){
-      try{Prism.highlightElement(nc)}catch(e){}
+      try{var c=pre.querySelector('code');if(c)Prism.highlightElement(c)}catch(e){}
     }
   }
   function highlightAll(){
