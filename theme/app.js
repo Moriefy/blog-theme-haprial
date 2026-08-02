@@ -100,7 +100,7 @@ function processMermaid(){
             apply();
           });
           innerSvg.addEventListener('mousedown',function(e){
-            if(scale<=1)return;e.preventDefault();dragging=true;startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;innerSvg.classList.add('panning');
+            if(scale<=1||e.altKey)return;e.preventDefault();dragging=true;startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;innerSvg.classList.add('panning');
           });
           innerSvg.style.transformOrigin='center center';
           innerSvg.style.willChange='transform';

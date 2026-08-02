@@ -261,6 +261,9 @@ a{color:var(--primary);text-decoration:none}
 .mermaid-block.mod-ctrl svg{cursor:zoom-in}
 .mermaid-block.mod-shift svg{cursor:zoom-out}
 .mermaid-block.mod-alt svg,.mermaid-block.mod-alt svg text{cursor:text;-webkit-user-select:text;user-select:text}
+.mermaid-block.mod-alt svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
+.mermaid-block.mod-alt svg text::-moz-selection{background:var(--primary-container);color:var(--on-primary-container)}
+.mermaid-block.mod-alt{user-select:text;-webkit-user-select:text}
 [data-theme="dark"] .mermaid-block::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.18);border-radius:var(--shape-m);pointer-events:none}
 .mermaid-loading{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:#8E9196;padding:20px 0}
 
