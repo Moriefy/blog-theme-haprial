@@ -68,12 +68,19 @@ function processMermaid(){
         if(pieSvg)initPieChart(pieSvg);
         var innerSvg=b.querySelector('svg');
         if(innerSvg){
-          var btn=document.createElement('button');
-          btn.className='mermaid-zoom-btn';btn.title='放大';
-          btn.innerHTML='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg><span class="zoom-level">1x</span>';
-          b.appendChild(btn);
+          var panel=document.createElement('div');
+          panel.className='mermaid-zoom-panel';
+          var btnIn=document.createElement('button');
+          btnIn.className='mermaid-zoom-btn';btnIn.title='放大';
+          btnIn.innerHTML='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>';
+          var btnOut=document.createElement('button');
+          btnOut.className='mermaid-zoom-btn';btnOut.title='缩小';
+          btnOut.innerHTML='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
+          panel.appendChild(btnIn);
+          panel.appendChild(btnOut);
+          b.appendChild(panel);
           var scale=1,tx=0,ty=0,dragging=false,startX=0,startY=0,startTx=0,startTy=0;
-          var zoomLabel=btn.querySelector('.zoom-level');
+          var STEP=0.4,MIN_SCALE=1,MAX_SCALE=3;
           function clamp(){
             var bw=b.clientWidth,bh=b.clientHeight;
             var sw=innerSvg.offsetWidth*scale,sh=innerSvg.offsetHeight*scale;
@@ -82,12 +89,15 @@ function processMermaid(){
             if(tx>maxX)tx=maxX;if(tx<-maxX)tx=-maxX;
             if(ty>maxY)ty=maxY;if(ty<-maxY)ty=-maxY;
           }
-          function apply(){clamp();innerSvg.style.transform='scale('+scale+') translate('+tx/scale+'px,'+ty/scale+'px)';innerSvg.style.transition=dragging?'none':'transform .25s ease'}
-          function updateLabel(){zoomLabel.textContent=scale+'x';zoomLabel.style.opacity=scale>1?'1':'0'}
-          btn.addEventListener('click',function(){
-            if(scale>1){scale=1;tx=0;ty=0;b.classList.remove('zoomed')}
-            else{scale=1.8;b.classList.add('zoomed')}
-            updateLabel();apply();
+          function apply(){clamp();innerSvg.style.transform='scale('+scale+') translate('+tx/scale+'px,'+ty/scale+'px)';innerSvg.style.transition=dragging?'none':'transform .25s ease';b.classList.toggle('zoomed',scale>1)}
+          btnIn.addEventListener('click',function(){
+            scale=Math.min(scale+STEP,MAX_SCALE);
+            apply();
+          });
+          btnOut.addEventListener('click',function(){
+            scale=Math.max(scale-STEP,MIN_SCALE);
+            if(scale<=1){tx=0;ty=0}
+            apply();
           });
           innerSvg.addEventListener('mousedown',function(e){
             if(scale<=1)return;e.preventDefault();dragging=true;startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;innerSvg.classList.add('panning');
