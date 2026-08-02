@@ -225,7 +225,7 @@ function postPageScript() {
   // Prism lazy-load for code blocks (conditional)
   var codeBlocks=document.querySelectorAll('pre code');
   if(codeBlocks.length){
-    var cb=document.createElement('link');cb.rel='stylesheet';cb.href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';document.head.appendChild(cb);
+    var cb=document.createElement('link');cb.rel='stylesheet';cb.href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css';document.head.appendChild(cb);
     var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';s.setAttribute('data-manual','');s.onload=function(){if(typeof Prism!=='undefined')Prism.highlightAll()};document.head.appendChild(s);
   }
   // Smooth TOC scroll
