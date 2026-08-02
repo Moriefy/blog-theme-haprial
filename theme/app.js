@@ -62,7 +62,7 @@ function processMermaid(){
     if(!code)return;
     try{
       var svg=renderMermaidFlowchart(code.trim());
-      if(svg){b.innerHTML=svg;var pieSvg=b.querySelector('.pie-chart');if(pieSvg)initPieChart(pieSvg)}
+      if(svg){b.innerHTML=svg;var pieSvg=b.querySelector('.pie-chart');if(pieSvg)initPieChart(pieSvg);b.querySelectorAll('.mermaid-zoom').forEach(function(z){z.addEventListener('click',function(){z.classList.toggle('zoomed')})})}
       else{b.innerHTML='<p style="color:var(--outline)">不支持的图表类型</p>'}
     }catch(e){b.innerHTML='<p style="color:var(--outline)">图表渲染失败</p>'}
   });
@@ -110,7 +110,7 @@ function renderFlowGraph(lines){
   var maxLW=0;layers.forEach(function(l){var w=l.length*nW+(l.length-1)*gX;if(w>maxLW)maxLW=w});
   var sW=maxLW+pX*2,sH=(maxD+1)*(nH+gY)-gY+pY*2;
   var bg='#FFF',nBg='#D4DDE3',nBd='#3D5A6E',tc='#1C1C1E',ac='#75787C',dBg='#D4E8DF';
-  var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
+  var s='<svg class="mermaid-zoom" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto;cursor:zoom-in">';
   s+='<defs><marker id="ah" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="10" markerHeight="6" orient="auto"><path d="M0,0L10,3L0,6" fill="'+ac+'"/></marker></defs>';
   edges.forEach(function(e){var sx=positions[e.src].x,sy=positions[e.src].y+nH/2,dx=positions[e.dst].x,dy=positions[e.dst].y-nH/2;var dash=e.style==='dotted'?' stroke-dasharray="6 4"':'';s+='<line x1="'+sx+'" y1="'+sy+'" x2="'+dx+'" y2="'+dy+'" stroke="'+ac+'" stroke-width="1.5"'+dash+' marker-end="url(#ah)"/>';if(e.label){var lx=(sx+dx)/2,ly=(sy+dy)/2-6;s+='<rect x="'+(lx-e.label.length*5-4)+'" y="'+(ly-10)+'" width="'+(e.label.length*10+8)+'" height="16" rx="3" fill="'+bg+'"/><text x="'+lx+'" y="'+ly+'" text-anchor="middle" font-size="11" fill="'+tc+'">'+escHtml(e.label)+'</text>'}});
   nodeOrder.forEach(function(id){var n=nodes[id],p=positions[id],cx=p.x,cy=p.y;if(n.shape==='diamond'){var dw=nW*0.7,dh=nH*0.9;s+='<polygon points="'+cx+','+(cy-dh)+' '+(cx+dw)+','+cy+' '+cx+','+(cy+dh)+' '+(cx-dw)+','+cy+'" fill="'+dBg+'" stroke="'+nBd+'" stroke-width="1.5"/><text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="13" font-weight="600" fill="'+tc+'">'+escHtml(n.label)+'</text>'}else if(n.shape==='circle'){var r=nH*0.45;s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+nBg+'" stroke="'+nBd+'" stroke-width="1.5"/><text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+escHtml(n.label)+'</text>'}else{var rx=n.shape==='rounded'?10:4;s+='<rect x="'+(cx-nW/2)+'" y="'+(cy-nH/2)+'" width="'+nW+'" height="'+nH+'" rx="'+rx+'" fill="'+nBg+'" stroke="'+nBd+'" stroke-width="1.5"/><text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="13" fill="'+tc+'">'+escHtml(n.label)+'</text>'}});
@@ -129,14 +129,14 @@ function renderSequenceDiagram(lines){
   messages.forEach(function(m){if(!pMap[m.from])pMap[m.from]={id:m.from,label:m.from};if(!pMap[m.to])pMap[m.to]={id:m.to,label:m.to}});;
   var pList=[];var seen={};messages.forEach(function(m){if(!seen[m.from]){pList.push(pMap[m.from]);seen[m.from]=1}if(!seen[m.to]){pList.push(pMap[m.to]);seen[m.to]=1}});
   if(!pList.length)return null;
-  var colW=160,colGap=60,rowH=50,padX=40,padY=30;
+  var colW=200,colGap=80,rowH=60,padX=50,padY=40;
   var sW=pList.length*colW+(pList.length-1)*colGap+padX*2;
-  var sH=padY*2+60+messages.length*rowH;
+  var sH=padY*2+70+messages.length*rowH;
   var tc='#1C1C1E',ac='#75787C',lc='#3D5A6E';
   var bg='#D4DDE3';
-  var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
+  var s='<svg class="mermaid-zoom" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto;cursor:zoom-in">';
   s+='<defs><marker id="sa" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0L10,3L0,6" fill="'+ac+'"/></marker></defs>';
-  pList.forEach(function(p,i){var x=padX+i*(colW+colGap)+colW/2;s+='<rect x="'+(x-50)+'" y="'+padY+'" width="100" height="32" rx="6" fill="'+bg+'" stroke="'+lc+'" stroke-width="1.5"/><text x="'+x+'" y="'+(padY+20)+'" text-anchor="middle" font-size="13" font-weight="600" fill="'+tc+'">'+escHtml(p.label)+'</text>';s+='<line x1="'+x+'" y1="'+(padY+32)+'" x2="'+x+'" y2="'+(sH-padY)+'" stroke="'+ac+'" stroke-width="1" stroke-dasharray="4 3"/>'});
+  pList.forEach(function(p,i){var x=padX+i*(colW+colGap)+colW/2;s+='<rect x="'+(x-60)+'" y="'+padY+'" width="120" height="36" rx="8" fill="'+bg+'" stroke="'+lc+'" stroke-width="1.5"/><text x="'+x+'" y="'+(padY+22)+'" text-anchor="middle" font-size="14" font-weight="600" fill="'+tc+'">'+escHtml(p.label)+'</text>';s+='<line x1="'+x+'" y1="'+(padY+36)+'" x2="'+x+'" y2="'+(sH-padY)+'" stroke="'+ac+'" stroke-width="1" stroke-dasharray="4 3"/>'});
   var pIdx={};pList.forEach(function(p,i){pIdx[p.id]=i});
   messages.forEach(function(m,i){
     var yi=padY+60+i*rowH;
@@ -145,7 +145,7 @@ function renderSequenceDiagram(lines){
     var dash=m.style==='dashed'?' stroke-dasharray="6 4"':'';
     s+='<line x1="'+fromX+'" y1="'+yi+'" x2="'+toX+'" y2="'+yi+'" stroke="'+lc+'" stroke-width="1.5"'+dash+' marker-end="url(#sa)"/>';
     var lx=(fromX+toX)/2;
-    s+='<text x="'+lx+'" y="'+(yi-6)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+escHtml(m.label)+'</text>';
+    s+='<text x="'+lx+'" y="'+(yi-8)+'" text-anchor="middle" font-size="13" fill="'+tc+'">'+escHtml(m.label)+'</text>';
   });
   s+='</svg>';return s;
 }
@@ -238,6 +238,7 @@ function initPieChart(svg){
     slice.addEventListener('click',function(e){e.stopPropagation()});
   });
   if(bg)bg.addEventListener('click',clearAll);
+  svg.addEventListener('mouseleave',clearAll);
 }
 function processCodeBlocks(){if(codeProcessed)return;codeProcessed=true;var pres=articleBody.querySelectorAll('pre');if(!pres.length)return;if(!document.querySelector('link[href*="prism-tomorrow"]')){var cb=document.createElement('link');cb.rel='stylesheet';cb.href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';document.head.appendChild(cb)}function highlightAll(pres){for(var i=0;i<pres.length;i++){var pre=pres[i];if(pre.closest('.code-block'))continue;var code=pre.querySelector('code'),text=code?code.textContent:pre.textContent;text=text.replace(/^\n+/,'').replace(/\n+$/,'');var lines=text.split('\n');var lm=code?code.className.match(/language-(\w+)/):null,lang=lm?lm[1]:'code';var w=document.createElement('div');w.className='code-block';var bar=document.createElement('div');bar.className='cb-bar';var ft=code.getAttribute("file-title");bar.innerHTML='<span class="cb-lang">'+lang+'</span>'+(ft?'<span class="cb-file">'+escHtml(ft)+'</span>':'')+'<button class="cb-copy" type="button" aria-label="复制代码">'+icons.copy+'</button>';var body=document.createElement('div');body.className='cb-body';var lnDiv=document.createElement('div');lnDiv.className='cb-lines';var lh='';for(var j=0;j<lines.length;j++)lh+='<span>'+(j+1)+'</span>';lnDiv.innerHTML=lh;var sep=document.createElement('div');sep.className='cb-sep';var preW=document.createElement('div');preW.className='cb-pre-wrap';var np=document.createElement('pre');np.className='language-'+lang;var nc=document.createElement('code');nc.className='language-'+lang;nc.textContent=escHtml(text);np.appendChild(nc);preW.appendChild(np);body.appendChild(lnDiv);body.appendChild(sep);body.appendChild(preW);w.appendChild(bar);w.appendChild(body);pre.parentNode.replaceChild(w,pre);if(lang==="diff"){var dLines=nc.textContent.split("\n");var dlHtml="";for(var dl=0;dl<dLines.length;dl++){var dlt=escHtml(dLines[dl]);if(dlt.charAt(0)==="+")dlHtml+="<span class=\"diff-add\">"+dlt+"</span>\n";else if(dlt.charAt(0)==="-")dlHtml+="<span class=\"diff-del\">"+dlt+"</span>\n";else dlHtml+=dlt+"\n"}nc.innerHTML=dlHtml.trimEnd()}if(typeof Prism!=='undefined'&&window.Prism)try{Prism.highlightElement(nc)}catch(e){}}}if(prismLoaded){highlightAll(pres);return}prismLoaded=true;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';s.setAttribute('data-manual','');s.onload=function(){if(typeof Prism!=='undefined')highlightAll(pres)};document.head.appendChild(s)}
 function setPageStagger(pid){}
