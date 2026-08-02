@@ -48,7 +48,6 @@ function copyText(t){if(navigator.clipboard&&isSecureContext){navigator.clipboar
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 var _cachedCards=null;
 function getAllCards(){if(!_cachedCards)_cachedCards=[].slice.call(document.querySelectorAll('.card'));return _cachedCards}
-var prismLoaded=false;
 var imgObserver=null;
 function observeImages(){if(imgObserver)imgObserver.disconnect();if(reducedMotion){articleBody.querySelectorAll('img').forEach(function(img){img.classList.add('revealed')});return}imgObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var img=entry.target;imgObserver.unobserve(img);if(img.complete&&img.naturalWidth>0){setTimeout(function(){img.classList.add('revealed')},60)}}})},{root:articleView,rootMargin:'100px',threshold:0.05});articleBody.querySelectorAll('img:not(.revealed)').forEach(function(img){imgObserver.observe(img)})}
 
@@ -328,52 +327,19 @@ function initPieChart(svg){
 }
 function processCodeBlocks(){
   if(codeProcessed)return;codeProcessed=true;
-  var pres=articleBody.querySelectorAll('pre');
-  if(!pres.length)return;
+  var codes=articleBody.querySelectorAll('pre code');
+  if(!codes.length)return;
+  function highlightAll(){
+    for(var i=0;i<codes.length;i++){
+      try{Prism.highlightElement(codes[i])}catch(e){}
+    }
+  }
+  if(typeof Prism!=='undefined'&&window.Prism){highlightAll();return}
   if(!document.querySelector('link[href*="prism-tomorrow"]')){
     var cb=document.createElement('link');cb.rel='stylesheet';
     cb.href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';
     document.head.appendChild(cb);
   }
-  function processOne(pre){
-    if(pre.closest('.code-block'))return;
-    var code=pre.querySelector('code');
-    // Count lines from textContent (decoded text, for line numbers only)
-    var text=code?code.textContent:pre.textContent;
-    text=text.replace(/^\n+/,'').replace(/\n+$/,'');
-    var lineCount=text.split('\n').length;
-    // Detect language
-    var lm=code?code.className.match(/language-(\w+)/):null;
-    var lang=lm?lm[1]:'code';
-    var ft=code?code.getAttribute('file-title'):null;
-    // Build wrapper AROUND the existing pre (don't replace it)
-    var w=document.createElement('div');w.className='code-block';
-    var bar=document.createElement('div');bar.className='cb-bar';
-    bar.innerHTML='<span class="cb-lang">'+lang+'</span>'
-      +(ft?'<span class="cb-file">'+escHtml(ft)+'</span>':'')
-      +'<button class="cb-copy" type="button" aria-label="复制代码">'+icons.copy+'</button>';
-    var body=document.createElement('div');body.className='cb-body';
-    var lnDiv=document.createElement('div');lnDiv.className='cb-lines';
-    var lnHtml='';
-    for(var j=0;j<lineCount;j++) lnHtml+='<span>'+(j+1)+'</span>';
-    lnDiv.innerHTML=lnHtml;
-    var sep=document.createElement('div');sep.className='cb-sep';
-    var preW=document.createElement('div');preW.className='cb-pre-wrap';
-    // Move the ORIGINAL pre into the wrapper — no textContent→innerHTML conversion
-    pre.parentNode.insertBefore(w,pre);
-    preW.appendChild(pre);
-    body.appendChild(lnDiv);body.appendChild(sep);body.appendChild(preW);
-    w.appendChild(bar);w.appendChild(body);
-    if(typeof Prism!=='undefined'&&window.Prism){
-      try{var c=pre.querySelector('code');if(c)Prism.highlightElement(c)}catch(e){}
-    }
-  }
-  function highlightAll(){
-    var all=articleBody.querySelectorAll('pre');
-    for(var i=0;i<all.length;i++) processOne(all[i]);
-  }
-  if(prismLoaded){highlightAll();return}
-  prismLoaded=true;
   var s=document.createElement('script');
   s.src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js';
   s.setAttribute('data-manual','');
@@ -529,7 +495,6 @@ document.addEventListener('mouseover',function(e){var card=e.target.closest('.ca
 
 document.addEventListener('click',function(e){
   var t;
-  if((t=e.target.closest('.cb-copy'))){var cd=t.closest('.code-block');cd=cd&&cd.querySelector('code');if(cd){copyText(cd.textContent);t.classList.add('copied');var old=t.innerHTML;t.innerHTML=icons.check;setTimeout(function(){t.innerHTML=old;t.classList.remove('copied')},2000)}return}
   if((t=e.target.closest('.art-nav-btn'))&&t.dataset.navId){var nId=t.dataset.navId,dir=t.classList.contains('next')?'next':'prev';switchToArticleVisual(nId,dir);replaceRoute({type:'article',articleId:nId});return}
   if((t=e.target.closest('#artTags .tag'))&&t.dataset.tagname){var tn=t.dataset.tagname;activeFilterLabel=tn;activeFilterFn=function(c){var tags=(c.dataset.tags||'').split('\u001f');return tags.indexOf(tn)!==-1};closeArticleVisual();if(currentPage!=='articles'){switchPageVisual('articles','left')}replaceRoute({type:'page',page:'articles'});applyFilterDirect(tn,activeFilterFn);window.scrollTo({top:0,behavior:'smooth'});return}
   if((t=e.target.closest('.pg-btn'))&&!t.disabled){var p=t.dataset.pg;if(p==='prev')paginationPage--;else if(p==='next')paginationPage++;else paginationPage=parseInt(p);renderPaginationPage();var list=$('articleList');if(list)list.scrollIntoView({behavior:'smooth',block:'start'});pushRoute({type:'page',page:'articles',paginationPage:paginationPage});return}
