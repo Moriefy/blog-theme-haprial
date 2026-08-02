@@ -245,12 +245,10 @@ a{color:var(--primary);text-decoration:none}
 .article-body del{color:var(--outline);text-decoration:line-through}
 
 /* ── Mermaid ── */
-.mermaid-block{margin:18px 0;padding:16px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--shape-m);overflow-x:auto;text-align:center;-webkit-overflow-scrolling:touch}
+.mermaid-block{margin:18px 0;padding:16px;background:#fff;border:1px solid #E0E1E3;border-radius:var(--shape-m);overflow-x:auto;text-align:center;-webkit-overflow-scrolling:touch}
 .mermaid-block svg{max-width:100%;height:auto;display:inline-block}
 .mermaid-block svg text{-webkit-user-select:text;user-select:text;cursor:text}
-[data-theme="dark"] .mermaid-block{position:relative}
-[data-theme="dark"] .mermaid-block::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.18);border-radius:var(--shape-m);pointer-events:none}
-.mermaid-loading{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:var(--outline);padding:20px 0}
+.mermaid-loading{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:#8E9196;padding:20px 0}
 
 /* ── MD TOC ── */
 .md-toc{background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--shape-m);padding:16px 20px;margin:18px 0}
