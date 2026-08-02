@@ -404,6 +404,7 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:768px){
   .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
   .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text;touch-action:auto}
+  .mermaid-block.zoomed svg{touch-action:none}
   .mermaid-block svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
   .mermaid-block svg text::-moz-selection{background:var(--primary-container);color:var(--on-primary-container)}
   .mermaid-block:not(.zoomed){-webkit-user-select:text;user-select:text}

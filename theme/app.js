@@ -107,6 +107,7 @@ function processMermaid(){
           function onTouchStart(e){
             if(scale<=1)return;
             if(e.touches.length!==1)return;
+            e.preventDefault();
             var t=e.touches[0];touchId=t.identifier;
             touchStartX=t.clientX;touchStartY=t.clientY;
             touchPending=true;
@@ -136,7 +137,7 @@ function processMermaid(){
               dragging=false;touchPending=false;touchId=null;innerSvg.classList.remove('panning');break;
             }}
           }
-          innerSvg.addEventListener('touchstart',onTouchStart,{passive:true});
+          innerSvg.addEventListener('touchstart',onTouchStart,{passive:false});
           innerSvg.addEventListener('touchmove',onTouchMove,{passive:false});
           innerSvg.addEventListener('touchend',onTouchEnd);
           innerSvg.addEventListener('touchcancel',onTouchEnd);
