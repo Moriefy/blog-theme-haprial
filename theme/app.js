@@ -359,7 +359,7 @@ function renderArticleNav(id){var idx=articleOrder.indexOf(String(id)),nav=$('ar
 
 var __twikooLoaded=false;
 var __friendsTwikooLoaded=false;
-function __initFriendsTwikoo(){var _c=window.__HAPRIAL_DATA__.comments;if(!_c||!_c.enabled||!_c.apiUrl)return;var sec=document.getElementById('friendsCommentSection');if(!sec)return;if(sec.dataset.loaded)return;sec.dataset.loaded='1';sec.id='commentSection';if(typeof window.__initComments==='function')window.__initComments('/friends/',_c.apiUrl);sec.id='friendsCommentSection'}
+function __initFriendsTwikoo(){var _c=window.__HAPRIAL_DATA__.comments;if(!_c||!_c.enabled)return;var sec=document.getElementById('friendsCommentSection');if(!sec)return;if(sec.dataset.loaded)return;sec.dataset.loaded='1';sec.id='commentSection';if(_c.provider!=='twikoo'&&typeof window.__initComments==='function')window.__initComments('/friends/',_c.apiUrl||'');sec.id='friendsCommentSection'}
 function __initTwikoo(path){
   var _c=window.__HAPRIAL_DATA__.comments;var envId=(_c&&_c.enabled)?_c.twikooEnvId:'';
   if(!envId)return;
