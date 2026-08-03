@@ -1,0 +1,14 @@
+name = "haprial-comments"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = "abcbcc5b73959edd073bb94d30a62981"
+
+# KV namespace binding
+# Create with: npx wrangler kv namespace create COMMENTS
+# Then fill in the id below
+[[kv_namespaces]]
+binding = "COMMENTS"
+id = "6b430b3e18c7463e967fe0effbd7e2eb"
+
+# Optional: set AUTH_KEY for export API protection
+# Set via: npx wrangler secret put AUTH_KEY

@@ -64,7 +64,12 @@
       "color": "#4c1353"
     }
   ],
-  "twikooEnvId": "https://twikoo.pluslogic.eu.org/",
+  "comments": {
+    "enabled": true,
+    "provider": "custom",
+    "apiUrl": "https://comments.pluslogic.eu.org",
+    "twikooEnvId": ""
+  },
   "friends": [
     {
       "name": "Anthony Fu",
