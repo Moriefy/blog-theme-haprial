@@ -1,655 +1,492 @@
-/* ── Haprial Comments — Material Design 3 ─────────────────────────────────── */
-/* "呼吸感" = generous whitespace, soft transitions, breathing rhythm          */
-/* Fully responsive. Uses blog's CSS variables (--primary, --surface, etc.)    */
-/* ──────────────────────────────────────────────────────────────────────────── */
+/* ============================================================
+   评论系统样式 — Material Design 3 风格
+   与 Haprial 博客主题完全融合
+   ============================================================ */
 
-/* ── Root ── */
-.cmt-section {
-  --cmt-gap: 20px;
-  --cmt-radius: 16px;
-  --cmt-radius-sm: 12px;
-  --cmt-ease: cubic-bezier(.4, 0, .2, 1);
-  --cmt-ease-decel: cubic-bezier(0, 0, .2, 1);
-  --cmt-duration: 280ms;
-  margin-top: 48px;
-  padding-top: 40px;
+/* ── 评论区容器 ── */
+.comment-section {
+  margin-top: 32px;
+  padding-top: 24px;
   border-top: 1px solid var(--outline-variant);
+  opacity: 0;
+  animation: fadeIn .4s ease .1s forwards;
 }
+.comment-section:empty { display: none; animation: none; }
 
-/* ── Header ── */
-.cmt-header {
-  margin-bottom: 36px;
-}
-
-.cmt-header-row {
+/* ── 标题 ── */
+.cs-header {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
-
-.cmt-title {
+.cs-header h3 {
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--on-surface);
-  letter-spacing: .01em;
   margin: 0;
 }
-
-.cmt-total {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-size: 12px;
+.cs-count {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  color: var(--outline);
   font-weight: 400;
-  color: var(--on-primary);
-  background: var(--primary);
-  padding: 2px 10px;
-  border-radius: 100px;
-  letter-spacing: .04em;
 }
 
-/* ── Form ── */
-.cmt-form {
+/* ── 评论表单 ── */
+.cs-form {
+  margin-bottom: 24px;
+  padding: 20px;
   background: var(--surface-container-lowest);
   border: 1px solid var(--outline-variant);
-  border-radius: var(--cmt-radius);
-  padding: 28px;
-  margin-bottom: 40px;
-  transition: border-color var(--cmt-duration) var(--cmt-ease),
-              box-shadow var(--cmt-duration) var(--cmt-ease);
+  border-radius: var(--shape-l);
+  transition: border-color 200ms;
 }
-
-.cmt-form:focus-within {
+.cs-form:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
 }
 
-/* ── Identity fields (MD3 outlined text field) ── */
-.cmt-identity {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+/* 回复指示器 */
+.cs-reply-indicator {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--shape-s);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
 }
-
-.cmt-field {
-  position: relative;
+.cs-reply-indicator.visible { display: flex; }
+.cs-reply-indicator strong { font-weight: 600; }
+.cs-cancel-reply {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--on-primary-container);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  opacity: .7;
+  transition: opacity 150ms;
+  line-height: 1;
 }
+.cs-cancel-reply:hover { opacity: 1; }
 
-.cmt-input {
-  width: 100%;
-  height: 48px;
-  padding: 16px 14px 8px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--cmt-radius-sm);
-  background: transparent;
+/* 输入框行 */
+.cs-form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cs-form input[type="text"],
+.cs-form input[type="email"],
+.cs-form input[type="url"] {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: none;
+  border-bottom: 1.5px solid var(--outline-variant);
+  border-radius: 0;
+  background: none;
   color: var(--on-surface);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
+  transition: border-color 200ms;
+}
+.cs-form input:focus {
   outline: none;
-  transition: border-color var(--cmt-duration) var(--cmt-ease);
+  border-bottom-color: var(--primary);
 }
-
-.cmt-input:focus {
-  border-color: var(--primary);
-  border-width: 2px;
-  padding: 15px 13px 7px;
-}
-
-.cmt-label {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 14px;
+.cs-form input::placeholder {
   color: var(--outline);
-  pointer-events: none;
-  transition: all var(--cmt-duration) var(--cmt-ease);
-  background: var(--surface-container-lowest);
-  padding: 0 4px;
-}
-
-.cmt-input:focus + .cmt-label,
-.cmt-input:not(:placeholder-shown) + .cmt-label {
-  top: 0;
-  transform: translateY(-50%) scale(.85);
-  color: var(--primary);
-  font-weight: 500;
-}
-
-.cmt-required { color: var(--error, #B3261E); }
-.cmt-optional { font-size: 11px; opacity: .6; }
-
-/* ── Reply hint ── */
-.cmt-reply-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  background: var(--primary-container);
-  color: var(--on-primary-container);
-  border-radius: var(--cmt-radius-sm);
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 13px;
-  animation: cmt-slideDown var(--cmt-duration) var(--cmt-ease-decel);
 }
 
-.cmt-reply-hint .cmt-icon {
-  flex-shrink: 0;
-}
-
-.cmt-reply-hint strong {
-  font-weight: 600;
-}
-
-.cmt-cancel-btn {
-  margin-left: auto;
-  padding: 4px 12px;
-  border: none;
-  border-radius: 100px;
-  background: rgba(0,0,0,.08);
-  color: inherit;
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 150ms;
-}
-
-[data-theme="dark"] .cmt-cancel-btn {
-  background: rgba(255,255,255,.08);
-}
-
-.cmt-cancel-btn:hover {
-  background: rgba(0,0,0,.14);
-}
-
-[data-theme="dark"] .cmt-cancel-btn:hover {
-  background: rgba(255,255,255,.14);
-}
-
-/* ── Textarea (MD3 outlined) ── */
-.cmt-textarea-wrap {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.cmt-textarea {
+/* 文本域 */
+.cs-form textarea {
   width: 100%;
-  min-height: 120px;
-  padding: 20px 16px 8px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--cmt-radius-sm);
-  background: transparent;
+  min-height: 88px;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 2px solid var(--outline-variant);
+  border-radius: 0;
+  background: none;
   color: var(--on-surface);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
   line-height: 1.75;
   resize: vertical;
+  transition: border-color 200ms;
+}
+.cs-form textarea:focus {
   outline: none;
-  transition: border-color var(--cmt-duration) var(--cmt-ease);
+  border-bottom-color: var(--primary);
 }
-
-.cmt-textarea:focus {
-  border-color: var(--primary);
-  border-width: 2px;
-  padding: 19px 15px 7px;
-}
-
-.cmt-textarea-label {
-  position: absolute;
-  left: 16px;
-  top: 18px;
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 14px;
+.cs-form textarea::placeholder {
   color: var(--outline);
-  pointer-events: none;
-  transition: all var(--cmt-duration) var(--cmt-ease);
-  background: var(--surface-container-lowest);
-  padding: 0 4px;
+  font-size: 13px;
 }
 
-.cmt-textarea:focus + .cmt-textarea-label,
-.cmt-textarea:not(:placeholder-shown) + .cmt-textarea-label {
-  top: 0;
-  transform: translateY(-50%) scale(.85);
-  color: var(--primary);
-  font-weight: 500;
-}
-
-/* ── Form actions ── */
-.cmt-form-actions {
+/* 操作栏 */
+.cs-form-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  margin-top: 12px;
 }
-
-.cmt-hint {
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+.cs-form-hint {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
   font-size: 11px;
   color: var(--outline);
-  opacity: .7;
+  letter-spacing: .02em;
 }
 
-.cmt-form-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-left: auto;
-}
-
-.cmt-char-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--outline);
-  transition: color 200ms;
-}
-
-.cmt-char-count.warn {
-  color: var(--error, #B3261E);
-}
-
-.cmt-submit {
-  height: 40px;
-  padding: 0 24px;
+/* 提交按钮 — MD3 Filled Button */
+.cs-submit {
+  height: 36px;
+  padding: 0 20px;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--shape-full);
   background: var(--primary);
   color: var(--on-primary);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.08);
-  transition: box-shadow 200ms var(--cmt-ease), transform 100ms var(--cmt-ease);
+  box-shadow: var(--e1);
+  transition: box-shadow 200ms, transform 100ms, opacity 200ms;
   position: relative;
   overflow: hidden;
 }
-
-.cmt-submit::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0;
-  transition: opacity 150ms;
+.cs-submit:hover {
+  box-shadow: var(--e2);
+}
+.cs-submit:active {
+  transform: scale(.97);
+  box-shadow: none;
+}
+.cs-submit:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
-.cmt-submit:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.1);
+/* ── 评论列表 ── */
+.cs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.cmt-submit:hover::before { opacity: .08; }
-.cmt-submit:active { transform: scale(.97); }
-.cmt-submit:active::before { opacity: .12; }
-.cmt-submit:disabled { opacity: .6; cursor: default; transform: none; }
-
-.cmt-spinner {
-  width: 18px;
-  height: 18px;
-  animation: cmt-spin .8s linear infinite;
-}
-
-/* ── Comment list ── */
-.cmt-list {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Single comment ── */
-.cmt-item {
-  display: flex;
-  gap: 16px;
-  padding: 24px 0;
+/* ── 单条评论 ── */
+.cs-item {
+  padding: 16px 0;
   border-bottom: 1px solid var(--outline-variant);
-  animation: cmt-fadeIn var(--cmt-duration) var(--cmt-ease-decel) backwards;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: csItemIn .3s cubic-bezier(0,0,.2,1) backwards;
+}
+.cs-item:last-child { border-bottom: none; }
+
+@keyframes csItemIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.cmt-item:last-child { border-bottom: none; }
-
-/* Stagger animation */
-.cmt-item:nth-child(1) { animation-delay: 0ms; }
-.cmt-item:nth-child(2) { animation-delay: 40ms; }
-.cmt-item:nth-child(3) { animation-delay: 80ms; }
-.cmt-item:nth-child(4) { animation-delay: 120ms; }
-.cmt-item:nth-child(5) { animation-delay: 160ms; }
-.cmt-item:nth-child(6) { animation-delay: 200ms; }
-
-/* Nested reply */
-.cmt-reply {
-  padding-left: 0;
-  margin-left: calc(var(--cmt-depth, 1) * 48px);
-  border-left: 2px solid var(--outline-variant);
-  padding-left: 20px;
-  border-bottom: none;
-  padding-top: 20px;
-  padding-bottom: 4px;
+.cs-item-main {
+  display: flex;
+  gap: 12px;
 }
 
-.cmt-children {
-  margin-top: 4px;
-}
-
-/* ── Avatar ── */
-.cmt-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
+/* 头像 */
+.cs-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  flex-shrink: 0;
-  letter-spacing: .02em;
-  transition: transform 200ms var(--cmt-ease);
+}
+.cs-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cs-avatar-initial {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--on-primary-container);
 }
 
-.cmt-item:hover .cmt-avatar {
-  transform: scale(1.06);
-}
-
-/* ── Meta ── */
-.cmt-body {
+/* 内容区 */
+.cs-body {
   flex: 1;
   min-width: 0;
 }
 
-.cmt-meta {
+.cs-meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
-
-.cmt-nick {
+.cs-nickname {
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: var(--on-surface);
 }
-
-.cmt-badge {
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 100px;
-  background: var(--primary);
-  color: var(--on-primary);
-  letter-spacing: .04em;
-  line-height: 1.4;
+.cs-nickname a {
+  color: inherit;
+  text-decoration: none;
 }
-
-.cmt-dot {
-  color: var(--outline-variant);
-  font-size: 10px;
+.cs-nickname a:hover {
+  color: var(--primary);
 }
-
-.cmt-time {
+.cs-time {
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 12px;
   color: var(--outline);
 }
-
-.cmt-ua {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+.cs-edited {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 11px;
   color: var(--outline);
-  opacity: .5;
-  margin-left: auto;
+  font-style: italic;
 }
 
-/* ── Content ── */
-.cmt-content {
+/* 评论正文 */
+.cs-content {
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.75;
   color: var(--on-surface-variant);
-  margin-bottom: 12px;
-  word-break: break-word;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
-
-.cmt-content strong {
-  font-weight: 600;
-  color: var(--on-surface);
-}
-
-.cmt-content code {
-  font-family: 'JetBrains Mono', monospace;
+.cs-content p { margin: 0 0 8px; }
+.cs-content p:last-child { margin-bottom: 0; }
+.cs-content code {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
   font-size: .85em;
   background: var(--surface-container-high);
   color: var(--primary);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--shape-xs);
 }
-
-.cmt-content a {
+.cs-content pre {
+  background: var(--surface-container);
+  padding: 12px;
+  border-radius: var(--shape-s);
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.cs-content pre code {
+  padding: 0;
+  background: none;
+}
+.cs-content a {
   color: var(--primary);
   text-decoration: none;
   border-bottom: 1px solid var(--primary-container);
   transition: border-color 200ms;
 }
-
-.cmt-content a:hover {
+.cs-content a:hover {
   border-bottom-color: var(--primary);
 }
-
-.cmt-content del {
-  color: var(--outline);
-  text-decoration: line-through;
+.cs-content blockquote {
+  border-left: 3px solid var(--primary);
+  background: var(--surface-container);
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 0 var(--shape-s) var(--shape-s) 0;
+}
+.cs-content blockquote p {
+  margin: 0;
+  color: var(--on-surface-variant);
 }
 
-/* ── Actions ── */
-.cmt-actions {
+/* ── 操作栏 ── */
+.cs-actions {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-top: 6px;
 }
-
-.cmt-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
+.cs-action {
+  background: none;
   border: none;
-  border-radius: 100px;
-  background: transparent;
-  color: var(--outline);
+  padding: 4px 8px;
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 12px;
+  color: var(--outline);
   cursor: pointer;
-  transition: color 200ms var(--cmt-ease), background 200ms var(--cmt-ease);
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--shape-full);
+  transition: color 150ms, background 150ms;
 }
-
-.cmt-action-btn:hover {
-  color: var(--on-surface);
+.cs-action:hover {
+  color: var(--on-surface-variant);
   background: var(--surface-container-high);
 }
-
-.cmt-action-btn:active {
-  background: var(--surface-container-highest);
-}
-
-.cmt-icon {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
+.cs-action svg {
+  width: 14px;
+  height: 14px;
   stroke: currentColor;
-  stroke-width: 1.5;
+  fill: none;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 200ms var(--cmt-ease);
 }
-
-.cmt-like-btn.liked {
+.cs-action.liked {
   color: var(--primary);
 }
-
-.cmt-like-btn.liked .cmt-icon {
-  transform: scale(1.15);
+.cs-action.liked svg {
+  fill: var(--primary);
 }
 
-.cmt-like-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  min-width: 8px;
+/* ── 嵌套回复 ── */
+.cs-replies {
+  margin-left: 48px;
+  padding-left: 14px;
+  border-left: 2px solid var(--outline-variant);
+  list-style: none;
+}
+.cs-replies .cs-item {
+  padding: 12px 0;
+}
+.cs-replies .cs-avatar {
+  width: 28px;
+  height: 28px;
+}
+.cs-replies .cs-avatar-initial {
+  font-size: 13px;
 }
 
-/* ── Empty state ── */
-.cmt-empty {
-  text-align: center;
-  padding: 60px 20px;
-  animation: cmt-fadeIn .5s var(--cmt-ease-decel);
-}
-
-.cmt-empty-icon {
-  width: 48px;
-  height: 48px;
-  stroke: var(--outline-variant);
-  stroke-width: 1;
-  fill: none;
-  margin-bottom: 16px;
-  opacity: .6;
-}
-
-.cmt-empty p {
+/* ── 状态提示 ── */
+.cs-pending-notice {
+  padding: 10px 14px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--shape-s);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 14px;
-  color: var(--outline);
-  margin: 0;
-}
-
-/* ── Error state ── */
-.cmt-error {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.cmt-error p {
-  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
-  font-size: 14px;
-  color: var(--outline);
+  font-size: 13px;
   margin-bottom: 16px;
 }
 
-.cmt-retry {
-  padding: 8px 20px;
+/* ── 加载更多 ── */
+.cs-load-more {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
   border: 1px solid var(--outline-variant);
-  border-radius: 100px;
-  background: transparent;
-  color: var(--primary);
+  border-radius: var(--shape-full);
+  background: none;
+  color: var(--on-surface-variant);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 13px;
   cursor: pointer;
-  transition: background 200ms, border-color 200ms;
+  transition: border-color 200ms, background 200ms, transform 150ms;
+  position: relative;
+  overflow: hidden;
 }
-
-.cmt-retry:hover {
-  background: var(--primary-container);
+.cs-load-more:hover {
   border-color: var(--primary);
+  background: var(--surface-container-low);
+  transform: translateY(-1px);
+}
+.cs-load-more:active {
+  transform: scale(.98);
 }
 
-/* ── Toast ── */
-.cmt-toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  padding: 12px 24px;
-  background: var(--on-surface);
-  color: var(--surface);
+/* ── 空状态 ── */
+.cs-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--outline);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
-  border-radius: var(--cmt-radius-sm);
-  box-shadow: 0 4px 14px rgba(0,0,0,.2);
+}
+
+/* ── 加载状态 ── */
+.cs-loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--outline);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+}
+.cs-loading::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--outline-variant);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: csSpin .6s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@keyframes csSpin { to { transform: rotate(360deg); } }
+
+/* ── Toast 提示 ── */
+.cs-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  padding: 10px 20px;
+  background: var(--on-surface);
+  color: var(--surface);
+  border-radius: var(--shape-s);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
   z-index: 9999;
   opacity: 0;
-  transition: opacity 250ms var(--cmt-ease), transform 250ms var(--cmt-ease);
+  transition: transform 250ms cubic-bezier(0,0,.2,1), opacity 250ms;
   pointer-events: none;
+  box-shadow: var(--e3);
 }
-
-.cmt-toast.show {
-  opacity: 1;
+.cs-toast.visible {
   transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
 
-/* ── Shake animation (validation) ── */
-@keyframes cmt-shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-6px); }
-  40% { transform: translateX(6px); }
-  60% { transform: translateX(-4px); }
-  80% { transform: translateX(4px); }
-}
-
-.cmt-shake {
-  animation: cmt-shake .4s var(--cmt-ease);
-  border-color: var(--error, #B3261E) !important;
-}
-
-/* ── Animations ── */
-@keyframes cmt-fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes cmt-slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes cmt-spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ── Reduced motion ── */
-@media (prefers-reduced-motion: reduce) {
-  .cmt-item,
-  .cmt-reply-hint,
-  .cmt-empty,
-  .cmt-toast { animation: none !important; transition: none !important; }
-  .cmt-avatar { transition: none; }
-}
-
-/* ── Responsive: Tablet ── */
+/* ── 响应式 ── */
 @media (max-width: 768px) {
-  .cmt-section { margin-top: 36px; padding-top: 32px; }
-  .cmt-form { padding: 20px; }
-  .cmt-identity { grid-template-columns: 1fr; gap: 12px; }
-  .cmt-item { gap: 12px; padding: 20px 0; }
-  .cmt-reply { margin-left: calc(var(--cmt-depth, 1) * 36px); padding-left: 16px; }
-  .cmt-avatar { width: 36px; height: 36px; border-radius: 18px; font-size: 14px; }
-  .cmt-ua { display: none; }
-  .cmt-hint { display: none; }
+  .cs-form-row {
+    flex-direction: column;
+  }
+  .cs-replies {
+    margin-left: 24px;
+    padding-left: 10px;
+  }
+  .cs-meta {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cs-form {
+    padding: 16px;
+  }
 }
 
-/* ── Responsive: Mobile ── */
-@media (max-width: 480px) {
-  .cmt-section { margin-top: 28px; padding-top: 24px; }
-  .cmt-form { padding: 16px; border-radius: 12px; }
-  .cmt-header { margin-bottom: 24px; }
-  .cmt-title { font-size: 18px; }
-  .cmt-item { gap: 10px; padding: 16px 0; }
-  .cmt-reply { margin-left: calc(var(--cmt-depth, 1) * 28px); padding-left: 12px; }
-  .cmt-avatar { width: 32px; height: 32px; border-radius: 16px; font-size: 13px; }
-  .cmt-nick { font-size: 13px; }
-  .cmt-content { font-size: 13px; line-height: 1.75; }
-  .cmt-form-actions { flex-direction: column; align-items: stretch; gap: 12px; }
-  .cmt-form-right { justify-content: space-between; }
-  .cmt-submit { width: 100%; justify-content: center; }
-  .cmt-reply-hint { font-size: 12px; padding: 8px 12px; }
-}
-
-/* ── Print ── */
-@media print {
-  .cmt-section { display: none; }
+/* ── 减少动画 ── */
+@media (prefers-reduced-motion: reduce) {
+  .cs-item { animation: none; opacity: 1; transform: none; }
+  .cs-toast { transition: none; }
+  .cs-loading::after { animation: none; }
 }

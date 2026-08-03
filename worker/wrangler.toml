@@ -1,18 +1,11 @@
 name = "haprial-comments"
-main = "worker.js"
-compatibility_date = "2024-12-01"
+main = "index.js"
+compatibility_date = "2024-01-01"
 
-# Custom domain
-routes = [
-  { pattern = "comments.pluslogic.eu.org/*", zone_name = "pluslogic.eu.org" }
-]
+[[d1_databases]]
+binding = "DB"
+database_name = "haprial-comments"
+database_id = "d6bf9f4f-b099-421f-a46c-c604a3974307"
 
-# KV binding
-[[kv_namespaces]]
-binding = "COMMENTS"
-id = "6b430b3e18c7463e967fe0effbd7e2eb"
-
-# Environment variables
-# [vars]
-# ADMIN_SECRET = "<your-admin-secret>"
-# ALLOWED_ORIGINS = "https://pluslogic.eu.org"
+[vars]
+ADMIN_TOKEN = "020bdac79b2ed0e911a9afa34cc05425"

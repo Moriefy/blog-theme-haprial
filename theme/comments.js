@@ -1,447 +1,304 @@
-// ── Haprial Comments — Material Design 3 ────────────────────────────────────
-// Zero-dependency, ~4KB gzip. Integrates with CF Worker API.
-// Usage: window.__initComments('/posts/20260801/')
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================
+// 评论系统前端 — 与 Haprial 博客主题融合
+// 零依赖，MD3 风格，修复键盘冲突
+// ============================================================
 (function () {
   'use strict';
 
-  var API = 'https://comments.pluslogic.eu.org/api';
-  var MAX_DEPTH = 3;
+  // ── SVG 图标 ──
+  var ICONS = {
+    heart: '<svg viewBox="0 0 16 16"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>',
+    heartFilled: '<svg viewBox="0 0 16 16" fill="currentColor" stroke="none"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>',
+    reply: '<svg viewBox="0 0 16 16"><path d="M6 3L2 7l4 4"/><path d="M2 7h8a4 4 0 014 4v1"/></svg>',
+  };
 
-  // ── Avatar palette (MD3 tonal) ──
-  var AVATAR_COLORS = [
-    ['#3D5A6E', '#D4DDE3'], ['#4A7B6A', '#D4E8DF'], ['#8E6B9E', '#E8D6F0'],
-    ['#B07D56', '#E8D8C8'], ['#5C7A3D', '#D8E8CC'], ['#6B5B8A', '#DDD6E8'],
-    ['#8B6B4A', '#E0D4C8'], ['#4A6B8A', '#D0DDE8'], ['#7A5B6B', '#E0D4DA'],
-    ['#5B7A6A', '#D4E0D8'],
-  ];
-
-  // ── State ──
-  var state = { comments: [], replyTo: null, replyNick: '', loaded: false };
-
-  // ── Utils ──
-  function $(s, p) { return (p || document).querySelector(s); }
-  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-  function hashStr(s) {
-    var h = 0;
-    for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-    return Math.abs(h);
+  // ── 工具函数 ──
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
   }
 
-  function avatarColor(nick) {
-    var c = AVATAR_COLORS[hashStr(nick) % AVATAR_COLORS.length];
-    return { bg: c[0], fg: c[1] };
+  function timeAgo(dateStr) {
+    var now = Date.now();
+    var then = new Date(dateStr + 'Z').getTime();
+    var diff = Math.floor((now - then) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+    if (diff < 2592000) return Math.floor(diff / 86400) + ' 天前';
+    return new Date(dateStr + 'Z').toLocaleDateString('zh-CN', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
   }
 
-  function timeAgo(ts) {
-    if (typeof ts === 'string') ts = new Date(ts).getTime();
-    var s = Math.floor((Date.now() - ts) / 1000);
-    if (s < 60) return '刚刚';
-    var m = Math.floor(s / 60);
-    if (m < 60) return m + ' 分钟前';
-    var h = Math.floor(m / 60);
-    if (h < 24) return h + ' 小时前';
-    var d = Math.floor(h / 24);
-    if (d < 30) return d + ' 天前';
-    var mo = Math.floor(d / 30);
-    if (mo < 12) return mo + ' 个月前';
-    return Math.floor(mo / 12) + ' 年前';
-  }
-
-  function isLiked(id) {
-    try { return localStorage.getItem('cmt_liked_' + id) === '1'; } catch (e) { return false; }
-  }
-  function setLiked(id, v) {
-    try {
-      if (v) localStorage.setItem('cmt_liked_' + id, '1');
-      else localStorage.removeItem('cmt_liked_' + id);
-    } catch (e) { }
-  }
-
-  function getStoredNick() {
-    try { return localStorage.getItem('cmt_nick') || ''; } catch (e) { return ''; }
-  }
-  function getStoredEmail() {
-    try { return localStorage.getItem('cmt_email') || ''; } catch (e) { return ''; }
-  }
-  function getStoredLink() {
-    try { return localStorage.getItem('cmt_link') || ''; } catch (e) { return ''; }
-  }
-  function saveIdentity(nick, email, link) {
-    try {
-      localStorage.setItem('cmt_nick', nick);
-      if (email) localStorage.setItem('cmt_email', email);
-      if (link) localStorage.setItem('cmt_link', link);
-    } catch (e) { }
-  }
-
-  // ── Tree builder ──
-  function buildTree(flat) {
-    var map = {}, roots = [];
-    for (var i = 0; i < flat.length; i++) {
-      map[flat[i].id] = { _c: flat[i], children: [] };
+  function avatarHtml(hash, nickname) {
+    if (hash) {
+      return '<img src="https://www.gravatar.com/avatar/' + hash + '?d=retro&s=72" alt="' + esc(nickname) + '" loading="lazy" width="36" height="36">';
     }
-    for (var i = 0; i < flat.length; i++) {
-      var c = flat[i];
-      var parentId = c.parent || c.replyTo;
-      if (parentId && map[parentId]) {
-        map[parentId].children.push(map[c.id]);
-      } else {
-        roots.push(map[c.id]);
-      }
-    }
-    roots.sort(function (a, b) { return (b._c.likes||0) - (a._c.likes||0) || (a._c.created||0) - (b._c.created||0); });
-    for (var i = 0; i < roots.length; i++) {
-      roots[i].children.sort(function (a, b) { return (a._c.created||0) - (b._c.created||0); });
-    }
-    return roots;
-  }
-
-  // ── Render single comment ──
-  function renderComment(node, depth) {
-    var c = node._c;
-    var ac = avatarColor(c.nick);
-    var initial = c.nick.charAt(0).toUpperCase();
-    var liked = isLiked(c.id);
-    var depthClass = depth > 0 ? ' cmt-reply' : '';
-    var indent = depth > 0 ? ' style="--cmt-depth:' + depth + '"' : '';
-    var content = c.html || c.content || '';
-    var ts = c.created || c.time || Date.now();
-    var ua = c.ua || c.device || '';
-
-    var html = '<div class="cmt-item' + depthClass + '" data-id="' + c.id + '"' + indent + '>'
-      + '<div class="cmt-avatar" style="background:' + ac.bg + ';color:' + ac.fg + '">' + esc(initial) + '</div>'
-      + '<div class="cmt-body">'
-      + '<div class="cmt-meta">'
-      + '<span class="cmt-nick">' + esc(c.nick) + '</span>'
-      + (c.isOwner ? '<span class="cmt-badge">博主</span>' : '')
-      + '<span class="cmt-dot">·</span>'
-      + '<span class="cmt-time" data-ts="' + ts + '">' + timeAgo(ts) + '</span>'
-      + (ua ? '<span class="cmt-ua">' + esc(ua) + '</span>' : '')
-      + '</div>'
-      + '<div class="cmt-content">' + content + '</div>'
-      + '<div class="cmt-actions">'
-      + '<button class="cmt-action-btn cmt-like-btn' + (liked ? ' liked' : '') + '" data-id="' + c.id + '">'
-      + '<svg class="cmt-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="' + (liked ? 'currentColor' : 'none') + '"/></svg>'
-      + '<span class="cmt-like-count">' + (c.likes || '') + '</span>'
-      + '</button>'
-      + (depth < MAX_DEPTH
-        ? '<button class="cmt-action-btn cmt-reply-btn" data-id="' + c.id + '" data-nick="' + esc(c.nick) + '">'
-        + '<svg class="cmt-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
-        + '回复</button>'
-        : '')
-      + '</div>';
-
-    // Children
-    if (node.children.length) {
-      html += '<div class="cmt-children">';
-      for (var i = 0; i < node.children.length; i++) {
-        html += renderComment(node.children[i], depth + 1);
-      }
-      html += '</div>';
-    }
-
-    html += '</div></div>';
-    return html;
-  }
-
-  // ── Render all ──
-  function render(container) {
-    var total = state.comments.length;
-    var tree = buildTree(state.comments);
-    var storedNick = getStoredNick();
-    var storedEmail = getStoredEmail();
-    var storedLink = getStoredLink();
-
-    var html = ''
-      // Header
-      + '<div class="cmt-header">'
-      + '<div class="cmt-header-row">'
-      + '<h3 class="cmt-title">评论</h3>'
-      + '<span class="cmt-total">' + total + '</span>'
-      + '</div>'
-      + '</div>'
-
-      // Form
-      + '<div class="cmt-form" id="cmtForm">'
-      + '<div class="cmt-identity">'
-      + '<div class="cmt-field">'
-      + '<input class="cmt-input" id="cmtNick" type="text" placeholder=" " maxlength="' + 30 + '" value="' + esc(storedNick) + '">'
-      + '<label class="cmt-label">昵称 <span class="cmt-required">*</span></label>'
-      + '<div class="cmt-line"></div>'
-      + '</div>'
-      + '<div class="cmt-field">'
-      + '<input class="cmt-input" id="cmtEmail" type="email" placeholder=" " value="' + esc(storedEmail) + '">'
-      + '<label class="cmt-label">邮箱 <span class="cmt-optional">(不会公开)</span></label>'
-      + '<div class="cmt-line"></div>'
-      + '</div>'
-      + '<div class="cmt-field">'
-      + '<input class="cmt-input" id="cmtLink" type="url" placeholder=" " value="' + esc(storedLink) + '">'
-      + '<label class="cmt-label">网站 <span class="cmt-optional">(可选)</span></label>'
-      + '<div class="cmt-line"></div>'
-      + '</div>'
-      + '</div>'
-
-      // Reply hint
-      + '<div class="cmt-reply-hint" id="cmtReplyHint" style="display:none">'
-      + '<svg class="cmt-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
-      + '<span>回复 <strong id="cmtReplyNick"></strong></span>'
-      + '<button class="cmt-cancel-btn" id="cmtCancelReply">取消</button>'
-      + '</div>'
-
-      // Textarea
-      + '<div class="cmt-textarea-wrap">'
-      + '<textarea class="cmt-textarea" id="cmtContent" placeholder=" " maxlength="2000" rows="4"></textarea>'
-      + '<label class="cmt-textarea-label">写下你的想法…</label>'
-      + '<div class="cmt-textarea-line"></div>'
-      + '</div>'
-
-      // Actions
-      + '<div class="cmt-form-actions">'
-      + '<span class="cmt-hint">支持 **粗体**、\`代码\`、~~删除线~~、[链接](url)</span>'
-      + '<div class="cmt-form-right">'
-      + '<span class="cmt-char-count" id="cmtCharCount">0 / 2000</span>'
-      + '<button class="cmt-submit" id="cmtSubmit">'
-      + '<span class="cmt-submit-text">发表评论</span>'
-      + '<span class="cmt-submit-loading" style="display:none">'
-      + '<svg class="cmt-spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="60" stroke-dashoffset="20"/></svg>'
-      + '</span>'
-      + '</button>'
-      + '</div>'
-      + '</div>'
-      + '</div>'
-
-      // List
-      + '<div class="cmt-list" id="cmtList">';
-
-    if (total === 0) {
-      html += '<div class="cmt-empty">'
-        + '<svg class="cmt-empty-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1"/></svg>'
-        + '<p>还没有评论，来说点什么吧</p>'
-        + '</div>';
-    } else {
-      for (var i = 0; i < tree.length; i++) {
-        html += renderComment(tree[i], 0);
-      }
-    }
-
-    html += '</div>';
-    container.innerHTML = html;
-    bindEvents(container);
-    state.loaded = true;
-  }
-
-  // ── Events ──
-  function bindEvents(el) {
-    var form = $('#cmtForm', el);
-    var textarea = $('#cmtContent', el);
-    var charCount = $('#cmtCharCount', el);
-    var submitBtn = $('#cmtSubmit', el);
-    var replyHint = $('#cmtReplyHint', el);
-    var replyNick = $('#cmtReplyNick', el);
-    var cancelBtn = $('#cmtCancelReply', el);
-    var list = $('#cmtList', el);
-
-    // Textarea auto-resize + char count
-    if (textarea) {
-      textarea.addEventListener('input', function () {
-        this.style.height = 'auto';
-        this.style.height = Math.max(120, this.scrollHeight) + 'px';
-        var len = this.value.length;
-        charCount.textContent = len + ' / 2000';
-        charCount.classList.toggle('warn', len > 1800);
-      });
-    }
-
-    // Submit
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function () { submit(form); });
-    }
-    if (textarea) {
-      textarea.addEventListener('keydown', function (e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submit(form); }
-      });
-    }
-
-    // Cancel reply
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', function () {
-        state.replyTo = null;
-        state.replyNick = '';
-        replyHint.style.display = 'none';
-        textarea.placeholder = ' ';
-      });
-    }
-
-    // Delegate: reply + like buttons
-    if (list) {
-      list.addEventListener('click', function (e) {
-        var likeBtn = e.target.closest('.cmt-like-btn');
-        if (likeBtn) {
-          e.preventDefault();
-          handleLike(likeBtn);
-          return;
-        }
-        var replyBtn = e.target.closest('.cmt-reply-btn');
-        if (replyBtn) {
-          e.preventDefault();
-          handleReply(replyBtn, el);
-          return;
-        }
-      });
-    }
-  }
-
-  function handleReply(btn, el) {
-    var id = btn.dataset.id;
-    var nick = btn.dataset.nick;
-    state.replyTo = id;
-    state.replyNick = nick;
-
-    var hint = $('#cmtReplyHint', el);
-    var replyNickEl = $('#cmtReplyNick', el);
-    var textarea = $('#cmtContent', el);
-
-    if (hint) hint.style.display = '';
-    if (replyNickEl) replyNickEl.textContent = nick;
-    if (textarea) {
-      textarea.focus();
-      textarea.placeholder = '回复 ' + nick + '…';
-    }
-
-    // Scroll to form
-    var form = $('#cmtForm', el);
-    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  async function handleLike(btn) {
-    var id = btn.dataset.id;
-    var path = location.pathname;
-    btn.disabled = true;
-
-    try {
-      var res = await fetch(API + '/like', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: path, commentId: id }),
-      });
-      var data = await res.json();
-      if (res.ok) {
-        setLiked(id, data.liked);
-        btn.classList.toggle('liked', data.liked);
-        var svg = btn.querySelector('svg path');
-        if (svg) svg.setAttribute('fill', data.liked ? 'currentColor' : 'none');
-        var countEl = btn.querySelector('.cmt-like-count');
-        if (countEl) countEl.textContent = data.likes || '';
-      }
-    } catch (e) { }
-    btn.disabled = false;
-  }
-
-  async function submit(form) {
-    var nick = $('#cmtNick', form).value.trim();
-    var email = $('#cmtEmail', form).value.trim();
-    var link = $('#cmtLink', form).value.trim();
-    var content = $('#cmtContent', form).value.trim();
-    var submitBtn = $('#cmtSubmit', form);
-    var submitText = $('.cmt-submit-text', submitBtn);
-    var submitLoading = $('.cmt-submit-loading', submitBtn);
-
-    if (!nick) { shake($('#cmtNick', form)); return; }
-    if (!content) { shake($('#cmtContent', form)); return; }
-
-    saveIdentity(nick, email, link);
-
-    submitBtn.disabled = true;
-    if (submitText) submitText.style.display = 'none';
-    if (submitLoading) submitLoading.style.display = '';
-
-    try {
-      var res = await fetch(API + '/comment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          path: location.pathname,
-          parent: state.replyTo,
-          nick: nick,
-          email: email || undefined,
-          link: link || undefined,
-          content: content,
-        }),
-      });
-
-      if (res.ok) {
-        // Reset form
-        $('#cmtContent', form).value = '';
-        $('#cmtContent', form).style.height = '';
-        $('#cmtCharCount', form).textContent = '0 / 2000';
-        state.replyTo = null;
-        state.replyNick = '';
-        var hint = $('#cmtReplyHint', form);
-        if (hint) hint.style.display = 'none';
-
-        // Reload
-        await load();
-      } else {
-        var err = await res.json();
-        showToast(err.error || '发送失败');
-      }
-    } catch (e) {
-      showToast('网络错误');
-    }
-
-    submitBtn.disabled = false;
-    if (submitText) submitText.style.display = '';
-    if (submitLoading) submitLoading.style.display = 'none';
-  }
-
-  function shake(el) {
-    if (!el) return;
-    el.classList.add('cmt-shake');
-    el.focus();
-    setTimeout(function () { el.classList.remove('cmt-shake'); }, 500);
+    var initial = (nickname || '?').charAt(0).toUpperCase();
+    return '<span class="cs-avatar-initial">' + esc(initial) + '</span>';
   }
 
   function showToast(msg) {
-    var existing = document.querySelector('.cmt-toast');
-    if (existing) existing.remove();
-    var t = document.createElement('div');
-    t.className = 'cmt-toast';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    requestAnimationFrame(function () { t.classList.add('show'); });
-    setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove(); }, 300); }, 2500);
+    var toast = document.querySelector('.cs-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'cs-toast';
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'polite');
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toast.classList.remove('visible'); }, 3000);
   }
 
-  // ── Load comments ──
-  async function load() {
-    var container = document.getElementById('tcomment');
-    if (!container) return;
+  // ── 渲染单条评论 ──
+  function renderComment(c) {
+    var isEdited = c.created_at !== c.updated_at;
+    var nameHtml = c.website
+      ? '<a href="' + esc(c.website) + '" rel="noopener noreferrer nofollow" target="_blank">' + esc(c.nickname) + '</a>'
+      : esc(c.nickname);
 
+    return '<li class="cs-item" data-id="' + c.id + '" data-depth="' + c.depth + '" id="cs-' + c.id + '">'
+      + '<div class="cs-item-main">'
+      + '<div class="cs-avatar" aria-hidden="true">' + avatarHtml(c.avatar_hash, c.nickname) + '</div>'
+      + '<div class="cs-body">'
+      + '<div class="cs-meta"><span class="cs-nickname">' + nameHtml + '</span>'
+      + '<time class="cs-time" datetime="' + c.created_at + '">' + timeAgo(c.created_at) + '</time>'
+      + (isEdited ? '<span class="cs-edited">(已编辑)</span>' : '')
+      + '</div>'
+      + '<div class="cs-content">' + c.content_html + '</div>'
+      + '<div class="cs-actions">'
+      + '<button class="cs-action cs-like" data-id="' + c.id + '" aria-label="点赞">'
+      + (c.liked > 0 ? ICONS.heartFilled : ICONS.heart)
+      + '<span>' + (c.liked || '') + '</span></button>'
+      + (c.depth < 2
+        ? '<button class="cs-action cs-reply-btn" data-id="' + c.id + '" data-name="' + esc(c.nickname) + '" aria-label="回复">'
+          + ICONS.reply + '<span>回复</span></button>'
+        : '')
+      + '</div></div></div></li>';
+  }
+
+  // ── 递归渲染树 ──
+  function renderTree(comments, parentId) {
+    var children = [];
+    for (var i = 0; i < comments.length; i++) {
+      if (comments[i].parent_id === parentId) children.push(comments[i]);
+    }
+    if (!children.length) return '';
+    var html = '';
+    for (var j = 0; j < children.length; j++) {
+      var c = children[j];
+      var replies = renderTree(comments, c.id);
+      html += renderComment(c);
+      if (replies) html += '<ul class="cs-replies cs-list">' + replies + '</ul>';
+    }
+    return html;
+  }
+
+  // ── 主类 ──
+  function CommentSystem(container, config) {
+    this.config = config || {};
+    this.el = typeof container === 'string' ? document.querySelector(container) : container;
+    if (!this.el) return;
+    this.api = this.config.api || this.el.dataset.api || '';
+    this.page = this.config.page || this.el.dataset.page || '';
+    if (!this.api || !this.page) return;
+
+    this.comments = [];
+    this.cursor = null;
+    this.hasMore = false;
+
+    // ── 标记：评论区正在输入，阻止键盘快捷键 ──
+    this._inputFocused = false;
+
+    this.init();
+  }
+
+  CommentSystem.prototype.init = function () {
+    var self = this;
+
+    // 注入 HTML
+    this.el.innerHTML = ''
+      + '<div class="cs-header"><h3>评论</h3><span class="cs-count"></span></div>'
+      + '<form class="cs-form" novalidate>'
+      + '<input type="hidden" name="parent_id" value="0">'
+      + '<input type="hidden" name="depth" value="0">'
+      + '<div class="cs-reply-indicator"><span>回复 <strong class="cs-reply-name"></strong></span>'
+      + '<button type="button" class="cs-cancel-reply" aria-label="取消回复">&times;</button></div>'
+      + '<div class="cs-form-row">'
+      + '<input type="text" name="nickname" placeholder="昵称 *" required maxlength="30" autocomplete="name" aria-label="昵称">'
+      + '<input type="email" name="email" placeholder="邮箱（可选）" maxlength="100" autocomplete="email" aria-label="邮箱">'
+      + '<input type="url" name="website" placeholder="网站（可选）" maxlength="200" aria-label="个人网站">'
+      + '</div>'
+      + '<textarea name="content" placeholder="写下你的评论…" required maxlength="2000" rows="3" aria-label="评论内容"></textarea>'
+      + '<div class="cs-form-actions">'
+      + '<span class="cs-form-hint">支持 **粗体**、*斜体*、`代码`、[链接](url)</span>'
+      + '<button type="submit" class="cs-submit">发表评论</button>'
+      + '</div>'
+      + '</form>'
+      + '<div class="cs-list-wrap"><div class="cs-loading">加载中</div></div>';
+
+    // 缓存引用
+    this.form = this.el.querySelector('.cs-form');
+    this.listWrap = this.el.querySelector('.cs-list-wrap');
+    this.replyIndicator = this.el.querySelector('.cs-reply-indicator');
+    this.replyName = this.el.querySelector('.cs-reply-name');
+    this.countEl = this.el.querySelector('.cs-count');
+
+    // ── 输入焦点追踪（修复键盘冲突）──
+    var inputs = this.form.querySelectorAll('input, textarea');
+    for (var i = 0; i < inputs.length; i++) {
+      inputs[i].addEventListener('focus', function () {
+        self._inputFocused = true;
+        window.__cmtInputFocused = true;
+      });
+      inputs[i].addEventListener('blur', function () {
+        self._inputFocused = false;
+        // 延迟清除，避免点击按钮时误触发
+        setTimeout(function () {
+          if (!self._inputFocused) window.__cmtInputFocused = false;
+        }, 200);
+      });
+    }
+
+    // 事件绑定
+    this.form.addEventListener('submit', function (e) { self.handleSubmit(e); });
+    this.el.querySelector('.cs-cancel-reply').addEventListener('click', function () { self.cancelReply(); });
+
+    // 事件代理
+    this.listWrap.addEventListener('click', function (e) {
+      var likeBtn = e.target.closest('.cs-like');
+      var replyBtn = e.target.closest('.cs-reply-btn');
+      var loadMoreBtn = e.target.closest('.cs-load-more');
+      if (likeBtn) self.handleLike(likeBtn);
+      else if (replyBtn) self.handleReply(replyBtn);
+      else if (loadMoreBtn) self.loadComments(true);
+    });
+
+    this.loadComments();
+  };
+
+  // ── API: 加载评论 ──
+  CommentSystem.prototype.loadComments = function (append) {
+    var self = this;
+    var url = this.api + '/api/comments?page=' + encodeURIComponent(this.page) + '&limit=50';
+    if (append && this.cursor) url += '&cursor=' + this.cursor;
+
+    fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+      self.comments = append ? self.comments.concat(data.comments) : data.comments;
+      self.cursor = data.cursor;
+      self.hasMore = data.hasMore;
+      self.render(data.total);
+    }).catch(function () {
+      self.listWrap.innerHTML = '<div class="cs-empty">加载失败，请刷新重试</div>';
+    });
+  };
+
+  // ── API: 提交评论 ──
+  CommentSystem.prototype.handleSubmit = function (e) {
+    e.preventDefault();
+    var self = this;
+    var btn = this.form.querySelector('.cs-submit');
+    var data = {
+      page: this.page,
+      parent_id: parseInt(this.form.parent_id.value) || 0,
+      depth: parseInt(this.form.depth.value) || 0,
+      nickname: this.form.nickname.value.trim(),
+      email: this.form.email.value.trim(),
+      website: this.form.website.value.trim(),
+      content: this.form.content.value.trim(),
+    };
+    if (!data.nickname) { showToast('请输入昵称'); this.form.nickname.focus(); return; }
+    if (!data.content) { showToast('请输入评论内容'); this.form.content.focus(); return; }
+
+    btn.disabled = true;
+    btn.textContent = '发送中…';
+
+    fetch(this.api + '/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+    .then(function (res) {
+      if (!res.ok) throw new Error(res.data.error || '提交失败');
+      showToast(res.data.message || '评论已提交');
+      self.form.content.value = '';
+      self.cancelReply();
+      if (res.data.status === 'approved') self.loadComments();
+      else self.listWrap.insertAdjacentHTML('afterbegin', '<div class="cs-pending-notice">评论已提交，等待审核通过后显示</div>');
+      try {
+        localStorage.setItem('cs_nick', data.nickname);
+        if (data.email) localStorage.setItem('cs_email', data.email);
+        if (data.website) localStorage.setItem('cs_web', data.website);
+      } catch (e) {}
+    }).catch(function (err) {
+      showToast(err.message);
+    }).finally(function () {
+      btn.disabled = false;
+      btn.textContent = '发表评论';
+    });
+  };
+
+  // ── 点赞 ──
+  CommentSystem.prototype.handleLike = function (btn) {
+    if (btn.classList.contains('liked')) return;
+    var id = btn.dataset.id;
+    var self = this;
+    fetch(this.api + '/api/comments/' + id + '/like', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) throw new Error(data.error);
+        btn.classList.add('liked');
+        btn.innerHTML = ICONS.heartFilled + '<span>' + data.liked + '</span>';
+      }).catch(function (err) { showToast(err.message); });
+  };
+
+  // ── 回复 ──
+  CommentSystem.prototype.handleReply = function (btn) {
+    this.form.parent_id.value = btn.dataset.id;
+    var item = btn.closest('.cs-item');
+    this.form.depth.value = item ? (parseInt(item.dataset.depth || 0) + 1) : 1;
+    this.replyName.textContent = btn.dataset.name;
+    this.replyIndicator.classList.add('visible');
+    this.form.content.focus();
+    this.form.content.placeholder = '回复 ' + btn.dataset.name + '…';
+  };
+
+  CommentSystem.prototype.cancelReply = function () {
+    this.form.parent_id.value = '0';
+    this.form.depth.value = '0';
+    this.replyIndicator.classList.remove('visible');
+    this.form.content.placeholder = '写下你的评论…';
+  };
+
+  // ── 渲染 ──
+  CommentSystem.prototype.render = function (total) {
+    this.countEl.textContent = total > 0 ? '(' + total + ')' : '';
+    if (!this.comments.length) {
+      this.listWrap.innerHTML = '<div class="cs-empty">还没有评论，来抢沙发吧 ✨</div>';
+      return;
+    }
+    var html = '<ul class="cs-list">' + renderTree(this.comments, 0) + '</ul>';
+    if (this.hasMore) html += '<button class="cs-load-more">加载更多评论</button>';
+    this.listWrap.innerHTML = html;
+    // 恢复记住的昵称
     try {
-      var res = await fetch(API + '/comments?path=' + encodeURIComponent(location.pathname));
-      if (!res.ok) throw new Error(res.status);
-      var data = await res.json();
-      state.comments = data.comments || [];
-      render(container);
-    } catch (e) {
-      container.innerHTML = '<div class="cmt-error">'
-        + '<p>评论加载失败</p>'
-        + '<button class="cmt-retry" onclick="window.__initComments()">重试</button>'
-        + '</div>';
-    }
-  }
+      var n = localStorage.getItem('cs_nick');
+      var e = localStorage.getItem('cs_email');
+      var w = localStorage.getItem('cs_web');
+      if (n && !this.form.nickname.value) this.form.nickname.value = n;
+      if (e && !this.form.email.value) this.form.email.value = e;
+      if (w && !this.form.website.value) this.form.website.value = w;
+    } catch (err) {}
+  };
 
-  // ── Update relative times ──
-  setInterval(function () {
-    var els = document.querySelectorAll('.cmt-time[data-ts]');
-    for (var i = 0; i < els.length; i++) {
-      var ts = parseInt(els[i].dataset.ts);
-      if (ts) els[i].textContent = timeAgo(ts);
-    }
-  }, 60000);
+  // ── 暴露全局接口 ──
+  window.HaprialComments = CommentSystem;
 
-  // ── Public API ──
-  window.__initComments = function () { load(); };
+  // ── 为 app.js 提供输入焦点检查 ──
+  window.__cmtInputFocused = false;
 })();
