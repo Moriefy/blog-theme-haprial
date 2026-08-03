@@ -359,22 +359,7 @@ function renderArticleNav(id){var idx=articleOrder.indexOf(String(id)),nav=$('ar
 
 var __twikooLoaded=false;
 var __friendsTwikooLoaded=false;
-function __initFriendsTwikoo(){
-  var _c=window.__HAPRIAL_DATA__.comments;var envId=(_c&&_c.enabled)?_c.twikooEnvId:'';
-  if(!envId||__friendsTwikooLoaded)return;
-  var el=document.getElementById('tcomment-friends');
-  if(!el)return;
-  __friendsTwikooLoaded=true;
-  function doInit(){if(typeof twikoo!=='undefined'){try{twikoo.init({envId:envId,el:'#tcomment-friends',path:'/friends/'})}catch(e){}}}
-  var obs=new IntersectionObserver(function(entries){
-    if(entries[0].isIntersecting){obs.disconnect();
-      if(__twikooLoaded){doInit();return}
-      __twikooLoaded=true;
-      var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/twikoo@1.6.40/dist/twikoo.all.min.js';s.onload=doInit;document.head.appendChild(s);
-    }
-  },{rootMargin:'200px'});
-  obs.observe(el);
-}
+function __initFriendsTwikoo(){/* Friends comments now handled per-friend in renderFriends() */}
 function __initTwikoo(path){
   var _c=window.__HAPRIAL_DATA__.comments;var envId=(_c&&_c.enabled)?_c.twikooEnvId:'';
   if(!envId)return;
@@ -461,7 +446,7 @@ function clearFilter(){activeFilterLabel='';activeFilterFn=null;if(!reducedMotio
 function renderTags(){var sorted=allTags.slice().sort(function(a,b){return a.n.localeCompare(b.n,'zh-CN')});$('tagsCount').textContent='共 '+sorted.length+' 个标签';$('tagsGrid').innerHTML=sorted.map(function(t){return'<div class="tag-card" data-tag="'+t.n+'"><div class="tag-card-name">'+t.n+'</div><div class="tag-card-count">'+t.c+' 篇文章</div></div>'}).join('')}
 function renderCats(){$('catsCount').textContent='共 '+cats.length+' 个分类';$('catsGrid').innerHTML=cats.map(function(c){return'<div class="cat-card" data-cat="'+c.f+'"><div class="cat-dot" style="background:'+c.col+'"></div><div class="cat-name">'+c.n+'</div><div class="cat-desc">'+c.d+'</div><div class="cat-count">'+c.c+' 篇文章</div></div>'}).join('')}
 function renderArchive(){var entries=[];articleOrder.forEach(function(id){var art=articles[id];if(!art)return;var m=art.dateISO.match(/(\d{4})-(\d{2})-(\d{2})/);if(!m)return;entries.push({id:id,year:+m[1],month:+m[2],day:+m[3],title:art.title,tags:art.tags,rt:art.rt,category:art.category})});entries.sort(function(a,b){return(b.year*10000+b.month*100+b.day)-(a.year*10000+a.month*100+a.day)});var grouped={},html='',idx=0;var monthNames={1:"Jan",2:"Feb",3:"Mar",4:"Apr",5:"May",6:"Jun",7:"Jul",8:"Aug",9:"Sep",10:"Oct",11:"Nov",12:"Dec"};entries.forEach(function(e){if(!grouped[e.year])grouped[e.year]=[];grouped[e.year].push(e)});Object.keys(grouped).sort(function(a,b){return b-a}).forEach(function(y){var items=grouped[y];html+='<div class="archive-year-group"><div class="archive-year-label">'+y+'<span class="archive-year-count">'+items.length+' 篇</span></div>';items.forEach(function(e){var tag=e.tags.length?e.tags[0]:'';html+='<div class="archive-card" data-id="'+e.id+'" style="--arch-d:'+(idx++*50)+'ms"><div class="archive-card-date"><span class="archive-card-month">'+monthNames[e.month]+'</span><span class="archive-card-day">'+e.day+'</span></div><div class="archive-card-body"><div class="archive-card-title">'+escHtml(e.title)+'</div><div class="archive-card-meta">'+(tag?'<span class="archive-card-tag">'+escHtml(tag)+'</span>':'')+'<span class="archive-card-rt">'+e.rt+'</span></div></div></div>'});html+='</div>'});$('archiveCount').textContent='共 '+entries.length+' 篇文章';$('archiveTimeline').innerHTML=html}
-function renderFriends(){$('flGrid').innerHTML=friends.map(function(f){return'<a class="fl-card" href="'+escHtml(f.u)+'" target="_blank" rel="noopener"><img class="fl-avatar" src="'+escHtml(f.a)+'" alt="'+escHtml(f.n)+'" width="48" height="48" loading="lazy"><div class="fl-info"><div class="fl-name">'+escHtml(f.n)+'</div><div class="fl-desc">'+escHtml(f.d)+'</div></div></a>'}).join('')}
+function renderFriends(){var cm=window.__HAPRIAL_DATA__.comments;var hasComments=cm&&cm.enabled&&cm.apiUrl;$('flGrid').innerHTML=friends.map(function(f,i){var id='fl-'+i;var card='<a class="fl-card" href="'+escHtml(f.u)+'" target="_blank" rel="noopener"><img class="fl-avatar" src="'+escHtml(f.a)+'" alt="'+escHtml(f.n)+'" width="48" height="48" loading="lazy"><div class="fl-info"><div class="fl-name">'+escHtml(f.n)+'</div><div class="fl-desc">'+escHtml(f.d)+'</div></div></a>';if(hasComments){card+='<div class="fl-comment-toggle" data-fl-idx="'+i+'"><button class="cmt-btn cmt-btn-ghost" style="font-size:12px;margin:8px 0">💬 评论</button></div><div class="fl-comment-section" id="flComment-'+id+'" style="display:none"></div>'}return card}).join('');if(hasComments){$('flGrid').addEventListener('click',function(e){var btn=e.target.closest('.fl-comment-toggle');if(!btn)return;var idx=parseInt(btn.dataset.flIdx);var sec=document.getElementById('flComment-fl-'+idx);if(!sec)return;if(sec.style.display==='none'){sec.style.display='';if(!sec.dataset.loaded){sec.dataset.loaded='1';sec.id='commentSection';if(typeof window.__initComments==='function')window.__initComments('/friends/fl-'+idx+'/',cm.apiUrl,'fl-'+idx);sec.id='flComment-fl-'+idx}}else{sec.style.display='none'}})}}
 function createRipple(e,el){if(isLowEnd)return;if(el.querySelectorAll('.ripple').length>3)return;var r=el.getBoundingClientRect(),s=Math.max(r.width,r.height)*2,sp=document.createElement('span');sp.className='ripple';sp.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(e.clientX-r.left-s/2)+'px;top:'+(e.clientY-r.top-s/2)+'px';el.appendChild(sp);sp.addEventListener('animationend',function(){sp.remove()})}
 function syncAllIcons(t){document.querySelectorAll('.theme-wrap').forEach(function(w){var s=w.querySelector('.sun'),m=w.querySelector('.moon');if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}})}
 function setTheme(t){var el=document.documentElement;el.setAttribute('data-theme',t);try{localStorage.setItem('th',t)}catch(e){}syncAllIcons(t);var btn=document.getElementById('themeBtn');if(btn)btn.setAttribute('aria-pressed',t==='dark'?'true':'false')}
@@ -503,6 +488,10 @@ document.addEventListener('click',function(e){
 });
 
 document.addEventListener('keydown',function(e){
+  // Guard: skip all shortcuts when typing in comment/input fields
+  if(window.__cmtInputFocused)return;
+  var ae=document.activeElement;
+  if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable))return;
   if(e.key==='Escape'){if(tocSheet.classList.contains('open')){closeTocSheet();return}if(searchView.classList.contains('open')){closeSearch();return}var lb=document.getElementById('lightbox');if(lb&&lb.classList.contains('open')){if(window.__lbClose)window.__lbClose();else{lb.classList.remove('open');document.body.style.overflow=''}return}if(articleView.classList.contains('open')){if(history.length>1)history.back();else{closeArticleVisual();pushRoute({type:'page',page:'articles'})}return}}
   if(searchView.classList.contains('open')){var items=svResults.querySelectorAll('.sv-item');if(e.key==='ArrowDown'){e.preventDefault();if(searchActiveIdx<items.length-1){searchActiveIdx++;updateSearchHighlight()}return}if(e.key==='ArrowUp'){e.preventDefault();if(searchActiveIdx>0){searchActiveIdx--;updateSearchHighlight()}return}if(e.key==='Enter'){e.preventDefault();if(searchActiveIdx>=0&&items[searchActiveIdx]){closeSearch();var sid=items[searchActiveIdx].dataset.id;setTimeout(function(){pushRoute({type:'article',articleId:sid});openArticleVisual(sid)},150)}return}}
   if(articleView.classList.contains('open')&&!searchView.classList.contains('open')){if(e.key==='ArrowRight'){var idx=articleOrder.indexOf(currentArticleId);if(idx<articleOrder.length-1){switchToArticleVisual(articleOrder[idx+1],'next');replaceRoute({type:'article',articleId:articleOrder[idx+1]})}return}if(e.key==='ArrowLeft'){var idx=articleOrder.indexOf(currentArticleId);if(idx>0){switchToArticleVisual(articleOrder[idx-1],'prev');replaceRoute({type:'article',articleId:articleOrder[idx-1]})}return}}
