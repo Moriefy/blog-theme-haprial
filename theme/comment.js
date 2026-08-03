@@ -1,5 +1,4 @@
-// Haprial Comments
-// Clean, modular comment system with Material Design 3
+// Haprial Comments — Coolapk-style 楼中楼
 (function () {
   'use strict';
 
@@ -8,20 +7,16 @@
   // ══════════════════════════════════════════════════════════════════════════
   var api = '', path = '', linkId = '';
   var list = [], loading = false, busy = false;
-  var root = null, bound = false;          // container + event guard
-  var inline = null, inlineTarget = null;  // inline reply state
+  var root = null, bound = false;
+  var inline = null, inlineTarget = null; // inline reply state
   var foldThreshold = 120;
-  var maxNest = 8;
+  var PREVIEW_COUNT = 3; // 默认展示几条子回复
 
   // ══════════════════════════════════════════════════════════════════════════
   // Utilities
   // ══════════════════════════════════════════════════════════════════════════
   var $ = function (id) { return document.getElementById(id); };
-
-  function esc(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
+  function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
   function ago(iso) {
     if (!iso) return '';
@@ -35,10 +30,21 @@
   }
 
   function byId(id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
-  function kids(pid) { return list.filter(function (c) { return (c.parent_id || null) === pid; }); }
+
+  // Get ALL replies to a top-level comment (flatten nested into one list)
+  function allReplies(topId) {
+    var result = [];
+    var direct = list.filter(function (c) { return c.parent_id === topId; });
+    for (var i = 0; i < direct.length; i++) {
+      result.push(direct[i]);
+      var sub = allReplies(direct[i].id);
+      for (var j = 0; j < sub.length; j++) result.push(sub[j]);
+    }
+    return result;
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Likes (localStorage)
+  // Likes
   // ══════════════════════════════════════════════════════════════════════════
   var LIKE_KEY = '***';
   function likedIds() { try { return JSON.parse(localStorage.getItem(LIKE_KEY) || '[]'); } catch (e) { return []; } }
@@ -51,7 +57,7 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Draft (localStorage + debounce)
+  // Draft
   // ══════════════════════════════════════════════════════════════════════════
   var draftTmr = null, draftNS = '';
   function dk() { return 'cmt_d_' + draftNS; }
@@ -74,7 +80,7 @@
   function touchDraft() { clearTimeout(draftTmr); draftTmr = setTimeout(saveDraft, 500); }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // XHR helpers
+  // XHR
   // ══════════════════════════════════════════════════════════════════════════
   function xhr(method, url, body, cb) {
     var r = new XMLHttpRequest();
@@ -88,68 +94,86 @@
   // ══════════════════════════════════════════════════════════════════════════
   // Avatar
   // ══════════════════════════════════════════════════════════════════════════
-  var PALETTE = ['#3D5A6E', '#4A7B6A', '#8E6B9E', '#B07D56', '#5C7A3D', '#6B5B8A', '#8B6B4A', '#4A6B8A'];
-  function avColor(n) { var h = 0; for (var i = 0; i < n.length; i++) h = ((h << 5) - h) + n.charCodeAt(i); return PALETTE[Math.abs(h) % PALETTE.length]; }
+  var PAL = ['#3D5A6E', '#4A7B6A', '#8E6B9E', '#B07D56', '#5C7A3D', '#6B5B8A', '#8B6B4A', '#4A6B8A'];
+  function avColor(n) { var h = 0; for (var i = 0; i < n.length; i++) h = ((h << 5) - h) + n.charCodeAt(i); return PAL[Math.abs(h) % PAL.length]; }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Render helpers
+  // Render — single card (main comment + replies)
   // ══════════════════════════════════════════════════════════════════════════
-
-  function avatar(nick) {
-    return '<div class="cm-av" style="background:' + avColor(nick) + '">' + esc(nick.charAt(0).toUpperCase()) + '</div>';
+  function nickHTML(c) {
+    return c.website
+      ? '<a class="cm-nick" href="' + esc(c.website) + '" target="_blank" rel="noopener">' + esc(c.nick) + '</a>'
+      : '<span class="cm-nick">' + esc(c.nick) + '</span>';
   }
 
-  function meta(c) {
-    var h = '';
-    // nick — link if website
-    if (c.website) h += '<a class="cm-nick" href="' + esc(c.website) + '" target="_blank" rel="noopener">' + esc(c.nick) + '</a>';
-    else h += '<span class="cm-nick">' + esc(c.nick) + '</span>';
-    // reply tag
-    if (c.parent_id) { var p = byId(c.parent_id); if (p) h += '<span class="cm-tag">↩ ' + esc(p.nick) + '</span>'; }
-    // device
-    if (c.device) h += '<span class="cm-dev">' + esc(c.device) + '</span>';
-    // time
-    h += '<span class="cm-time">' + ago(c.time) + '</span>';
+  function deviceTag(c) {
+    return c.device ? '<span class="cm-dev">' + esc(c.device) + '</span>' : '';
+  }
+
+  // Main comment header
+  function mainMeta(c) {
+    return '<div class="cm-meta">' + nickHTML(c) + deviceTag(c) + '<span class="cm-time">' + ago(c.time) + '</span></div>';
+  }
+
+  // Like button
+  function likeBtn(c) {
+    var liked = hasLiked(c.id), lk = c.likes || 0;
+    return '<button class="cm-like' + (liked ? ' on' : '') + '" data-act="like" data-id="' + c.id + '">' +
+      (liked ? '▲' : '△') + (lk ? ' ' + lk : '') + '</button>';
+  }
+
+  // Single reply line (compact, 酷安 style)
+  function replyLine(r) {
+    var parentNick = '';
+    if (r.parent_id) {
+      var p = byId(r.parent_id);
+      if (p && p.nick !== r.nick) parentNick = '回复 <span class="cm-at">@' + esc(p.nick) + '</span>：';
+    }
+    return '<div class="cm-reply" data-id="' + r.id + '">' +
+      nickHTML(r) +
+      '<span class="cm-reply-body">' + parentNick + r.content + '</span>' +
+    '</div>';
+  }
+
+  // Full card
+  function cardHTML(top) {
+    var replies = allReplies(top.id);
+    var total = replies.length;
+    var liked = hasLiked(top.id), lk = top.likes || 0;
+
+    var h = '<div class="cm-card" data-top="' + top.id + '">';
+    h += '<div class="cm-card-head">';
+    h += '<div class="cm-av" style="background:' + avColor(top.nick) + '">' + esc(top.nick.charAt(0).toUpperCase()) + '</div>';
+    h += '<div class="cm-card-main">';
+    h += mainMeta(top);
+    h += '<div class="cm-body">' + top.content + '</div>';
+    h += '<div class="cm-acts">';
+    h += '<button class="cm-btn" data-act="reply" data-id="' + top.id + '">回复</button>';
+    h += likeBtn(top);
+    h += '</div>';
+    h += '</div></div>';
+
+    // Replies section
+    if (total > 0) {
+      h += '<div class="cm-replies" data-top="' + top.id + '">';
+      h += '<div class="cm-replies-inner">';
+      var show = replies.slice(0, PREVIEW_COUNT);
+      for (var i = 0; i < show.length; i++) h += replyLine(show[i]);
+      h += '</div>';
+      if (total > PREVIEW_COUNT) {
+        h += '<button class="cm-more" data-act="expand" data-top="' + top.id + '">展开剩余 ' + (total - PREVIEW_COUNT) + ' 条回复</button>';
+      }
+      h += '</div>';
+    }
+
+    h += '</div>';
     return h;
   }
 
-  function actions(c) {
-    var liked = hasLiked(c.id), lk = c.likes || 0;
-    return '<div class="cm-acts">' +
-      '<button class="cm-btn" data-act="reply" data-id="' + c.id + '">回复</button>' +
-      '<button class="cm-btn cm-like' + (liked ? ' on' : '') + '" data-act="like" data-id="' + c.id + '">' +
-        (liked ? '▲' : '△') + (lk ? ' ' + lk : '') +
-      '</button>' +
-    '</div>';
-  }
-
-  function commentNode(c, depth) {
-    return '<div class="cm-node" data-id="' + c.id + '">' +
-      avatar(c.nick) +
-      '<div class="cm-main">' +
-        '<div class="cm-meta">' + meta(c) + '</div>' +
-        '<div class="cm-body">' + c.content + '</div>' +
-        actions(c) +
-      '</div>' +
-    '</div>';
-  }
-
-  function buildTree(pid, depth) {
-    var ch = kids(pid);
-    if (!ch.length) return '';
-    var cls = depth >= maxNest ? 'cm-tree cm-accent' : 'cm-tree';
-    var h = '<div class="' + cls + '">';
-    for (var i = 0; i < ch.length; i++) {
-      h += commentNode(ch[i], depth);
-      h += buildTree(ch[i].id, depth + 1);
-    }
-    return h + '</div>';
-  }
-
-  function allHTML() {
+  function allCardsHTML() {
     var top = list.filter(function (c) { return !c.parent_id; });
     var h = '';
-    for (var i = 0; i < top.length; i++) { h += commentNode(top[i], 0); h += buildTree(top[i].id, 1); }
+    for (var i = 0; i < top.length; i++) h += cardHTML(top[i]);
     return h;
   }
 
@@ -176,7 +200,7 @@
           '</div>' +
         '</div>' +
         '<div id="cmList">' +
-          (loading ? skelHTML() : n ? '<div class="cm-list">' + allHTML() + '</div>' : emptyHTML()) +
+          (loading ? skelHTML() : n ? allCardsHTML() : emptyHTML()) +
         '</div>' +
       '</div>';
     loadDraft();
@@ -187,12 +211,10 @@
     return '<div class="cm-skel"><div class="cm-skel-av"></div><div class="cm-skel-ln" style="width:30%"></div></div>' +
            '<div class="cm-skel"><div class="cm-skel-av"></div><div class="cm-skel-ln" style="width:50%"></div></div>';
   }
-  function emptyHTML() {
-    return '<div class="cm-empty"><p class="cm-empty-ico">💬</p><p>还没有评论，来抢沙发吧</p></div>';
-  }
+  function emptyHTML() { return '<div class="cm-empty"><p class="cm-empty-ico">💬</p><p>还没有评论，来抢沙发吧</p></div>'; }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Long‑comment fold
+  // Long-comment fold
   // ══════════════════════════════════════════════════════════════════════════
   function applyFold() {
     if (!root) return;
@@ -207,14 +229,8 @@
         btn.className = 'cm-fold-btn';
         btn.textContent = '展开';
         btn.onclick = function () {
-          if (el.classList.contains('cm-fold')) {
-            el.classList.remove('cm-fold');
-            btn.textContent = '收起';
-          } else {
-            el.classList.add('cm-fold');
-            btn.textContent = '展开';
-            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
+          if (el.classList.contains('cm-fold')) { el.classList.remove('cm-fold'); btn.textContent = '收起'; }
+          else { el.classList.add('cm-fold'); btn.textContent = '展开'; el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
         };
         el.parentNode.insertBefore(btn, el.nextSibling);
       });
@@ -222,19 +238,38 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Inline reply
+  // Expand replies
+  // ══════════════════════════════════════════════════════════════════════════
+  function expandReplies(topId) {
+    var card = root.querySelector('.cm-card[data-top="' + topId + '"]');
+    if (!card) return;
+    var repliesDiv = card.querySelector('.cm-replies');
+    if (!repliesDiv) return;
+    var replies = allReplies(topId);
+    var inner = repliesDiv.querySelector('.cm-replies-inner');
+    if (inner) {
+      var h = '';
+      for (var i = 0; i < replies.length; i++) h += replyLine(replies[i]);
+      inner.innerHTML = h;
+    }
+    var btn = repliesDiv.querySelector('.cm-more');
+    if (btn) btn.remove();
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Inline reply (酷安 style: appears inside the card)
   // ══════════════════════════════════════════════════════════════════════════
   function killInline() {
     if (inline) { inline.remove(); inline = null; inlineTarget = null; }
   }
 
-  function spawnInline(cid) {
+  function spawnInline(topId) {
     killInline();
-    var parent = byId(cid);
-    if (!parent) return;
-    var node = root.querySelector('.cm-node[data-id="' + cid + '"]');
-    if (!node) return;
-    inlineTarget = cid;
+    var top = byId(topId);
+    if (!top) return;
+    var card = root.querySelector('.cm-card[data-top="' + topId + '"]');
+    if (!card) return;
+    inlineTarget = topId;
 
     var f = document.createElement('div');
     f.className = 'cm-inline';
@@ -244,14 +279,14 @@
         '<input class="cm-in cm-il-email" placeholder="邮箱" maxlength="100">' +
         '<input class="cm-in cm-il-web" placeholder="网站" maxlength="200">' +
       '</div>' +
-      '<textarea class="cm-ta cm-il-body" placeholder="回复 ' + esc(parent.nick) + '…" maxlength="2000"></textarea>' +
+      '<textarea class="cm-ta cm-il-body" placeholder="回复 ' + esc(top.nick) + '…" maxlength="2000"></textarea>' +
       '<div class="cm-foot">' +
         '<span class="cm-hint">Ctrl+Enter 发送</span>' +
         '<button class="cm-cancel">取消</button>' +
         '<button class="cm-send cm-il-send">回复</button>' +
       '</div>';
 
-    node.querySelector('.cm-main').appendChild(f);
+    card.appendChild(f);
     inline = f;
 
     // Pre-fill from main form
@@ -262,25 +297,23 @@
 
     setTimeout(function () { f.querySelector('.cm-il-body').focus(); }, 60);
 
-    // Wire inline buttons
     f.querySelector('.cm-cancel').onclick = killInline;
-    f.querySelector('.cm-il-send').onclick = function () { submitInline(f, cid); };
+    f.querySelector('.cm-il-send').onclick = function () { submitInline(f, topId); };
     f.querySelector('.cm-il-body').onkeydown = function (e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submitInline(f, cid); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submitInline(f, topId); }
     };
-    // Draft
     var ins = f.querySelectorAll('.cm-in, .cm-ta');
     for (var i = 0; i < ins.length; i++) ins[i].oninput = touchDraft;
   }
 
-  function submitInline(f, pid) {
+  function submitInline(f, parentId) {
     if (busy) return;
     var nick = (f.querySelector('.cm-il-nick').value || '').trim();
     var body = (f.querySelector('.cm-il-body').value || '').trim();
     if (!nick) { f.querySelector('.cm-il-nick').focus(); return; }
     if (!body) { f.querySelector('.cm-il-body').focus(); return; }
 
-    // Sync fields to main form
+    // Sync to main form
     var mn = $('cmtNick'), me = $('cmtEmail'), mw = $('cmtWeb');
     if (mn) mn.value = nick;
     if (me) me.value = (f.querySelector('.cm-il-email').value || '').trim();
@@ -290,11 +323,10 @@
     var btn = f.querySelector('.cm-il-send');
     btn.disabled = true; btn.textContent = '发送中…';
 
-    doSubmit(nick, (f.querySelector('.cm-il-email').value || '').trim(), (f.querySelector('.cm-il-web').value || '').trim(), body, pid, function () {
+    doSubmit(nick, (f.querySelector('.cm-il-email').value || '').trim(), (f.querySelector('.cm-il-web').value || '').trim(), body, parentId, function () {
       busy = false; btn.disabled = false; btn.textContent = '回复';
       killInline();
       clearDraft();
-      var ci = $('cmtBody'); if (ci) ci.value = '';
     });
   }
 
@@ -343,12 +375,8 @@
     var nowLiked = flipLike(cid);
     if (c) c.likes = nowLiked ? cur + 1 : Math.max(0, cur - 1);
 
-    // Instant UI
     var btn = root.querySelector('[data-act="like"][data-id="' + cid + '"]');
-    if (btn) {
-      btn.classList.toggle('on', nowLiked);
-      btn.innerHTML = (nowLiked ? '▲' : '△') + (c.likes ? ' ' + c.likes : '');
-    }
+    if (btn) { btn.classList.toggle('on', nowLiked); btn.innerHTML = (nowLiked ? '▲' : '△') + (c.likes ? ' ' + c.likes : ''); }
 
     xhr('POST', api + '/api/comments/like', { comment_id: cid, path: path, link_id: linkId || '', action: nowLiked ? 'like' : 'unlike' }, function (err, res) {
       if (!err && c && res && res.likes !== undefined) {
@@ -359,7 +387,7 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Event delegation — bound ONCE per container
+  // Event delegation — bound ONCE
   // ══════════════════════════════════════════════════════════════════════════
   function bind() {
     if (bound || !root) return;
@@ -368,21 +396,82 @@
     root.addEventListener('click', function (e) {
       var t = e.target;
 
-      // Send button
+      // Send
       if (t.id === 'cmSend' || t.closest('#cmSend')) { e.preventDefault(); submitMain(); return; }
 
-      // Action buttons (reply / like)
+      // Action buttons
       var act = t.closest('[data-act]');
       if (act) {
         e.preventDefault();
-        var a = act.dataset.act, id = act.dataset.id;
+        var a = act.dataset.act;
+        var id = act.dataset.id;
         if (a === 'reply') { inlineTarget === id ? killInline() : spawnInline(id); }
         else if (a === 'like') { handleLike(id); }
+        else if (a === 'expand') { expandReplies(act.dataset.top); }
+        return;
+      }
+
+      // Click on reply line to reply to that specific reply
+      var replyEl = t.closest('.cm-reply');
+      if (replyEl && replyEl.dataset.id) {
+        e.preventDefault();
+        // Find the top-level card this reply belongs to
+        var card = replyEl.closest('.cm-card');
+        if (card && card.dataset.top) {
+          // Set the parent_id to the specific reply, but spawn inline in the card
+          var rid = replyEl.dataset.id;
+          killInline();
+          var rComment = byId(rid);
+          if (!rComment) return;
+          var cardEl = root.querySelector('.cm-card[data-top="' + card.dataset.top + '"]');
+          if (!cardEl) return;
+          inlineTarget = card.dataset.top;
+
+          var f = document.createElement('div');
+          f.className = 'cm-inline';
+          f.innerHTML =
+            '<div class="cm-fields">' +
+              '<input class="cm-in cm-il-nick" placeholder="昵称 *" maxlength="50">' +
+              '<input class="cm-in cm-il-email" placeholder="邮箱" maxlength="100">' +
+              '<input class="cm-in cm-il-web" placeholder="网站" maxlength="200">' +
+            '</div>' +
+            '<textarea class="cm-ta cm-il-body" placeholder="回复 ' + esc(rComment.nick) + '…" maxlength="2000"></textarea>' +
+            '<div class="cm-foot">' +
+              '<span class="cm-hint">Ctrl+Enter 发送</span>' +
+              '<button class="cm-cancel">取消</button>' +
+              '<button class="cm-send cm-il-send" data-reply-to="' + rid + '">回复</button>' +
+            '</div>';
+
+          cardEl.appendChild(f);
+          inline = f;
+
+          var mn = $('cmtNick'), me = $('cmtEmail'), mw = $('cmtWeb');
+          if (mn && mn.value) f.querySelector('.cm-il-nick').value = mn.value;
+          if (me && me.value) f.querySelector('.cm-il-email').value = me.value;
+          if (mw && mw.value) f.querySelector('.cm-il-web').value = mw.value;
+
+          setTimeout(function () { f.querySelector('.cm-il-body').focus(); }, 60);
+
+          f.querySelector('.cm-cancel').onclick = killInline;
+          f.querySelector('.cm-il-send').onclick = function () {
+            var targetId = f.querySelector('.cm-il-send').dataset.replyTo || card.dataset.top;
+            submitInline(f, targetId);
+          };
+          f.querySelector('.cm-il-body').onkeydown = function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              var targetId = f.querySelector('.cm-il-send').dataset.replyTo || card.dataset.top;
+              submitInline(f, targetId);
+            }
+          };
+          var ins = f.querySelectorAll('.cm-in, .cm-ta');
+          for (var i = 0; i < ins.length; i++) ins[i].oninput = touchDraft;
+        }
         return;
       }
     });
 
-    // Input watchers: draft + keyboard guard
+    // Input watchers
     function watch(el) {
       if (!el) return;
       el.addEventListener('input', touchDraft);
@@ -413,7 +502,7 @@
       '.cm-cnt{font-size:12px;font-weight:500;color:var(--on-primary-container);background:var(--primary-container);padding:2px 10px;border-radius:999px}',
 
       // ── Form ──
-      '.cm-form{background:var(--surface-container-low);border-radius:28px;padding:28px;margin-bottom:32px}',
+      '.cm-form{background:var(--surface-container-low);border-radius:28px;padding:28px;margin-bottom:24px}',
       '.cm-fields{display:flex;gap:12px;margin-bottom:14px}',
       '.cm-in{flex:1;height:44px;padding:0 16px;background:var(--surface);border:1px solid var(--outline-variant);border-radius:12px;font-size:14px;color:var(--on-surface);outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit}',
       '.cm-in:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-container)}',
@@ -434,22 +523,21 @@
       '.cm-cancel:hover{background:var(--surface-container-high)}',
 
       // ── Inline reply ──
-      '.cm-inline{background:var(--surface-container-low);border-radius:16px;padding:20px;margin:14px 0;animation:cmIn .2s ease both}',
+      '.cm-inline{background:var(--surface-container-low);border-radius:16px;padding:20px;margin-top:16px;animation:cmIn .2s ease both}',
       '.cm-inline .cm-fields{margin-bottom:12px}',
       '.cm-inline .cm-ta{min-height:80px}',
 
-      // ── Comment list ──
-      '.cm-list{display:flex;flex-direction:column}',
-      '.cm-node{display:flex;gap:14px;padding:20px 0;border-bottom:1px solid var(--outline-variant)}',
-      '.cm-node:last-child{border-bottom:none}',
+      // ── Card (酷安 style) ──
+      '.cm-card{padding:20px 0;border-bottom:1px solid var(--outline-variant)}',
+      '.cm-card:last-child{border-bottom:none}',
+      '.cm-card-head{display:flex;gap:12px}',
       '.cm-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;user-select:none}',
-      '.cm-main{flex:1;min-width:0}',
+      '.cm-card-main{flex:1;min-width:0}',
       '.cm-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}',
       '.cm-nick{font-size:14px;font-weight:600;color:var(--on-surface);text-decoration:none}',
       'a.cm-nick:hover{color:var(--primary)}',
       '.cm-time{font-size:12px;color:var(--outline)}',
       '.cm-dev{font-size:11px;color:var(--outline);background:var(--surface-container-high);padding:1px 6px;border-radius:4px}',
-      '.cm-tag{font-size:11px;color:var(--primary);background:var(--primary-container);padding:1px 8px;border-radius:999px}',
 
       // ── Content ──
       '.cm-body{font-size:14px;line-height:1.8;color:var(--on-surface-variant);word-break:break-word}',
@@ -469,13 +557,23 @@
       '.cm-acts{display:flex;align-items:center;gap:6px;margin-top:8px}',
       '.cm-btn{font-size:12px;color:var(--outline);background:none;border:none;cursor:pointer;padding:4px 10px;border-radius:999px;transition:color .15s,background .15s;font-family:inherit}',
       '.cm-btn:hover{color:var(--primary);background:var(--surface-container-high)}',
+      '.cm-like{font-size:12px;color:var(--outline);background:none;border:none;cursor:pointer;padding:4px 10px;border-radius:999px;transition:color .15s;font-family:inherit}',
+      '.cm-like:hover{color:var(--primary)}',
       '.cm-like.on{color:var(--primary)}',
 
-      // ── Nesting ──
-      '.cm-tree{padding-left:24px;border-left:2px solid var(--outline-variant)}',
-      '.cm-tree .cm-node{padding:14px 0}',
-      '.cm-tree .cm-av{width:30px;height:30px;font-size:12px}',
-      '.cm-accent{border-left:3px solid var(--primary);background:var(--surface-container-low);border-radius:0 8px 8px 0;padding-left:14px}',
+      // ── Replies (酷安 楼中楼) ──
+      '.cm-replies{margin-top:12px;margin-left:48px;background:var(--surface-container-low);border-radius:12px;padding:8px 16px}',
+      '.cm-replies-inner{display:flex;flex-direction:column;gap:0}',
+      '.cm-reply{display:flex;gap:6px;padding:8px 0;border-bottom:1px solid var(--outline-variant);font-size:13px;line-height:1.7;color:var(--on-surface-variant);cursor:pointer;transition:background .15s}',
+      '.cm-reply:last-child{border-bottom:none}',
+      '.cm-reply:hover{background:var(--surface-container)}',
+      '.cm-reply .cm-nick{font-size:13px;font-weight:600;flex-shrink:0}',
+      '.cm-reply-body{flex:1;min-width:0;word-break:break-word}',
+      '.cm-reply-body code{font-family:\'JetBrains Mono\',monospace;font-size:.85em;background:var(--surface-container-high);color:var(--primary);padding:1px 5px;border-radius:3px}',
+      '.cm-reply-body strong{font-weight:600;color:var(--on-surface)}',
+      '.cm-reply-body a{color:var(--primary);text-decoration:none;border-bottom:1px solid var(--primary-container)}',
+      '.cm-more{display:block;width:100%;padding:10px 0;border:none;background:none;font-size:13px;color:var(--primary);cursor:pointer;text-align:left;font-family:inherit;transition:opacity .15s}',
+      '.cm-more:hover{opacity:.7}',
 
       // ── States ──
       '.cm-empty{text-align:center;padding:48px 0;font-size:14px;color:var(--outline)}',
@@ -496,10 +594,9 @@
       '.cm-inline .cm-fields{flex-direction:column}',
       '.cm-inline .cm-in{height:44px;font-size:16px}',
       '.cm-inline .cm-ta{font-size:16px}',
-      '.cm-tree{padding-left:16px}',
-      '.cm-node{gap:10px;padding:14px 0}',
+      '.cm-replies{margin-left:0;padding:6px 12px}',
       '.cm-av{width:32px;height:32px;font-size:13px}',
-      '.cm-tree .cm-av{width:28px;height:28px;font-size:11px}',
+      '.cm-reply{padding:6px 0;font-size:12px}',
       '}',
 
     ].join('\n');
@@ -516,8 +613,7 @@
     path = p || '';
     linkId = lid || '';
     draftNS = linkId ? 'link_' + linkId : (path || '').replace(/\//g, '_');
-    list = [];
-    loading = true;
+    list = []; loading = true;
 
     injectCSS();
 
@@ -531,15 +627,12 @@
     render();
     bind();
 
-    // Lazy-load via IntersectionObserver
     if ('IntersectionObserver' in window) {
       var obs = new IntersectionObserver(function (entries) {
         if (entries[0].isIntersecting) { obs.disconnect(); fetchComments(); }
       }, { rootMargin: '200px' });
       obs.observe(root);
-    } else {
-      fetchComments();
-    }
+    } else { fetchComments(); }
   }
 
   function fetchComments() {
@@ -547,7 +640,6 @@
     loading = true;
     var el = $('cmList');
     if (el) el.innerHTML = skelHTML();
-
     xhr('GET', api + '/api/comments?path=' + encodeURIComponent(path), null, function (err, data) {
       loading = false;
       if (err || !data) {
