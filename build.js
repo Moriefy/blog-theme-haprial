@@ -336,7 +336,7 @@ ${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provi
 <section class="page" id="pageTags"><div class="container"><section class="page-hero"><h1>标签</h1><p id="tagsCount"></p></section><div class="tags-grid" id="tagsGrid"></div></div></section>
 <section class="page" id="pageCategories"><div class="container"><section class="page-hero"><h1>分类</h1><p id="catsCount"></p></section><div class="cats-grid" id="catsGrid"></div></div></section>
 <section class="page" id="pageArchive"><div class="container"><section class="page-hero"><h1>归档</h1><p id="archiveCount"></p></section><div class="archive-timeline" id="archiveTimeline"></div></div></section>
-<section class="page" id="pageFriends"><div class="container"><section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid" id="flGrid"></div></div></section>
+<section class="page" id="pageFriends"><div class="container"><section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid" id="flGrid"></div>${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled?'<section class="comment-section" id="friendsCommentSection"></section>':''}</div></section>
 <section class="page" id="pageAbout"><div class="container"><div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="Moriefy" width="72" height="72"></div><h1>Moriefy</h1><p class="about-tagline">${escHtml(config.tagline)}</p><div class="about-divider"></div><div class="about-bio">${config.bio.split('\n').filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">技术栈</h3><div class="about-skill-list">${config.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${Object.keys(articles).length}</span><span class="about-stat-label">篇文章</span></div><div class="about-stat"><span class="about-stat-num">${config.categories.length}</span><span class="about-stat-label">个分类</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">个标签</span></div></div><div class="about-divider"></div><div class="about-links">${config.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div></div></div></section>
 
 <article class="article-view" id="articleView">
@@ -694,14 +694,14 @@ function seoPageFoot() {
   const dir = path.join(OUT_DIR, 'friends');
   fs.mkdirSync(dir, { recursive: true });
   let body = `<section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid">`;
-  SITE_CONFIG.friends.forEach((f, i) => {
-    const linkId = 'fl-' + i;
+  SITE_CONFIG.friends.forEach(f => {
     body += `<a class="fl-card" href="${escHtml(f.url)}" target="_blank" rel="noopener"><img class="fl-avatar" src="${escHtml(f.avatar)}" alt="${escHtml(f.name)}" width="48" height="48"><div class="fl-info"><div class="fl-name">${escHtml(f.name)}</div><div class="fl-desc">${escHtml(f.desc)}</div></div></a>`;
-    if (SITE_CONFIG.comments && SITE_CONFIG.comments.enabled) {
-      body += `<div class="fl-comment-section" style="margin:16px 0 32px;padding:16px;background:var(--surface-container-low);border-radius:var(--shape-m)"><div id="commentSection-${linkId}"></div></div>`;
-    }
   });
   body += '</div>';
+  if (SITE_CONFIG.comments && SITE_CONFIG.comments.enabled) {
+    body += '<section class="comment-section" id="commentSection"></section>';
+    body += `<script src="/theme/comment.js"></script><script>window.__initComments('/friends/','${escHtml(SITE_CONFIG.comments.apiUrl || '')}')</script>`;
+  }
   fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('友链', '这些站点值得关注。') + body + seoPageFoot());
   console.log('  ✓ friends/index.html');
 }

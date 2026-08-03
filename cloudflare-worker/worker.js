@@ -218,6 +218,7 @@ async function handleLike(request, env) {
   const commentId = sanitize(body.comment_id, 30);
   const path = sanitize(body.path, 200);
   const link_id = sanitize(body.link_id, 100);
+  const action = sanitize(body.action, 10) || 'like';
 
   if (!commentId) return json({ error: 'Missing comment_id' }, 400, origin);
   if (!path && !link_id) return json({ error: 'Missing path or link_id' }, 400, origin);
@@ -230,7 +231,11 @@ async function handleLike(request, env) {
   const idx = comments.findIndex(c => c.id === commentId);
   if (idx === -1) return json({ error: 'Comment not found' }, 404, origin);
 
-  comments[idx].likes = (comments[idx].likes || 0) + 1;
+  if (action === 'unlike') {
+    comments[idx].likes = Math.max(0, (comments[idx].likes || 0) - 1);
+  } else {
+    comments[idx].likes = (comments[idx].likes || 0) + 1;
+  }
   await env.COMMENTS.put(kvKey, JSON.stringify(comments));
 
   return json({ ok: true, likes: comments[idx].likes }, 200, origin);

@@ -253,7 +253,7 @@
     xhr.send(JSON.stringify(data));
   }
 
-  function postLike(commentId, path, linkId, cb) {
+  function postLike(commentId, path, linkId, action, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', API + '/api/comments/like');
     xhr.setRequestHeader('Content-Type', 'application/json');
@@ -261,7 +261,7 @@
       try { var r = JSON.parse(xhr.responseText); cb(xhr.status === 200 ? null : r.error, r); } catch (e) { cb(e); }
     };
     xhr.onerror = function () { cb(new Error('Network error')); };
-    xhr.send(JSON.stringify({ comment_id: commentId, path: path, link_id: linkId }));
+    xhr.send(JSON.stringify({ comment_id: commentId, path: path, link_id: linkId, action: action || 'like' }));
   }
 
   // ── Build Comment HTML ────────────────────────────────────────────────────
@@ -305,7 +305,7 @@
         '<div class="cmt-actions-row">' +
           '<button class="cmt-reply-btn" data-reply="' + c.id + '">回复</button>' +
           '<button class="cmt-like-btn' + (liked ? ' liked' : '') + '" data-like="' + c.id + '">' +
-            (liked ? '❤️' : '🤍') + ' <span class="cmt-like-count">' + (likeCount > 0 ? likeCount : '') + '</span>' +
+            '<span class="cmt-like-icon">' + (liked ? '▲' : '△') + '</span> <span class="cmt-like-count">' + (likeCount > 0 ? likeCount : '') + '</span>' +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -390,18 +390,24 @@
     if (!container) return;
     var texts = container.querySelectorAll('.cmt-text[data-folded="false"]');
     texts.forEach(function (txt) {
-      // Measure after render
       requestAnimationFrame(function () {
         if (txt.scrollHeight > FOLD_HEIGHT + 20) {
           txt.classList.add('cmt-text-fold');
           txt.dataset.folded = 'true';
           var btn = document.createElement('button');
           btn.className = 'cmt-fold-btn';
-          btn.textContent = '展开全文';
+          btn.textContent = '展开';
           btn.addEventListener('click', function () {
-            txt.classList.remove('cmt-text-fold');
-            txt.dataset.folded = 'done';
-            btn.remove();
+            if (txt.dataset.folded === 'true') {
+              txt.classList.remove('cmt-text-fold');
+              txt.dataset.folded = 'done';
+              btn.textContent = '收起';
+            } else {
+              txt.classList.add('cmt-text-fold');
+              txt.dataset.folded = 'true';
+              btn.textContent = '展开';
+              txt.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
           });
           txt.parentNode.insertBefore(btn, txt.nextSibling);
         }
@@ -618,18 +624,36 @@
 
   // ── Like handler ──────────────────────────────────────────────────────────
   function handleLike(btn, commentId) {
-    if (isLiked(commentId)) return; // already liked
-    addLikedId(commentId);
-    btn.classList.add('liked');
-    btn.innerHTML = '❤️ <span class="cmt-like-count">' + (((findComment(commentId) || {}).likes || 0) + 1) + '</span>';
+    var alreadyLiked = isLiked(commentId);
+    var c = findComment(commentId);
+    var currentLikes = (c && c.likes) || 0;
 
-    postLike(commentId, currentPath, currentLinkId, function (err, result) {
-      if (err) return;
-      var c = findComment(commentId);
-      if (c) c.likes = result.likes;
-      var countEl = btn.querySelector('.cmt-like-count');
-      if (countEl && result.likes) countEl.textContent = result.likes;
-    });
+    if (alreadyLiked) {
+      removeLikedId(commentId);
+      btn.classList.remove('liked');
+      var newCount = Math.max(0, currentLikes - 1);
+      if (c) c.likes = newCount;
+      btn.innerHTML = '<span class="cmt-like-icon">△</span> <span class="cmt-like-count">' + (newCount > 0 ? newCount : '') + '</span>';
+      postLike(commentId, currentPath, currentLinkId, 'unlike', function () {});
+    } else {
+      addLikedId(commentId);
+      btn.classList.add('liked');
+      var newCount2 = currentLikes + 1;
+      if (c) c.likes = newCount2;
+      btn.innerHTML = '<span class="cmt-like-icon">▲</span> <span class="cmt-like-count">' + newCount2 + '</span>';
+      postLike(commentId, currentPath, currentLinkId, 'like', function (err, result) {
+        if (err) return;
+        if (c) c.likes = result.likes;
+        var countEl = btn.querySelector('.cmt-like-count');
+        if (countEl && result.likes) countEl.textContent = result.likes;
+      });
+    }
+  }
+
+  function removeLikedId(id) {
+    var arr = getLikedIds();
+    var idx = arr.indexOf(id);
+    if (idx !== -1) { arr.splice(idx, 1); try { localStorage.setItem(LIKES_KEY, JSON.stringify(arr)); } catch (e) {} }
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
