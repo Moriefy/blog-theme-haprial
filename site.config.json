@@ -65,7 +65,7 @@
     }
   ],
   "comments": {
-    "enabled": true,
+    "enabled": false,
     "provider": "twikoo",
     "twikooEnvId": "https://twikoo.pluslogic.eu.org"
   },
