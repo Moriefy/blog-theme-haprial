@@ -37,7 +37,7 @@ function getGlobalFingerprint() {
     path.join(THEME_DIR, 'app.js'),
     path.join(THEME_DIR, 'lightbox.js'),
     path.join(THEME_DIR, 'post-init.js'),
-    path.join(THEME_DIR, 'twikoo-custom.css'),
+    path.join(THEME_DIR, 'comments.css'),
     path.join(ROOT, 'build.js'),
     path.join(ROOT, 'lib', 'markdown.js'),
     path.join(ROOT, 'src', '404.html'),
@@ -200,29 +200,7 @@ function themeInitScript() {
 }
 
 function postPageScript() {
-  const _commentsOn = !!(SITE_CONFIG.comments && SITE_CONFIG.comments.enabled && SITE_CONFIG.comments.provider === 'twikoo');
-  const _twikooBlock = _commentsOn ? `
-  // Comments (Twikoo) lazy-load
-  (function(){
-    var envId='${SITE_CONFIG.comments.twikooEnvId||''}';
-    if(!envId)return;
-    var el=document.getElementById('tcomment');
-    if(!el)return;
-    var loaded=false;
-    function init(){
-      if(loaded)return;loaded=true;
-      var s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/twikoo@1.6.40/dist/twikoo.all.min.js';
-      s.onload=function(){try{twikoo.init({envId:envId,el:'#tcomment',path:location.pathname})}catch(e){}};
-      document.head.appendChild(s);
-    }
-    if('IntersectionObserver' in window){
-      new IntersectionObserver(function(entries){
-        if(entries[0].isIntersecting){init()}
-      },{rootMargin:'200px'}).observe(el);
-    }else{init()}
-  })();` : '';
-  return _twikooBlock + `
+  return `
   // Prism lazy-load for code blocks (conditional)
   var codeBlocks=document.querySelectorAll('pre code');
   if(codeBlocks.length){
@@ -300,7 +278,7 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 <style>${cssContent}${themeTransition}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
-${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provider==='twikoo'?'<link rel="stylesheet" href="/theme/twikoo-custom.css" media="print" onload="this.media=\'all\'">':''}
+${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css" media="print" onload="this.media=\'all\'">':''}
 </head>
 <body>
 
@@ -335,7 +313,7 @@ ${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provi
 <section class="page" id="pageTags"><div class="container"><section class="page-hero"><h1>标签</h1><p id="tagsCount"></p></section><div class="tags-grid" id="tagsGrid"></div></div></section>
 <section class="page" id="pageCategories"><div class="container"><section class="page-hero"><h1>分类</h1><p id="catsCount"></p></section><div class="cats-grid" id="catsGrid"></div></div></section>
 <section class="page" id="pageArchive"><div class="container"><section class="page-hero"><h1>归档</h1><p id="archiveCount"></p></section><div class="archive-timeline" id="archiveTimeline"></div></div></section>
-<section class="page" id="pageFriends"><div class="container"><section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid" id="flGrid"></div>${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provider==='twikoo'?'<section class="comment-section" id="friendsCommentSection"><div id="tcomment-friends"></div></section>':''}</div></section>
+<section class="page" id="pageFriends"><div class="container"><section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid" id="flGrid"></div>${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled?'<section class="cmt-section" id="friendsCommentSection"><div id="tcomment"></div></section>':''}</div></section>
 <section class="page" id="pageAbout"><div class="container"><div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="Moriefy" width="72" height="72"></div><h1>Moriefy</h1><p class="about-tagline">${escHtml(config.tagline)}</p><div class="about-divider"></div><div class="about-bio">${config.bio.split('\n').filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">技术栈</h3><div class="about-skill-list">${config.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${Object.keys(articles).length}</span><span class="about-stat-label">篇文章</span></div><div class="about-stat"><span class="about-stat-num">${config.categories.length}</span><span class="about-stat-label">个分类</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">个标签</span></div></div><div class="about-divider"></div><div class="about-links">${config.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div></div></div></section>
 
 <article class="article-view" id="articleView">
@@ -346,7 +324,7 @@ ${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provi
     <button class="icon-btn" id="avThemeBtn" aria-label="切换主题"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
   </header>
   <div class="rprog" id="rprog"></div>
-  <div class="av-content" id="avContent"><header class="article-header"><div class="art-meta si d0" id="artMeta"></div><h1 class="si d1" id="artTitle"></h1><div class="art-tags si d2" id="artTags"></div><div class="art-div si d3"></div></header><div class="article-body" id="articleBody" data-stg></div><div class="art-nav" id="artNav"></div>${config.comments&&config.comments.enabled&&config.comments.provider==='twikoo'?'<section class="comment-section" id="commentSection"><div id="tcomment"></div></section>':''}</div>
+  <div class="av-content" id="avContent"><header class="article-header"><div class="art-meta si d0" id="artMeta"></div><h1 class="si d1" id="artTitle"></h1><div class="art-tags si d2" id="artTags"></div><div class="art-div si d3"></div></header><div class="article-body" id="articleBody" data-stg></div><div class="art-nav" id="artNav"></div>${config.comments&&config.comments.enabled?'<section class="cmt-section" id="commentSection"><div id="tcomment"></div></section>':''}</div>
 </article>
 
 <div class="search-view" id="searchView">
@@ -367,6 +345,7 @@ ${SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provi
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
 <script src="/theme/lightbox.js"></script>
+<script defer src="/theme/comments.js"></script>
 <script defer src="/theme/app.js"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
@@ -433,7 +412,7 @@ function buildPostHtml(id, art, config, opts) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHtml(art.title)} | ${escHtml(config.title)}</title>
-${config.comments&&config.comments.enabled&&config.comments.provider==='twikoo'?'<meta name="twikoo-envId" content="'+escHtml(config.comments.twikooEnvId||'')+'">':''}
+
 <meta name="description" content="${escHtml(art.excerpt)}">
 <meta name="robots" content="index, follow">
 <meta name="googlebot" content="index, follow">
@@ -465,7 +444,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <link rel="stylesheet" href="/theme/styles.css">
-${config.comments&&config.comments.enabled&&config.comments.provider==='twikoo'?'<link rel="stylesheet" href="/theme/twikoo-custom.css">':''}
+${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css">':''}
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
 
@@ -487,7 +466,7 @@ ${config.comments&&config.comments.enabled&&config.comments.provider==='twikoo'?
   </header>
     <div class="article-body revealed">${art.content}</div>
   <div class="art-nav revealed">${navHtml}</div>
-  ${config.comments&&config.comments.enabled&&config.comments.provider==='twikoo'?'<section class="comment-section" id="commentSection"><div id="tcomment"></div></section>':''}
+  ${config.comments&&config.comments.enabled?'<section class="cmt-section" id="commentSection"><div id="tcomment"></div></section>':''}
 </main>
 
 <aside class="toc">
@@ -502,10 +481,12 @@ ${config.comments&&config.comments.enabled&&config.comments.provider==='twikoo'?
 </footer>
 
 <script src="/theme/lightbox.js"></script>
+<script src="/theme/comments.js"></script>
 <script>
 ${themeInitScript()}
 ${postPageScript()}
 window.__initLightbox(document.querySelector('.article-body'));
+window.__initComments();
 (function(){var tc=document.querySelector('.toc'),av=document.querySelector('.av-content'),ht=null;if(!tc||!av)return;function thr(){return av.getBoundingClientRect().right}function show(){clearTimeout(ht);tc.classList.add('visible')}function hide(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},1500)}document.addEventListener('mousemove',function(e){if(e.clientX>=thr())show();else hide()});tc.addEventListener('mouseenter',function(){clearTimeout(ht)});tc.addEventListener('mouseleave',function(){hide()})})();
 </script>
 </body>
@@ -549,12 +530,11 @@ Object.entries(articles).forEach(([id, a]) => {
 });
 
 const commentsEnabled = !!(SITE_CONFIG.comments && SITE_CONFIG.comments.enabled);
-const twikooEnvId = commentsEnabled ? (SITE_CONFIG.comments.twikooEnvId || '') : '';
 
 const dataObj = {
   siteTitle: SITE_CONFIG.title,
   siteAuthor: SITE_CONFIG.author,
-  comments: { enabled: commentsEnabled, provider: commentsEnabled ? (SITE_CONFIG.comments.provider || 'twikoo') : '', twikooEnvId: twikooEnvId },
+  comments: { enabled: commentsEnabled, provider: commentsEnabled ? (SITE_CONFIG.comments.provider || 'haprial') : '' },
   articleOrder,
   articles: articlesMeta,
   allTags,
@@ -603,6 +583,7 @@ function seoPageHead(title, description) {
 <link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/theme/styles.css">
+<link rel="stylesheet" href="/theme/comments.css">
 </head>
 <body>
 <header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
@@ -694,9 +675,9 @@ function seoPageFoot() {
     body += `<a class="fl-card" href="${escHtml(f.url)}" target="_blank" rel="noopener"><img class="fl-avatar" src="${escHtml(f.avatar)}" alt="${escHtml(f.name)}" width="48" height="48"><div class="fl-info"><div class="fl-name">${escHtml(f.name)}</div><div class="fl-desc">${escHtml(f.desc)}</div></div></a>`;
   });
   body += '</div>';
-  if (SITE_CONFIG.comments && SITE_CONFIG.comments.enabled && SITE_CONFIG.comments.provider === 'twikoo' && SITE_CONFIG.comments.twikooEnvId) {
-    body += '<section class="comment-section" id="commentSection"><div id="tcomment"></div></section>';
-    body += `<script src="https://cdn.jsdelivr.net/npm/twikoo@1.6.40/dist/twikoo.all.min.js"></script><script>twikoo.init({envId:'${escHtml(SITE_CONFIG.comments.twikooEnvId)}',el:'#tcomment',path:'/friends/'})</script>`;
+  if (SITE_CONFIG.comments && SITE_CONFIG.comments.enabled) {
+    body += '<section class="cmt-section" id="commentSection"><div id="tcomment"></div></section>';
+    body += '<script src="/theme/comments.js"></script><script>window.__initComments();</script>';
   }
   fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('友链', '这些站点值得关注。') + body + seoPageFoot());
   console.log('  ✓ friends/index.html');
@@ -717,7 +698,8 @@ fs.mkdirSync(themeOut, { recursive: true });
 fs.copyFileSync(path.join(THEME_DIR, 'styles.css'), path.join(themeOut, 'styles.css'));
 fs.copyFileSync(path.join(THEME_DIR, 'app.js'), path.join(themeOut, 'app.js'));
 fs.copyFileSync(path.join(THEME_DIR, 'lightbox.js'), path.join(themeOut, 'lightbox.js'));
-if (SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled&&SITE_CONFIG.comments.provider==='twikoo') fs.copyFileSync(path.join(THEME_DIR, 'twikoo-custom.css'), path.join(themeOut, 'twikoo-custom.css'));
+fs.copyFileSync(path.join(THEME_DIR, 'comments.js'), path.join(themeOut, 'comments.js'));
+if (SITE_CONFIG.comments&&SITE_CONFIG.comments.enabled) fs.copyFileSync(path.join(THEME_DIR, 'comments.css'), path.join(themeOut, 'comments.css'));
 console.log('  ✓ theme/');
 
 // Copy static assets

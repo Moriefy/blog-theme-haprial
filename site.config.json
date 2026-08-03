@@ -65,9 +65,8 @@
     }
   ],
   "comments": {
-    "enabled": false,
-    "provider": "twikoo",
-    "twikooEnvId": "https://twikoo.pluslogic.eu.org"
+    "enabled": true,
+    "provider": "haprial"
   },
   "friends": [
     {
