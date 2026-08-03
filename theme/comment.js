@@ -24,18 +24,22 @@
   // 构建树：把平铺数组转成 { roots: [...], childrenOf: {id: [...]} }
   function buildTree(comments) {
     var map = {}, roots = [], kids = {};
-    for (var i = 0; i < comments.length; i++) map[comments[i].id] = comments[i];
+    for (var i = 0; i < comments.length; i++) {
+      var c = comments[i];
+      // 兼容 pid 和 parent_id 两种字段名
+      if (!c.pid && c.parent_id) c.pid = c.parent_id;
+      map[c.id] = c;
+    }
     for (var i = 0; i < comments.length; i++) {
       var c = comments[i];
       if (!c.pid) { roots.push(c); kids[c.id] = []; }
       else {
-        // 找到根评论
         var cur = c;
         while (cur.pid && map[cur.pid]) cur = map[cur.pid];
         var rootId = cur.id;
         if (!kids[rootId]) kids[rootId] = [];
         c._replyTo = map[c.pid] ? map[c.pid].nick : '';
-        c._isSubReply = c.pid !== rootId; // 是否是回复子回复（非直接回复根）
+        c._isSubReply = c.pid !== rootId;
         kids[rootId].push(c);
       }
     }
@@ -231,7 +235,7 @@
     btn.disabled = true; btn.textContent = '发送中…';
 
     xhr('POST', api + '/api/comments', {
-      url: pageUrl, nick: nick, email: email, website: website,
+      path: pageUrl, nick: nick, email: email, website_url: website,
       content: content, parent_id: pid, hp: hp ? hp.value : ''
     }, function (err, res) {
       sending = false;
@@ -239,7 +243,7 @@
       if (err || !res || !res.ok) { alert((res && res.error) || '发送失败'); return; }
       // 保存用户信息
       try { localStorage.setItem('cmt_user', JSON.stringify({ n: nick, e: email, w: website })); } catch {}
-      if (res.comment) all.push(res.comment);
+      if (res.comment) { var nc = res.comment; if (!nc.pid && nc.parent_id) nc.pid = nc.parent_id; all.push(nc); }
       cancelReply();
       render();
     });
@@ -257,7 +261,7 @@
     var btn = root.querySelector('[data-act="like"][data-id="' + id + '"]');
     if (btn) { btn.classList.toggle('on', nowLiked); btn.innerHTML = (nowLiked ? '▲' : '△') + (c.likes ? ' ' + c.likes : ''); }
 
-    xhr('POST', api + '/api/comments/like', { id: id, url: pageUrl, action: nowLiked ? 'like' : 'unlike' }, function (err, res) {
+    xhr('POST', api + '/api/comments/like', { comment_id: id, path: pageUrl, action: nowLiked ? 'like' : 'unlike' }, function (err, res) {
       if (!err && res && res.likes !== undefined) { c.likes = res.likes; if (btn) btn.innerHTML = (nowLiked ? '▲' : '△') + (res.likes ? ' ' + res.likes : ''); }
     });
   }
@@ -442,9 +446,9 @@
     if (!pageUrl) return;
     loading = true;
     var el = $('qList'); if (el) el.innerHTML = skelHTML();
-    xhr('GET', api + '/api/comments?url=' + encodeURIComponent(pageUrl), null, function (err, data) {
+    xhr('GET', api + '/api/comments?path=' + encodeURIComponent(pageUrl), null, function (err, data) {
       loading = false;
-      if (err || !data || !data.ok) {
+      if (err || !data) {
         if (el) el.innerHTML = '<div class="q-empty"><p>加载失败</p><button class="q-cancel" onclick="window.__initComments(\'' + pageUrl + '\',\'' + api + '\')">重试</button></div>';
         return;
       }
