@@ -193,14 +193,23 @@
     this.f.dep.value = it ? (parseInt(it.dataset.depth || 0) + 1) : 1;
     this.rn.textContent = b.dataset.name;
     this.ri.classList.add('visible');
-    this.f.body.focus();
     this.f.body.placeholder = '回复 ' + b.dataset.name + '…';
+    // 把表单移到被回复评论的下方
+    if (it && it.nextSibling) {
+      it.parentNode.insertBefore(this.f, it.nextSibling);
+    } else if (it) {
+      it.parentNode.appendChild(this.f);
+    }
+    this.f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    this.f.body.focus();
   };
 
   CS.prototype._cancel = function () {
     this.f.pid.value = '0'; this.f.dep.value = '0';
     this.ri.classList.remove('visible');
     this.f.body.placeholder = '写下你的评论…';
+    // 把表单移回原位（列表后面）
+    this.lw.parentNode.insertBefore(this.f, this.lw);
   };
 
   CS.prototype._show = function (total) {
