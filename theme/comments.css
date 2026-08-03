@@ -398,6 +398,35 @@
   background: var(--surface-container-low);
   transform: translateY(-1px);
 }
+
+/* ── 博主标识 ── */
+.cs-admin-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 11px;
+  color: var(--outline);
+  text-decoration: none;
+  cursor: pointer;
+}
+.cs-admin-link:hover {
+  color: var(--primary);
+}
+
+.cs-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  line-height: 1.6;
+  vertical-align: middle;
+  margin-left: 4px;
+}
 .cs-load-more:active {
   transform: scale(.98);
 }

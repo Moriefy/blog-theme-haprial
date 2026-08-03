@@ -41,9 +41,10 @@
     var nm = c.website
       ? '<a href="' + esc(c.website) + '" rel="noopener noreferrer nofollow" target="_blank">' + esc(c.nickname) + '</a>'
       : esc(c.nickname);
+    var badge = c.is_admin ? '<span class="cs-badge">博主</span>' : '';
     return '<li class="cs-item" data-id="' + c.id + '" data-depth="' + c.depth + '">'
       + '<div class="cs-item-main"><div class="cs-avatar">' + avatar(c.avatar_hash, c.nickname) + '</div>'
-      + '<div class="cs-body"><div class="cs-meta"><span class="cs-nickname">' + nm + '</span>'
+      + '<div class="cs-body"><div class="cs-meta"><span class="cs-nickname">' + nm + '</span>' + badge
       + '<time class="cs-time">' + timeAgo(c.created_at) + '</time>'
       + (ed ? '<span class="cs-edited">(已编辑)</span>' : '')
       + '</div><div class="cs-content">' + c.content_html + '</div>'
@@ -115,6 +116,25 @@
 
     this.f.addEventListener('submit', function (e) { self._submit(e); });
     d.querySelector('.cs-cr').addEventListener('click', function () { self._cancel(); });
+
+    // 博主认证入口（只在没认证时显示）
+    try {
+      if (!localStorage.getItem('cs_admin_token')) {
+        var adminLink = document.createElement('a');
+        adminLink.className = 'cs-admin-link';
+        adminLink.textContent = '博主认证';
+        adminLink.href = 'javascript:void(0)';
+        adminLink.addEventListener('click', function () {
+          var t = prompt('输入管理 Token：');
+          if (t) {
+            localStorage.setItem('cs_admin_token', t);
+            toast('已认证，之后你的评论会显示博主标识');
+            adminLink.remove();
+          }
+        });
+        this.el.appendChild(adminLink);
+      }
+    } catch (e) {}
     this.lw.addEventListener('click', function (e) {
       var a = e.target.closest('.cs-like'), b = e.target.closest('.cs-reply-btn'), c = e.target.closest('.cs-load-more');
       if (a) self._like(a); else if (b) self._reply(b); else if (c) self._load(1);
@@ -164,8 +184,10 @@
 
     this.btn.disabled = true; this.btn.textContent = '发送中…';
 
+    var hdrs = { 'Content-Type': 'application/json' };
+    try { var at = localStorage.getItem('cs_admin_token'); if (at) hdrs['X-Admin-Token'] = at; } catch (e) {}
     fetch(this.api + '/api/comments', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bd)
+      method: 'POST', headers: hdrs, body: JSON.stringify(bd)
     }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (r) {
       if (!r.ok) throw new Error(r.d.error || '提交失败');

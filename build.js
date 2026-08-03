@@ -279,7 +279,7 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 <style>${cssContent}${themeTransition}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
-${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785774623" media="print" onload="this.media=\'all\'">':''}
+${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352" media="print" onload="this.media=\'all\'">':''}
 </head>
 <body>
 
@@ -444,8 +444,8 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-<link rel="stylesheet" href="/theme/styles.css?v=1785774623">
-${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785774623">':''}
+<link rel="stylesheet" href="/theme/styles.css?v=1785775352">
+${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352">':''}
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
 
@@ -487,7 +487,7 @@ ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/
 ${themeInitScript()}
 ${postPageScript()}
 window.__initLightbox(document.querySelector('.article-body'));
-(function(){var tc=document.querySelector('.toc'),av=1785774623document.querySelector('.av-content'),ht=null;if(!tc||!av)return;function thr(){return av.getBoundingClientRect().right}function show(){clearTimeout(ht);tc.classList.add('visible')}function hide(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},1500)}document.addEventListener('mousemove',function(e){if(e.clientX>=thr())show();else hide()});tc.addEventListener('mouseenter',function(){clearTimeout(ht)});tc.addEventListener('mouseleave',function(){hide()})})();
+(function(){var tc=document.querySelector('.toc'),av=1785775352document.querySelector('.av-content'),ht=null;if(!tc||!av)return;function thr(){return av.getBoundingClientRect().right}function show(){clearTimeout(ht);tc.classList.add('visible')}function hide(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},1500)}document.addEventListener('mousemove',function(e){if(e.clientX>=thr())show();else hide()});tc.addEventListener('mouseenter',function(){clearTimeout(ht)});tc.addEventListener('mouseleave',function(){hide()})})();
 ${config.comments&&config.comments.enabled&&config.comments.api?'(function(){var el=document.getElementById("commentSectionInner");if(el&&typeof HaprialComments!=="undefined")new HaprialComments(el,{api:"'+escHtml(config.comments.api)+'",page:"/posts/'+id+'/"})})();':''}
 </script>
 </body>
@@ -584,7 +584,7 @@ function seoPageHead(title, description) {
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/theme/styles.css?v=1785774623">
+<link rel="stylesheet" href="/theme/styles.css?v=1785775352">
 </head>
 <body>
 <header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
@@ -677,7 +677,7 @@ function seoPageFoot() {
   });
   body += '</div>';
   if (commentsEnabled && commentsApi) {
-    body += '<link rel="stylesheet" href="/theme/comments.css?v=1785774623">';
+    body += '<link rel="stylesheet" href="/theme/comments.css?v=1785775352">';
     body += '<section class="comment-section"><div id="friendsCommentInner"></div></section>';
     body += '<script src="/theme/comments.js"></script>';
     body += `<script>new window.HaprialComments(document.getElementById("friendsCommentInner"),{api:"${escHtml(commentsApi)}",page:"/friends/"})</script>`;
