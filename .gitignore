@@ -2,3 +2,6 @@
 dist/
 .build-cache.json
 .recycle/
+-e 
+# Wrangler
+worker/.wrangler/
