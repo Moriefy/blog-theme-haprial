@@ -76,23 +76,7 @@ function formatContent(text) {
 }
 
 // ── Geolocation ─────────────────────────────────────────────────────────────
-async function getLocation(ip) {
-  if (!ip || ip === 'unknown' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) return '';
-  try {
-    const resp = await fetch('http://ip-api.com/json/' + ip + '?fields=status,country,regionName,city&lang=zh-CN', {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!resp.ok) return '';
-    const data = await resp.json();
-    if (data.status !== 'success') return '';
-    const parts = [];
-    if (data.regionName) parts.push(data.regionName);
-    if (data.city && data.city !== data.regionName) parts.push(data.city);
-    return parts.join(' ');
-  } catch (e) {
-    return '';
-  }
-}
+function getLocation() { return ''; }
 
 // ── Rate Limiting ───────────────────────────────────────────────────────────
 async function checkRateLimit(kv, ip, window, max, prefix) {
@@ -127,7 +111,6 @@ async function handleGetComments(request, env) {
     time: c.time,
     parent_id: c.parent_id || null,
     device: c.device || '',
-    location: c.location || '',
     likes: c.likes || 0,
   }));
 
@@ -162,7 +145,6 @@ async function handlePostComment(request, env) {
 
   const ua = request.headers.get('User-Agent') || '';
   const device = parseDevice(ua);
-  const location = await getLocation(ip);
 
   const comment = {
     id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -175,7 +157,6 @@ async function handlePostComment(request, env) {
     parent_id: parent_id,
     link_id: link_id,
     device: device,
-    location: location,
     likes: 0,
     ip: ip,
   };
@@ -198,7 +179,6 @@ async function handlePostComment(request, env) {
       time: comment.time,
       parent_id: comment.parent_id,
       device: comment.device,
-      location: comment.location,
       likes: 0,
     },
   }, 200, origin);
