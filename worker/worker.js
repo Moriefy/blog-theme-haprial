@@ -2,6 +2,7 @@
 // Deploy to: comments.pluslogic.eu.org
 // KV Binding: COMMENTS
 // Env Var: ADMIN_SECRET
+// Version: 2
 
 const ALLOWED_ORIGINS = [
   'https://pluslogic.eu.org',

@@ -10,7 +10,7 @@ routes = [
 # KV binding
 [[kv_namespaces]]
 binding = "COMMENTS"
-id = "<YOUR_KV_NAMESPACE_ID>"
+id = "6b430b3e18c7463e967fe0effbd7e2eb"
 
 # Environment variables
 # [vars]

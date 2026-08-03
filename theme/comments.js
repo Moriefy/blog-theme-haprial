@@ -35,6 +35,7 @@
   }
 
   function timeAgo(ts) {
+    if (typeof ts === 'string') ts = new Date(ts).getTime();
     var s = Math.floor((Date.now() - ts) / 1000);
     if (s < 60) return '刚刚';
     var m = Math.floor(s / 60);
@@ -83,15 +84,16 @@
     }
     for (var i = 0; i < flat.length; i++) {
       var c = flat[i];
-      if (c.parent && map[c.parent]) {
-        map[c.parent].children.push(map[c.id]);
+      var parentId = c.parent || c.replyTo;
+      if (parentId && map[parentId]) {
+        map[parentId].children.push(map[c.id]);
       } else {
         roots.push(map[c.id]);
       }
     }
-    roots.sort(function (a, b) { return b._c.likes - a._c.likes || a._c.created - b._c.created; });
+    roots.sort(function (a, b) { return (b._c.likes||0) - (a._c.likes||0) || (a._c.created||0) - (b._c.created||0); });
     for (var i = 0; i < roots.length; i++) {
-      roots[i].children.sort(function (a, b) { return a._c.created - b._c.created; });
+      roots[i].children.sort(function (a, b) { return (a._c.created||0) - (b._c.created||0); });
     }
     return roots;
   }
@@ -104,6 +106,9 @@
     var liked = isLiked(c.id);
     var depthClass = depth > 0 ? ' cmt-reply' : '';
     var indent = depth > 0 ? ' style="--cmt-depth:' + depth + '"' : '';
+    var content = c.html || c.content || '';
+    var ts = c.created || c.time || Date.now();
+    var ua = c.ua || c.device || '';
 
     var html = '<div class="cmt-item' + depthClass + '" data-id="' + c.id + '"' + indent + '>'
       + '<div class="cmt-avatar" style="background:' + ac.bg + ';color:' + ac.fg + '">' + esc(initial) + '</div>'
@@ -112,10 +117,10 @@
       + '<span class="cmt-nick">' + esc(c.nick) + '</span>'
       + (c.isOwner ? '<span class="cmt-badge">博主</span>' : '')
       + '<span class="cmt-dot">·</span>'
-      + '<span class="cmt-time" data-ts="' + c.created + '">' + timeAgo(c.created) + '</span>'
-      + (c.ua ? '<span class="cmt-ua">' + esc(c.ua) + '</span>' : '')
+      + '<span class="cmt-time" data-ts="' + ts + '">' + timeAgo(ts) + '</span>'
+      + (ua ? '<span class="cmt-ua">' + esc(ua) + '</span>' : '')
       + '</div>'
-      + '<div class="cmt-content">' + c.html + '</div>'
+      + '<div class="cmt-content">' + content + '</div>'
       + '<div class="cmt-actions">'
       + '<button class="cmt-action-btn cmt-like-btn' + (liked ? ' liked' : '') + '" data-id="' + c.id + '">'
       + '<svg class="cmt-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="' + (liked ? 'currentColor' : 'none') + '"/></svg>'
