@@ -185,16 +185,8 @@
 .cs-item {
   padding: 16px 0;
   border-bottom: 1px solid var(--outline-variant);
-  opacity: 0;
-  transform: translateY(6px);
-  animation: csItemIn .3s cubic-bezier(0,0,.2,1) backwards;
 }
 .cs-item:last-child { border-bottom: none; }
-
-@keyframes csItemIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 .cs-item-main {
   display: flex;
@@ -484,7 +476,7 @@
 
 /* ── 减少动画 ── */
 @media (prefers-reduced-motion: reduce) {
-  .cs-item { animation: none; opacity: 1; transform: none; }
+  .cs-item { animation: none; }
   .cs-toast { transition: none; }
   .cs-loading::after { animation: none; }
 }
