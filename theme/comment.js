@@ -349,12 +349,10 @@
         '<div class="cmt-hp"><input type="text" name="website_url" tabindex="-1" autocomplete="off"></div>' +
         '<div class="cmt-form-row">' +
           '<input class="cmt-input" id="cmtNick" type="text" placeholder="昵称 *" maxlength="50" autocomplete="name">' +
-          '<input class="cmt-input" id="cmtEmail" type="email" placeholder="邮箱（选填）" maxlength="100" autocomplete="email">' +
+          '<input class="cmt-input" id="cmtEmail" type="email" placeholder="邮箱" maxlength="100" autocomplete="email">' +
+          '<input class="cmt-input" id="cmtWebsite" type="url" placeholder="网站" maxlength="200" autocomplete="url">' +
         '</div>' +
-        '<div class="cmt-form-row">' +
-          '<input class="cmt-input" id="cmtWebsite" type="url" placeholder="网站（选填）" maxlength="200" autocomplete="url">' +
-        '</div>' +
-        '<textarea class="cmt-textarea" id="cmtContent" placeholder="写下你的想法…（支持 **粗体** *斜体* `代码` [链接](URL) 😀）" maxlength="2000"></textarea>' +
+        '<textarea class="cmt-textarea" id="cmtContent" placeholder="写下你的想法…" maxlength="2000"></textarea>' +
         '<div class="cmt-actions">' +
           '<span class="cmt-hint">支持 <code>**粗体**</code> <code>*斜体*</code> <code>`代码`</code> <code>[链接](URL)</code></span>' +
           '<span class="cmt-draft-hint" id="cmtDraftHint"></span>' +
@@ -433,12 +431,10 @@
     form.innerHTML =
       '<div class="cmt-form-row">' +
         '<input class="cmt-input cmt-inline-nick" type="text" placeholder="昵称 *" maxlength="50" autocomplete="name">' +
-        '<input class="cmt-input cmt-inline-email" type="email" placeholder="邮箱（选填）" maxlength="100" autocomplete="email">' +
+        '<input class="cmt-input cmt-inline-email" type="email" placeholder="邮箱" maxlength="100" autocomplete="email">' +
+        '<input class="cmt-input cmt-inline-website" type="url" placeholder="网站" maxlength="200" autocomplete="url">' +
       '</div>' +
-      '<div class="cmt-form-row">' +
-        '<input class="cmt-input cmt-inline-website" type="url" placeholder="网站（选填）" maxlength="200" autocomplete="url">' +
-      '</div>' +
-      '<textarea class="cmt-textarea cmt-inline-content" placeholder="回复 ' + escHtml(parent.nick) + '…（支持 **粗体** *斜体* `代码`）" maxlength="2000"></textarea>' +
+      '<textarea class="cmt-textarea cmt-inline-content" placeholder="回复 ' + escHtml(parent.nick) + '…" maxlength="2000"></textarea>' +
       '<div class="cmt-actions">' +
         '<span class="cmt-hint">按 Ctrl+Enter 发送</span>' +
         '<button class="cmt-btn cmt-btn-ghost cmt-inline-cancel">取消</button>' +
