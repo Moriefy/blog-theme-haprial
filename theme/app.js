@@ -367,7 +367,7 @@ function __initComments(path){
   var el=section.querySelector('#commentSectionInner');
   if(!el){section.innerHTML='<div id="commentSectionInner"></div>';el=section.querySelector('#commentSectionInner')}
   if(typeof HaprialComments!=='undefined'){
-    if(__commentsInstance&&__commentsInstance._inputFocused!==undefined){__commentsInstance._inputFocused=false;window.__cmtInputFocused=false}
+    if(__commentsInstance&&__commentsInstance._f!==undefined){__commentsInstance._f=false;window.__cmtInputFocused=false}
     __commentsInstance=new HaprialComments(el,{api:_c.api,page:path})
   }
 }

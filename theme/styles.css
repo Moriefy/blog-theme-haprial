@@ -381,8 +381,8 @@ a{color:var(--primary);text-decoration:none}
 @keyframes ripExpand{0%{transform:scale(0);opacity:1}100%{transform:scale(4);opacity:0}}
 
 /* ── Comment & Footer ── */
-.comment-section{margin-top:32px;padding-top:24px;border-top:1px solid var(--outline-variant);opacity:0;animation:fadeIn .4s ease .1s forwards}
-.comment-section:empty{display:none;animation:none}
+.comment-section{margin-top:32px;padding-top:24px;border-top:1px solid var(--outline-variant)}
+.comment-section:empty{display:none}
 .site-footer{border-top:1px solid var(--outline-variant);padding:16px 24px;text-align:center;background:var(--surface-container-low)}
 .footer-nav{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px}
 .footer-link{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--on-surface-variant);cursor:pointer;transition:color 200ms;padding:8px 4px;min-height:44px;display:inline-flex;align-items:center;border-radius:var(--shape-full);position:relative;overflow:hidden}

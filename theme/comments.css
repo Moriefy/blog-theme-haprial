@@ -8,10 +8,8 @@
   margin-top: 32px;
   padding-top: 24px;
   border-top: 1px solid var(--outline-variant);
-  opacity: 0;
-  animation: fadeIn .4s ease .1s forwards;
 }
-.comment-section:empty { display: none; animation: none; }
+.comment-section:empty { display: none; }
 
 /* ── 标题 ── */
 .cs-header {
