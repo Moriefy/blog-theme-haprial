@@ -112,7 +112,7 @@ async function handlePost(req, cors, env) {
   if (last && Date.now() - parseInt(last) < RATE_WINDOW) {
     return json({ error: 'slow down' }, 429, cors);
   }
-  await env.COMMENTS.put(rlKey, String(Date.now()), { expirationTtl: 30 });
+  await env.COMMENTS.put(rlKey, String(Date.now()), { expirationTtl: 60 });
 
   // Build comment
   const ts = Date.now();
