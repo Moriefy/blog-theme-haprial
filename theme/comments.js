@@ -93,7 +93,7 @@
       + '<input type="url" name="web" placeholder="网站（可选）" maxlength="200">'
       + '</div>'
       + '<textarea name="body" placeholder="写下你的评论…" required maxlength="2000" rows="3"></textarea>'
-      + '<div class="cs-form-actions"><span class="cs-form-hint">支持 **粗体** *斜体* `代码` [链接](url)</span><button type="submit" class="cs-submit">发表评论</button></div>'
+      + '<div class="cs-form-actions"><span class="cs-form-hint">支持 **粗体** *斜体* `代码` [链接](url)</span><button type="submit" class="cs-submit">发送</button></div>'
       + '</form>'
       + '<div class="cs-lw"></div>';
 
@@ -175,7 +175,7 @@
       self._load();
       try { localStorage.setItem('cs_nick', bd.nickname); if (bd.email) localStorage.setItem('cs_email', bd.email); if (bd.website) localStorage.setItem('cs_web', bd.website); } catch (e) {}
     }).catch(function (e) { toast(e.message); })
-    .finally(function () { self.btn.disabled = false; self.btn.textContent = '发表评论'; });
+    .finally(function () { self.btn.disabled = false; self.btn.textContent = '发送'; });
   };
 
   CS.prototype._like = function (b) {
