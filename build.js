@@ -279,7 +279,7 @@ ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id +
 <style>${cssContent}${themeTransition}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
-${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css" media="print" onload="this.media=\'all\'">':''}
+${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785773017" media="print" onload="this.media=\'all\'">':''}
 </head>
 <body>
 
@@ -444,8 +444,8 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-<link rel="stylesheet" href="/theme/styles.css">
-${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css">':''}
+<link rel="stylesheet" href="/theme/styles.css?v=1785773017">
+${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785773017">':''}
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
 
@@ -584,7 +584,7 @@ function seoPageHead(title, description) {
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/theme/styles.css">
+<link rel="stylesheet" href="/theme/styles.css?v=1785773017">
 </head>
 <body>
 <header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
@@ -677,7 +677,7 @@ function seoPageFoot() {
   });
   body += '</div>';
   if (commentsEnabled && commentsApi) {
-    body += '<link rel="stylesheet" href="/theme/comments.css">';
+    body += '<link rel="stylesheet" href="/theme/comments.css?v=1785773017">';
     body += '<section class="comment-section"><div id="friendsCommentInner"></div></section>';
     body += '<script src="/theme/comments.js"></script>';
     body += `<script>new window.HaprialComments(document.getElementById("friendsCommentInner"),{api:"${escHtml(commentsApi)}",page:"/friends/"})</script>`;
