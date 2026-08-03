@@ -66,8 +66,7 @@
   ],
   "comments": {
     "enabled": true,
-    "provider": "custom",
-    "apiUrl": "https://comments.pluslogic.eu.org",
+    "provider": "twikoo",
     "twikooEnvId": ""
   },
   "friends": [
