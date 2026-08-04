@@ -67,7 +67,7 @@
   "comments": {
     "enabled": true,
     "provider": "custom",
-    "api": "https://haprial-comments.pluslogic.workers.dev"
+    "api": "https://pluslogic.eu.org"
   },
   "friends": [
     {
