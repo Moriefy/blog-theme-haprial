@@ -30,6 +30,68 @@ async function ensureTables(db){
   migrated=true;
 }
 
+// ── GitHub Push Helper ──
+async function githubPush(env, filePath, content, message) {
+  const token = env.GITHUB_TOKEN;
+  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  if (!token) return { ok: false, error: 'no token' };
+
+  // Get current file SHA (if exists)
+  let sha = null;
+  try {
+    const getReq = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+    });
+    if (getReq.ok) { const d = await getReq.json(); sha = d.sha; }
+  } catch (e) {}
+
+  const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: 'main' };
+  if (sha) body.sha = sha;
+
+  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+    body: JSON.stringify(body)
+  });
+  return { ok: resp.ok, status: resp.status };
+}
+
+async function githubDelete(env, filePath, message) {
+  const token = env.GITHUB_TOKEN;
+  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  if (!token) return { ok: false, error: 'no token' };
+
+  let sha = null;
+  try {
+    const getReq = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+    });
+    if (getReq.ok) { const d = await getReq.json(); sha = d.sha; }
+  } catch (e) {}
+  if (!sha) return { ok: true, msg: 'file not found' };
+
+  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+    body: JSON.stringify({ message, sha, branch: 'main' })
+  });
+  return { ok: resp.ok };
+}
+
+function buildMd(article) {
+  let md = '---\n';
+  md += `title: "${article.title}"\n`;
+  md += `date: "${article.date}"\n`;
+  let tags = article.tags;
+  if (typeof tags === 'string') try { tags = JSON.parse(tags); } catch (e) { tags = []; }
+  md += `tags: ${JSON.stringify(tags)}\n`;
+  md += `category: "${article.category}"\n`;
+  md += `excerpt: "${article.excerpt}"\n`;
+  md += '---\n\n';
+  md += article.content;
+  return md;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -163,7 +225,10 @@ export default {
           if (!title || !content) return json({ error: '标题和内容必填' }, 400);
           const slug = (date || new Date().toISOString().slice(0, 10)).replace(/-/g, '') + '-' + title.toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
           const tagsStr = Array.isArray(tags) ? JSON.stringify(tags) : (tags || '[]');
-          const result = await env.DB.prepare("INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status,pinned) VALUES (?,?,?,?,?,?,?,?,?)").bind(slug, title, date || new Date().toISOString().slice(0, 10), tagsStr, category || '', excerpt || '', content, status || 'draft', pinned ? 1 : 0).run();
+          const result = await env.DB.prepare("INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status,pinned) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET title=excluded.title,date=excluded.date,tags=excluded.tags,category=excluded.category,excerpt=excluded.excerpt,content=excluded.content,status=excluded.status,updated_at=datetime('now')").bind(slug, title, date || new Date().toISOString().slice(0, 10), tagsStr, category || '', excerpt || '', content, status || 'draft', pinned ? 1 : 0).run();
+          // Push to GitHub
+          const md = buildMd({ title, date: date || new Date().toISOString().slice(0, 10), tags: tags, category: category || '', excerpt: excerpt || '', content });
+          githubPush(env, `content/blog/${slug}.md`, md, `blog: ${title}`).catch(()=>{});
           return json({ ok: true, id: result.meta.last_row_id, slug }, 201);
         }
 
@@ -186,6 +251,12 @@ export default {
           fields.push("updated_at=datetime('now')");
           params.push(id);
           await env.DB.prepare("UPDATE articles SET " + fields.join(',') + " WHERE id=?").bind(...params).run();
+          // Push to GitHub
+          const updated = await env.DB.prepare("SELECT * FROM articles WHERE id=?").bind(id).first();
+          if (updated) {
+            const md = buildMd(updated);
+            githubPush(env, `content/blog/${updated.slug}.md`, md, `blog update: ${updated.title}`).catch(()=>{});
+          }
           return json({ ok: true });
         }
 
@@ -196,6 +267,8 @@ export default {
           if (!art) return json({ error: '文章不存在' }, 404);
           await env.DB.prepare("INSERT INTO trash (original_id,type,title,slug,data) VALUES (?,?,?,?,?)").bind(art.id, 'article', art.title, art.slug, JSON.stringify(art)).run();
           await env.DB.prepare("DELETE FROM articles WHERE id=?").bind(id).run();
+          // Delete from GitHub
+          githubDelete(env, `content/blog/${art.slug}.md`, `blog delete: ${art.title}`).catch(()=>{});
           return json({ ok: true });
         }
 
@@ -326,6 +399,9 @@ export default {
           if (item.type === 'article') {
             const art = JSON.parse(item.data);
             await env.DB.prepare("INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status,pinned) VALUES (?,?,?,?,?,?,?,?,?)").bind(art.slug, art.title, art.date, art.tags, art.category, art.excerpt, art.content, art.status||'draft', art.pinned||0).run();
+            // Push to GitHub
+            const md = buildMd(art);
+            githubPush(env, `content/blog/${art.slug}.md`, md, `blog restore: ${art.title}`).catch(()=>{});
           }
           await env.DB.prepare("DELETE FROM trash WHERE id=?").bind(id).run();
           return json({ ok: true });
