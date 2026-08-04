@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
 const { escHtml, parseFrontMatter, mdInline, mdToHtml } = require('./lib/markdown');
 
 // ── Config ──────────────────────────────────────────────────────────────────
@@ -791,11 +792,75 @@ console.log('   Articles: ' + articleOrder.length);
 console.log('   Tags: ' + allTags.length);
 console.log('   Categories: ' + cats.length);
 
-// Save build cache for next incremental run
-saveCache({
-  globalFp,
-  articles: loadArticles._newArticleCache || {},
-  outputHashes: newOutputHashes,
-  lastBuild: new Date().toISOString()
+// ── Sync to D1 (if env vars set) ──
+async function syncToD1() {
+  const adminPw = process.env.ADMIN_PASSWORD;
+  const workerUrl = process.env.WORKER_URL || 'https://comments.pluslogic.eu.org';
+  if (!adminPw) { console.log('   ⏭  D1 sync skipped (no ADMIN_PASSWORD)'); return; }
+
+  function api(method, apiPath, body, token) {
+    return new Promise((resolve, reject) => {
+      const data = body ? JSON.stringify(body) : null;
+      const url = new URL(workerUrl + apiPath);
+      const opts = { hostname: url.hostname, path: url.pathname, method, headers: { 'Content-Type': 'application/json' } };
+      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+      if (data) opts.headers['Content-Length'] = Buffer.byteLength(data);
+      const req = https.request(opts, res => {
+        let chunks = [];
+        res.on('data', c => chunks.push(c));
+        res.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString())); } catch (e) { resolve({}); } });
+      });
+      req.on('error', reject);
+      if (data) req.write(data);
+      req.end();
+    });
+  }
+
+  try {
+    console.log('   🔄 Syncing to D1...');
+    const auth = await api('POST', '/api/admin/auth', { password: adminPw });
+    if (!auth.ok) { console.log('   ✗ D1 auth failed:', auth.error); return; }
+    const token = auth.token;
+
+    // Sync articles
+    let synced = 0;
+    const mdFiles = fs.readdirSync(CONTENT_DIR).filter(f => f.endsWith('.md')).sort();
+    for (const file of mdFiles) {
+      const filePath = path.join(CONTENT_DIR, file);
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const [meta, body] = parseFrontMatter(raw);
+      const dateVal = meta.date || '';
+      const tags = Array.isArray(meta.tags) ? meta.tags : [];
+      const res = await api('POST', '/api/admin/articles', {
+        title: meta.title || file.replace('.md',''), date: dateVal, tags,
+        category: meta.category || '', excerpt: meta.excerpt || '',
+        content: body.trim(), status: 'published'
+      }, token);
+      if (res.ok) synced++;
+    }
+
+    // Sync friend links
+    let friendsSynced = 0;
+    for (const f of SITE_CONFIG.friends) {
+      const res = await api('POST', '/api/admin/friends', {
+        name: f.name, url: f.url, avatar: f.avatar || '', desc: f.desc || '', sort: 0
+      }, token);
+      if (res.ok) friendsSynced++;
+    }
+
+    console.log(`   ✓ D1 synced: ${synced} articles, ${friendsSynced} friends`);
+  } catch (e) {
+    console.log('   ✗ D1 sync error:', e.message);
+  }
+}
+
+syncToD1().then(() => {
+  // Save build cache for next incremental run
+  saveCache({
+    globalFp,
+    articles: loadArticles._newArticleCache || {},
+    outputHashes: newOutputHashes,
+    lastBuild: new Date().toISOString()
+  });
+  console.log('   Cache saved for next build');
 });
-console.log('   Cache saved for next build');
