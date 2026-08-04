@@ -51,28 +51,41 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  padding: 8px 12px;
+  padding: 6px 8px 6px 14px;
   background: var(--primary-container);
   color: var(--on-primary-container);
-  border-radius: var(--shape-s);
+  border-radius: var(--shape-m);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 13px;
 }
 .cs-reply-indicator.visible { display: flex; }
 .cs-reply-indicator strong { font-weight: 600; }
-.cs-cancel-reply {
-  margin-left: auto;
-  background: none;
+.cs-cr {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--shape-full);
   border: none;
+  background: none;
   color: var(--on-primary-container);
   cursor: pointer;
-  font-size: 18px;
-  padding: 0 4px;
-  opacity: .7;
-  transition: opacity 150ms;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: background 150ms;
 }
-.cs-cancel-reply:hover { opacity: 1; }
+.cs-cr:hover { background: rgba(0,0,0,.08); }
+[data-theme="dark"] .cs-cr:hover { background: rgba(255,255,255,.08); }
+.cs-cr svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
 /* 输入框行 */
 .cs-form-row {
@@ -142,6 +155,31 @@
   font-size: 11px;
   color: var(--outline);
   letter-spacing: .02em;
+}
+
+/* 按钮组 */
+.cs-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 放弃按钮 — MD3 Text Button */
+.cs-discard {
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--shape-full);
+  background: none;
+  color: var(--primary);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms;
+}
+.cs-discard:hover {
+  background: var(--primary-container);
 }
 
 /* 提交按钮 — MD3 Filled Button */
@@ -488,17 +526,15 @@
 /* ── 响应式 ── */
 @media (max-width: 768px) {
   .cs-form-row {
-    flex-direction: column;
-    gap: 12px;
+    gap: 6px;
   }
   .cs-form input[type="text"],
   .cs-form input[type="email"],
   .cs-form input[type="url"] {
-    height: 48px;
+    font-size: 14px;
   }
   .cs-form textarea {
-    min-height: 110px;
-    padding: 16px 0;
+    min-height: 100px;
   }
   .cs-replies {
     margin-left: 24px;
