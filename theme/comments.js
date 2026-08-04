@@ -25,7 +25,7 @@
   }
 
   function avatar(h, n) {
-    if (h) return '<img src="https://www.gravatar.com/avatar/' + h + '?d=retro&s=72" alt="' + esc(n) + '" loading="lazy" width="36" height="36">';
+    if (h) return '<img src="https://cravatar.cn/avatar/' + h + '?d=retro&s=72" alt="' + esc(n) + '" loading="lazy" width="36" height="36">';
     return '<span class="cs-avatar-initial">' + esc((n || '?')[0].toUpperCase()) + '</span>';
   }
 
@@ -41,7 +41,7 @@
     var nm = c.website
       ? '<a href="' + esc(c.website) + '" rel="noopener noreferrer nofollow" target="_blank">' + esc(c.nickname) + '</a>'
       : esc(c.nickname);
-    var badge = c.is_admin ? '<span class="cs-badge">博主</span>' : '';
+    var badge = c.is_admin ? '<span class="cs-badge">艾德密</span>' : '' ;
     return '<li class="cs-item" data-id="' + c.id + '" data-depth="' + c.depth + '">'
       + '<div class="cs-item-main"><div class="cs-avatar">' + avatar(c.avatar_hash, c.nickname) + '</div>'
       + '<div class="cs-body"><div class="cs-meta"><span class="cs-nickname">' + nm + '</span>' + badge
