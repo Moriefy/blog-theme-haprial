@@ -149,13 +149,22 @@
     this._load();
   };
 
-  CS.prototype._load = function (ap) {
+  CS.prototype._fetchWithTimeout = function (url, opts, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { reject(new Error('请求超时')) }, timeoutMs || 10000);
+      fetch(url, opts).then(function (r) { clearTimeout(timer); resolve(r); },
+        function (e) { clearTimeout(timer); reject(e); });
+    });
+  };
+
+  CS.prototype._load = function (ap, retries) {
     var self = this;
     var u = this.api + '/api/comments?page=' + encodeURIComponent(this.page) + '&limit=50';
     if (ap && this.cursor) u += '&cursor=' + this.cursor;
     if (!ap) this.lw.innerHTML = '<div class="cs-loading">加载中</div>';
+    retries = retries || 0;
 
-    fetch(u).then(function (r) {
+    self._fetchWithTimeout(u, {}, 10000).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }).then(function (d) {
@@ -164,7 +173,11 @@
       self._show(d.total);
     }).catch(function (e) {
       console.error('[CS] load error:', e);
-      self.lw.innerHTML = '<div class="cs-empty">加载失败，请刷新重试</div>';
+      if (retries < 1) {
+        setTimeout(function () { self._load(ap, retries + 1); }, 2000);
+      } else {
+        self.lw.innerHTML = '<div class="cs-empty">加载失败，请点击<a href="javascript:void(0)" onclick="this.closest(\'.cs-lw\').parentNode.querySelector(\'.cs-form\').__cs && this.closest(\'.cs-lw\').parentNode.querySelector(\'.cs-form\').__cs._load()">重试</a>或刷新页面</div>';
+      }
     });
   };
 
