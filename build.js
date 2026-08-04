@@ -36,7 +36,6 @@ function getGlobalFingerprint() {
     path.join(THEME_DIR, 'styles.css'),
     path.join(THEME_DIR, 'app.js'),
     path.join(THEME_DIR, 'lightbox.js'),
-    path.join(THEME_DIR, 'post-init.js'),
     path.join(THEME_DIR, 'comments.css'),
     path.join(THEME_DIR, 'comments.js'),
     path.join(ROOT, 'build.js'),
