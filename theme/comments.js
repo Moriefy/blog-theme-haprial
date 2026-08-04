@@ -94,7 +94,7 @@
       + '<input type="url" name="web" placeholder="网站（可选）" maxlength="200">'
       + '</div>'
       + '<textarea name="body" placeholder="写下你的评论…" required maxlength="2000" rows="3"></textarea>'
-      + '<div class="cs-form-actions"><span class="cs-form-hint">支持 **粗体** *斜体* `代码` [链接](url)</span><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
+      + '<div class="cs-form-actions"><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
       + '</form>'
       + '<div class="cs-lw"></div>';
 
@@ -173,6 +173,7 @@
       self.comments = ap ? self.comments.concat(d.comments) : d.comments;
       self.cursor = d.cursor; self.more = d.hasMore;
       self._show(d.total);
+      self._applyLikedState();
     }).catch(function (e) {
       console.error('[CS] load error:', e);
       if (retries < 1) {
@@ -218,10 +219,41 @@
   CS.prototype._like = function (b) {
     if (b.classList.contains('liked')) return;
     var id = b.dataset.id;
+    var self = this;
     fetch(this.api + '/api/comments/' + id + '/like', { method: 'POST' })
       .then(function (r) { return r.json(); })
-      .then(function (d) { if (d.error) throw new Error(d.error); b.classList.add('liked'); b.innerHTML = HEART_FILL + '<span>' + d.liked + '</span>'; })
+      .then(function (d) {
+        if (d.error) throw new Error(d.error);
+        b.classList.add('liked');
+        b.innerHTML = HEART_FILL + '<span>' + d.liked + '</span>';
+        self._saveLiked(id);
+      })
       .catch(function (e) { toast(e.message); });
+  };
+
+  CS.prototype._getLikedSet = function () {
+    try {
+      var raw = localStorage.getItem('cs_liked');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return [] }
+  };
+
+  CS.prototype._saveLiked = function (id) {
+    try {
+      var arr = this._getLikedSet();
+      if (arr.indexOf(id) === -1) { arr.push(id); localStorage.setItem('cs_liked', JSON.stringify(arr)); }
+    } catch (e) {}
+  };
+
+  CS.prototype._applyLikedState = function () {
+    var liked = this._getLikedSet();
+    var btns = this.el.querySelectorAll('.cs-like');
+    for (var i = 0; i < btns.length; i++) {
+      if (liked.indexOf(btns[i].dataset.id) !== -1) {
+        btns[i].classList.add('liked');
+        btns[i].innerHTML = HEART_FILL + btns[i].innerHTML.replace(HEART, '');
+      }
+    }
   };
 
   CS.prototype._reply = function (b) {
