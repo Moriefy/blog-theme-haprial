@@ -774,6 +774,18 @@ const notFoundHtml = fs.readFileSync(path.join(ROOT, 'src', '404.html'), 'utf8')
 fs.writeFileSync(path.join(OUT_DIR, '404.html'), notFoundHtml);
 console.log('  ✓ 404.html');
 
+// Copy admin assets
+if (fs.existsSync(path.join(ROOT, 'admin'))) {
+  const adminOut = path.join(OUT_DIR, 'admin');
+  fs.mkdirSync(adminOut, { recursive: true });
+  fs.readdirSync(path.join(ROOT, 'admin')).forEach(f => {
+    const sp = path.join(ROOT, 'admin', f);
+    const dp = path.join(adminOut, f);
+    if (fs.statSync(sp).isFile()) fs.copyFileSync(sp, dp);
+  });
+  console.log('  ✓ admin/');
+}
+
 console.log('\n✅ Build complete! Output: dist/');
 console.log('   Articles: ' + articleOrder.length);
 console.log('   Tags: ' + allTags.length);
