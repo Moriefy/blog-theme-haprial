@@ -126,7 +126,6 @@
   width: 100%;
   min-height: 100px;
   padding: 14px 0;
-  padding-bottom: 48px;
   border: none;
   border-bottom: 2px solid var(--outline-variant);
   border-radius: 0;
@@ -147,14 +146,13 @@
   font-size: 13px;
 }
 
-/* 按钮组 — 浮在 textarea 右下角 */
+/* 按钮组 — 下划线下方，右对齐 */
 .cs-btn-group {
-  position: absolute;
-  right: 0;
-  bottom: 8px;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
+  padding-top: 12px;
 }
 
 /* 放弃按钮 — MD3 Text Button */
