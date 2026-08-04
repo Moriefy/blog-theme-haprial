@@ -42,12 +42,15 @@
       ? '<a href="' + esc(c.website) + '" rel="noopener noreferrer nofollow" target="_blank">' + esc(c.nickname) + '</a>'
       : esc(c.nickname);
     var badge = c.is_admin ? '<span class="cs-badge">艾德密</span>' : '' ;
+    var contentLen = (c.content_html || '').replace(/<[^>]+>/g, '').length;
+    var longCls = contentLen > 300 ? ' cs-long' : '';
     return '<li class="cs-item" data-id="' + c.id + '" data-depth="' + c.depth + '">'
       + '<div class="cs-item-main"><div class="cs-avatar">' + avatar(c.avatar_hash, c.nickname) + '</div>'
       + '<div class="cs-body"><div class="cs-meta"><span class="cs-nickname">' + nm + '</span>' + badge
       + '<time class="cs-time">' + timeAgo(c.created_at) + '</time>'
       + (ed ? '<span class="cs-edited">(已编辑)</span>' : '')
-      + '</div><div class="cs-content">' + c.content_html + '</div>'
+      + '</div><div class="cs-content' + longCls + '">' + c.content_html + '</div>'
+      + (contentLen > 300 ? '<button class="cs-expand-btn">展开全文</button>' : '')
       + '<div class="cs-actions">'
       + '<button class="cs-action cs-like" data-id="' + c.id + '">'
       + (c.liked > 0 ? HEART_FILL : HEART) + '<span>' + (c.liked || '') + '</span></button>'
@@ -137,8 +140,15 @@
       }
     } catch (e) {}
     this.lw.addEventListener('click', function (e) {
-      var a = e.target.closest('.cs-like'), b = e.target.closest('.cs-reply-btn'), c = e.target.closest('.cs-load-more');
+      var a = e.target.closest('.cs-like'), b = e.target.closest('.cs-reply-btn'), c = e.target.closest('.cs-load-more'), d = e.target.closest('.cs-expand-btn');
       if (a) self._like(a); else if (b) self._reply(b); else if (c) self._load(1);
+      else if (d) {
+        var content = d.previousElementSibling;
+        if (content && content.classList.contains('cs-content')) {
+          var expanded = content.classList.toggle('cs-expanded');
+          d.textContent = expanded ? '收起' : '展开全文';
+        }
+      }
     });
 
     // 恢复昵称、邮箱、网站
