@@ -142,11 +142,22 @@
       if (a) self._like(a); else if (b) self._reply(b); else if (c) self._load(1);
     });
 
-    // 恢复昵称
+    // 恢复昵称、邮箱、网站
     try {
       var n = localStorage.getItem('cs_nick'), em = localStorage.getItem('cs_email'), w = localStorage.getItem('cs_web');
       if (n) this.f.nick.value = n; if (em) this.f.em.value = em; if (w) this.f.web.value = w;
     } catch (e) {}
+
+    // 恢复草稿
+    try {
+      var draft = localStorage.getItem('cs_draft_' + this.page);
+      if (draft) this.f.body.value = draft;
+    } catch (e) {}
+
+    // 实时保存草稿
+    this.f.body.addEventListener('input', function () {
+      try { localStorage.setItem('cs_draft_' + self.page, self.f.body.value); } catch (e) {}
+    });
 
     this._load();
   };
@@ -209,6 +220,7 @@
       if (!r.ok) throw new Error(r.d.error || '提交失败');
       toast(r.d.message || '评论已提交');
       self.f.body.value = '';
+      try { localStorage.removeItem('cs_draft_' + self.page); } catch (e) {}
       self._cancel();
       self._load();
       try { localStorage.setItem('cs_nick', bd.nickname); if (bd.email) localStorage.setItem('cs_email', bd.email); if (bd.website) localStorage.setItem('cs_web', bd.website); } catch (e) {}
@@ -249,9 +261,12 @@
     var liked = this._getLikedSet();
     var btns = this.el.querySelectorAll('.cs-like');
     for (var i = 0; i < btns.length; i++) {
-      if (liked.indexOf(btns[i].dataset.id) !== -1) {
-        btns[i].classList.add('liked');
-        btns[i].innerHTML = HEART_FILL + btns[i].innerHTML.replace(HEART, '');
+      var b = btns[i];
+      if (liked.indexOf(b.dataset.id) !== -1 && !b.classList.contains('liked')) {
+        b.classList.add('liked');
+        var count = b.querySelector('span');
+        b.innerHTML = HEART_FILL;
+        if (count) b.appendChild(count);
       }
     }
   };
