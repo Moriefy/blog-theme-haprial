@@ -282,7 +282,6 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352
 </head>
 <body>
 
-<a href="#articleList" class="skip-link">跳到内容</a>
 <header class="top-app-bar" id="topAppBar">
   <span class="logo" id="logoBtn">Moriefy</span>
   <div class="spacer"></div>
