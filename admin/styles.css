@@ -34,7 +34,7 @@ a{color:var(--primary);text-decoration:none}
 .md3-btn-icon:hover{background:var(--surface-container-high)}
 .md3-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .md3-btn-icon svg{width:20px;height:20px}
-.app{display:flex;min-height:100vh}
+.app{display:flex;min-height:100vh;overflow-x:hidden}
 .sidebar{width:240px;background:var(--surface-container);border-right:1px solid var(--outline-variant);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
 .sidebar-header{padding:20px 20px 12px;font-size:18px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant)}
 .sidebar-nav{flex:1;padding:8px;overflow-y:auto}
@@ -44,7 +44,7 @@ a{color:var(--primary);text-decoration:none}
 .nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .nav-sep{height:1px;background:var(--outline-variant);margin:8px 16px}
 .sidebar-footer{padding:12px 20px;border-top:1px solid var(--outline-variant)}
-.main{flex:1;margin-left:240px;min-height:100vh}
+.main{flex:1;margin-left:240px;min-height:100vh;overflow-y:auto}
 .topbar{height:56px;background:var(--surface-container);border-bottom:1px solid var(--outline-variant);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:50}
 .topbar-title{font-size:16px;font-weight:600;flex:1}
 .topbar-actions{display:flex;gap:8px}
@@ -137,12 +137,12 @@ tr:hover td{background:var(--surface-container-high)}
 .toolbar button:hover{background:var(--surface-container-high)}
 @media(max-width:768px){
   .sidebar{display:none}
-  .main{margin-left:0}
+  .main{margin-left:0;overflow-y:auto}
   .editor-wrap{grid-template-columns:1fr;height:auto}
   .preview-pane{display:none}
   .preview-pane.show{display:block}
   .meta-grid{grid-template-columns:1fr}
-  .content{padding:16px}
+  .content{padding:16px;padding-bottom:80px}
   .topbar{padding:0 16px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   table{font-size:12px}

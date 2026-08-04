@@ -25,6 +25,7 @@ function api(method,path,body){
 function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},3000)}
 function showDialog(html){$('dialog').innerHTML=html;$('dialogOverlay').classList.add('open')}
 function closeDialog(){$('dialogOverlay').classList.remove('open')}
+window.closeDialog=closeDialog;
 
 // ── Auth ──
 function checkAuth(){
