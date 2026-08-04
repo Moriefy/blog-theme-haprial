@@ -93,8 +93,7 @@
       + '<input type="email" name="em" placeholder="邮箱（可选）" maxlength="100" autocomplete="email">'
       + '<input type="url" name="web" placeholder="网站（可选）" maxlength="200">'
       + '</div>'
-      + '<textarea name="body" placeholder="写下你的评论…" required maxlength="2000" rows="3"></textarea>'
-      + '<div class="cs-form-actions"><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
+      + '<div class="cs-textarea-wrap"><textarea name="body" placeholder="写下你的评论…" required maxlength="2000" rows="3"></textarea><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
       + '</form>'
       + '<div class="cs-lw"></div>';
 

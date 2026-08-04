@@ -119,10 +119,14 @@
 }
 
 /* 文本域 */
+.cs-textarea-wrap {
+  position: relative;
+}
 .cs-form textarea {
   width: 100%;
   min-height: 100px;
   padding: 14px 0;
+  padding-bottom: 48px;
   border: none;
   border-bottom: 2px solid var(--outline-variant);
   border-radius: 0;
@@ -143,22 +147,11 @@
   font-size: 13px;
 }
 
-/* 操作栏 */
-.cs-form-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
-}
-.cs-form-hint {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-size: 11px;
-  color: var(--outline);
-  letter-spacing: .02em;
-}
-
-/* 按钮组 */
+/* 按钮组 — 浮在 textarea 右下角 */
 .cs-btn-group {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
