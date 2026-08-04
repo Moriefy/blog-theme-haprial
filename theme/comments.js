@@ -198,7 +198,7 @@
     this.btn.disabled = true; this.btn.textContent = '发送中…';
 
     var hdrs = { 'Content-Type': 'application/json' };
-    try { var at = localStorage.getItem('cs_admin_token'); if (at) hdrs['X-Admin-Token'] = at; } catch (e) {}
+    try { var at = localStorage.getItem('cs_admin_token'); if (at) hdrs['Authorization'] = 'Bearer ' + at; } catch (e) {}
     fetch(this.api + '/api/comments', {
       method: 'POST', headers: hdrs, body: JSON.stringify(bd)
     }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
