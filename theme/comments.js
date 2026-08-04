@@ -191,6 +191,7 @@
       return r.json();
     }).then(function (d) {
       self.comments = ap ? self.comments.concat(d.comments) : d.comments;
+      self.comments.sort(function(a, b) { return b.id - a.id; });
       self.cursor = d.cursor; self.more = d.hasMore;
       self._show(d.total);
       self._applyLikedState();
