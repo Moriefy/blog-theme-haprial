@@ -130,19 +130,21 @@
         adminLink.textContent = '博主认证';
         adminLink.href = 'javascript:void(0)';
         adminLink.addEventListener('click', function () {
-          var t = prompt('输入管理 Token：');
-          if (!t) return;
+          var pw = prompt('输入管理密码：');
+          if (!pw) return;
           adminLink.textContent = '验证中…';
           adminLink.style.pointerEvents = 'none';
-          fetch(selfApi + '/api/admin/verify', {
-            headers: { 'Authorization': 'Bearer ' + t }
+          fetch(selfApi + '/api/admin/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw })
           }).then(function (r) { return r.json(); }).then(function (d) {
-            if (d.ok) {
-              localStorage.setItem('cs_admin_token', t);
+            if (d.ok && d.token) {
+              localStorage.setItem('cs_admin_token', d.token);
               toast('认证成功，之后你的评论会显示博主标识');
               adminLink.remove();
             } else {
-              toast('密码错误，认证失败');
+              toast(d.error || '密码错误，认证失败');
               adminLink.textContent = '博主认证';
               adminLink.style.pointerEvents = '';
             }
