@@ -12,8 +12,9 @@
   --e3:0 4px 14px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.05);
   --shape-s:8px;--shape-m:12px;--shape-l:16px;--shape-full:9999px;
 }
-html{-webkit-font-smoothing:antialiased}
+html{-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 body{font-family:'Noto Sans SC','PingFang SC',sans-serif;background:var(--surface);color:var(--on-surface);line-height:1.6;font-size:14px;min-height:100vh}
+button,a,input,textarea,select{-webkit-tap-highlight-color:transparent}
 input,textarea,select,button{font-family:inherit;font-size:inherit}
 a{color:var(--primary);text-decoration:none}
 

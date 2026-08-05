@@ -374,21 +374,30 @@ function renderCmtTree(list,pageSlug){
   });
   function renderNode(c,depth){
     var indent=depth*24;
-    var h='<div class="cmt-item" id="cmt-'+c.id+'" style="margin-left:'+indent+'px">'
+    var h='<div class="cmt-item" id="cmt-'+c.id+'" data-cmt-id="'+c.id+'" data-cmt-name="'+esc(c.nickname)+'" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +'<div class="cmt-body">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
-      +'<button class="md3-btn md3-btn-text" onclick="window._replyCmt('+c.id+',\''+esc(c.nickname).replace(/'/g,"\\'")+'\')">回复</button>'
-      +'<button class="md3-btn md3-btn-text" onclick="window._likeCmt('+c.id+')">👍 '+(c.liked||0)+'</button>'
-      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delCmt('+c.id+')">删除</button>'
+      +'<button class="md3-btn md3-btn-text cmt-reply-btn" data-id="'+c.id+'" data-name="'+esc(c.nickname)+'">回复</button>'
+      +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'">'+(c.liked>0?'❤️ '+c.liked:'♡')+'</button>'
+      +'<button class="md3-btn md3-btn-text cmt-del-btn" data-id="'+c.id+'" style="color:var(--error)">删除</button>'
       +'</div><div id="reply-'+c.id+'"></div></div>';
     c._children.forEach(function(child){h+=renderNode(child,depth+1)});
     return h
   }
   var html='';
   roots.forEach(function(c){html+=renderNode(c,0)});
-  el.innerHTML=html
+  el.innerHTML=html;
+  // 事件委托
+  el.addEventListener('click',function(e){
+    var btn=e.target.closest('.cmt-reply-btn');
+    if(btn){window._replyCmt(parseInt(btn.dataset.id),btn.dataset.name);return}
+    btn=e.target.closest('.cmt-like-btn');
+    if(btn){window._likeCmt(parseInt(btn.dataset.id));return}
+    btn=e.target.closest('.cmt-del-btn');
+    if(btn){window._delCmt(parseInt(btn.dataset.id));return}
+  })
 }
 window._replyCmt=function(id,name){
   var el=$('reply-'+id);if(!el)return;
