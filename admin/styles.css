@@ -122,6 +122,19 @@ tr:hover td{background:var(--surface-container-high)}
 .toolbar button{height:32px;padding:0 10px;border:1px solid var(--outline-variant);border-radius:var(--shape-s);background:transparent;color:var(--on-surface-variant);cursor:pointer;font-size:12px;font-weight:500;transition:background 150ms}
 .toolbar button:hover{background:var(--surface-container-high)}
 
+/* ── 评论两栏布局 ── */
+.cmt-layout{display:grid;grid-template-columns:280px 1fr;gap:0;min-height:calc(100vh - 56px - 48px);margin:-24px}
+.cmt-sidebar{border-right:1px solid var(--outline-variant);overflow-y:auto;background:var(--surface-container-lowest)}
+.cmt-sidebar-header{padding:16px 20px;font-size:14px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;background:inherit;z-index:1}
+.cmt-art-item{padding:12px 20px;cursor:pointer;border-bottom:1px solid var(--outline-variant);transition:background 150ms}
+.cmt-art-item:hover{background:var(--surface-container-high)}
+.cmt-art-item.active{background:var(--primary-container);color:var(--on-primary-container)}
+.cmt-art-item.active .cmt-art-name{color:var(--on-primary-container)}
+.cmt-art-name{font-size:13px;font-weight:500;color:var(--on-surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmt-main{overflow-y:auto;display:flex;flex-direction:column}
+.cmt-main-header{padding:16px 20px;font-size:14px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;background:var(--surface);z-index:1}
+.cmt-main #cmtList{padding:0 20px 20px;flex:1}
+
 /* ── 评论 ── */
 .cmt-item{padding:12px 0;border-bottom:1px solid var(--outline-variant)}
 .cmt-item:last-child{border-bottom:none}
@@ -173,6 +186,9 @@ tr:hover td{background:var(--surface-container-high)}
 @media(max-width:768px){
   .sidebar{display:none}
   .main{margin-left:0}
+  .cmt-layout{grid-template-columns:1fr;min-height:auto}
+  .cmt-sidebar{border-right:none;border-bottom:1px solid var(--outline-variant);max-height:200px}
+  .cmt-main #cmtList{padding:0 16px 16px}
   .editor-wrap{grid-template-columns:1fr;height:auto}
   .preview-pane{display:none}
   .preview-pane.show{display:block}

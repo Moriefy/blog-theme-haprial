@@ -15,6 +15,31 @@ async function verifyAdmin(req,env){const auth=req.headers.get('Authorization')|
 async function makeAdminToken(env){const exp=Date.now()+7*24*60*60*1000;const payload=String(exp);const sig=await hmacSign(env.ADMIN_TOKEN,payload);return payload+'.'+sig}
 async function isAdminComment(req,env){const auth=req.headers.get('Authorization')||'';if(!auth.startsWith('Bearer '))return false;const token=auth.slice(7);if(token===env.ADMIN_TOKEN)return true;const [payload,sig]=token.split('.');if(!payload||!sig)return false;const exp=parseInt(payload);if(!exp||Date.now()>exp)return false;try{const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.ADMIN_TOKEN),{name:'HMAC',hash:'SHA-256'},false,['sign']);const sigBuf=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(payload));const expected=Array.from(new Uint8Array(sigBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');return expected===sig}catch(e){return false}}
 
+// ── Webhook 签名验证 ──
+async function verifyWebhookSignature(request, secret) {
+  const sig = request.headers.get('X-Hub-Signature-256') || '';
+  if (!sig || !secret) return false;
+  const body = await request.clone().text();
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body));
+  const expected = 'sha256=' + Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return sig === expected;
+}
+
+// ── GitHub Fetch Helper ──
+async function githubFetch(env, filePath) {
+  const token = env.GITHUB_TOKEN;
+  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  if (!token) return null;
+  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+  });
+  if (!resp.ok) return null;
+  const d = await resp.json();
+  const content = decodeURIComponent(escape(atob(d.content)));
+  return { content, sha: d.sha };
+}
+
 // ── Auto-migration ──
 let migrated=false;
 async function ensureTables(db){
@@ -193,6 +218,64 @@ export default {
         return json({ ok });
       }
 
+      // GET /api/admin/setup/status — 无需认证
+      if (method === 'GET' && path === '/api/admin/setup/status') {
+        const pw = await env.DB.prepare("SELECT value FROM admin_config WHERE key='password_hash'").first();
+        return json({ passwordSet: !!pw });
+      }
+
+      // ════════════════════════════════════════
+      //  GITHUB WEBHOOK
+      // ════════════════════════════════════════
+      if (method === 'POST' && path === '/api/webhook/github') {
+        const secret = env.WEBHOOK_SECRET;
+        if (secret) {
+          const valid = await verifyWebhookSignature(request, secret);
+          if (!valid) return json({ error: 'Invalid signature' }, 401);
+        }
+        let payload;
+        try { payload = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+        if (!payload.commits || !Array.isArray(payload.commits)) return json({ ok: true, msg: 'no commits' });
+        const blogPrefix = 'content/blog/';
+        const added = [], modified = [], removed = [];
+        for (const commit of payload.commits) {
+          (commit.added || []).forEach(f => { if (f.startsWith(blogPrefix) && f.endsWith('.md')) added.push(f); });
+          (commit.modified || []).forEach(f => { if (f.startsWith(blogPrefix) && f.endsWith('.md')) modified.push(f); });
+          (commit.removed || []).forEach(f => { if (f.startsWith(blogPrefix) && f.endsWith('.md')) removed.push(f); });
+        }
+        const toSync = [...new Set([...added, ...modified])];
+        let synced = 0;
+        for (const filePath of toSync) {
+          const fileData = await githubFetch(env, filePath);
+          if (!fileData) continue;
+          const raw = fileData.content;
+          const fmMatch = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+          const meta = {};
+          if (fmMatch) {
+            fmMatch[1].split(/\r?\n/).forEach(line => {
+              const m = line.match(/^(\w+):\s*"?([^"]*)"?$/);
+              if (m) {
+                let val = m[2].trim();
+                if (val.startsWith('[')) try { val = JSON.parse(val); } catch {}
+                meta[m[1]] = val;
+              }
+            });
+          }
+          const body = fmMatch ? raw.slice(fmMatch[0].length).trim() : raw.trim();
+          const slug = filePath.replace(blogPrefix, '').replace(/\.md$/, '');
+          const tags = Array.isArray(meta.tags) ? JSON.stringify(meta.tags) : (meta.tags || '[]');
+          await env.DB.prepare(`INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status) VALUES (?,?,?,?,?,?,?,?)
+            ON CONFLICT(slug) DO UPDATE SET title=excluded.title,date=excluded.date,tags=excluded.tags,category=excluded.category,excerpt=excluded.excerpt,content=excluded.content,updated_at=datetime('now')`)
+            .bind(slug, meta.title || slug, meta.date || '', tags, meta.category || '', meta.excerpt || '', body, 'published').run();
+          synced++;
+        }
+        for (const filePath of removed) {
+          const slug = filePath.replace(blogPrefix, '').replace(/\.md$/, '');
+          await env.DB.prepare("DELETE FROM articles WHERE slug=?").bind(slug).run();
+        }
+        return json({ ok: true, synced, removed: removed.length });
+      }
+
       // 以下所有 /api/admin/* 路由需要认证
       if (path.startsWith('/api/admin/')) {
         const authed = await verifyAdmin(request, env);
@@ -221,9 +304,12 @@ export default {
         // POST /api/admin/articles — 创建
         if (method === 'POST' && path === '/api/admin/articles') {
           let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
-          const { title, date, tags, category, excerpt, content, status, pinned } = body;
+          const { title, date, slug: userSlug, tags, category, excerpt, content, status, pinned } = body;
           if (!title || !content) return json({ error: '标题和内容必填' }, 400);
-          const slug = (date || new Date().toISOString().slice(0, 10)).replace(/-/g, '') + '-' + title.toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+          const datePrefix = (date || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+          const slugSuffix = userSlug ? userSlug.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
+            : title.toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+          const slug = datePrefix + '-' + slugSuffix;
           const tagsStr = Array.isArray(tags) ? JSON.stringify(tags) : (tags || '[]');
           const result = await env.DB.prepare("INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status,pinned) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET title=excluded.title,date=excluded.date,tags=excluded.tags,category=excluded.category,excerpt=excluded.excerpt,content=excluded.content,status=excluded.status,updated_at=datetime('now')").bind(slug, title, date || new Date().toISOString().slice(0, 10), tagsStr, category || '', excerpt || '', content, status || 'draft', pinned ? 1 : 0).run();
           // Push to GitHub
@@ -431,10 +517,58 @@ export default {
           return json({ articles: arts.c, published: published.c, drafts: drafts.c, comments: comments.c, friends: friends.c, trash: trash.c });
         }
 
-        // ── 建站初始化 ──
-        if (method === 'GET' && path === '/api/admin/setup/status') {
-          const pw = await env.DB.prepare("SELECT value FROM admin_config WHERE key='password_hash'").first();
-          return json({ passwordSet: !!pw });
+        // ── 修改密码 ──
+        if (method === 'POST' && path === '/api/admin/password') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const oldPw = body.old_password || '';
+          const newPw = body.new_password || '';
+          if (!oldPw || !newPw) return json({ error: '请填写完整' }, 400);
+          if (newPw.length < 6) return json({ error: '新密码至少6位' }, 400);
+          const oldHash = await sha256Hex(oldPw);
+          const stored = await env.DB.prepare("SELECT value FROM admin_config WHERE key='password_hash'").first();
+          if (!stored || stored.value !== oldHash) return json({ error: '当前密码错误' }, 401);
+          const newHash = await sha256Hex(newPw);
+          await env.DB.prepare("UPDATE admin_config SET value=? WHERE key='password_hash'").bind(newHash).run();
+          return json({ ok: true });
+        }
+
+        // ── 从 GitHub 导入数据 ──
+        if (method === 'POST' && path === '/api/admin/import-from-github') {
+          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const token = env.GITHUB_TOKEN;
+          if (!token) return json({ error: '未配置 GITHUB_TOKEN' }, 500);
+          const listResp = await fetch(`https://api.github.com/repos/${repo}/contents/content/blog`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (!listResp.ok) return json({ error: '获取仓库文件失败' }, 500);
+          const files = await listResp.json();
+          const mdFiles = files.filter(f => f.name.endsWith('.md'));
+          let imported = 0;
+          for (const file of mdFiles) {
+            const fileData = await githubFetch(env, `content/blog/${file.name}`);
+            if (!fileData) continue;
+            const raw = fileData.content;
+            const fmMatch = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+            const meta = {};
+            if (fmMatch) {
+              fmMatch[1].split(/\r?\n/).forEach(line => {
+                const m = line.match(/^(\w+):\s*"?([^"]*)"?$/);
+                if (m) {
+                  let val = m[2].trim();
+                  if (val.startsWith('[')) try { val = JSON.parse(val); } catch {}
+                  meta[m[1]] = val;
+                }
+              });
+            }
+            const body = fmMatch ? raw.slice(fmMatch[0].length).trim() : raw.trim();
+            const slug = file.name.replace(/\.md$/, '');
+            const tags = Array.isArray(meta.tags) ? JSON.stringify(meta.tags) : (meta.tags || '[]');
+            await env.DB.prepare(`INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status) VALUES (?,?,?,?,?,?,?,?)
+              ON CONFLICT(slug) DO UPDATE SET title=excluded.title,date=excluded.date,tags=excluded.tags,category=excluded.category,excerpt=excluded.excerpt,content=excluded.content,updated_at=datetime('now')`)
+              .bind(slug, meta.title || slug, meta.date || '', tags, meta.category || '', meta.excerpt || '', body, 'published').run();
+            imported++;
+          }
+          return json({ ok: true, imported });
         }
 
         // ── 全站数据导出 ──

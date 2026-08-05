@@ -175,8 +175,9 @@ function renderEditor(){
   c.innerHTML='<div class="meta-grid">'
     +'<div class="meta-field full"><label>标题</label><input class="md3-input" id="edTitle" placeholder="文章标题"></div>'
     +'<div class="meta-field"><label>日期</label><input class="md3-input" id="edDate" type="date"></div>'
+    +'<div class="meta-field"><label>备注（文件名后缀）</label><input class="md3-input" id="edSlug" placeholder="webassembly"></div>'
     +'<div class="meta-field"><label>分类</label><input class="md3-input" id="edCat" placeholder="tech / design / think / culture"></div>'
-    +'<div class="meta-field full"><label>标签（逗号分隔）</label><input class="md3-input" id="edTags" placeholder="标签1, 标签2, 标签3"></div>'
+    +'<div class="meta-field"><label>标签（逗号分隔）</label><input class="md3-input" id="edTags" placeholder="标签1, 标签2, 标签3"></div>'
     +'<div class="meta-field full"><label>摘要</label><textarea class="md3-input" id="edExcerpt" rows="2" placeholder="文章摘要"></textarea></div>'
     +'</div>'
     +'<div class="toolbar">'
@@ -201,6 +202,18 @@ function renderEditor(){
     +'</div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._saveDraft()">存草稿</button><button class="md3-btn md3-btn-filled" onclick="window._saveArticle()">发布</button>';
   var ed=$('edContent');
+  // 标题变化时自动生成备注
+  var titleTimer=null;
+  $('edTitle').addEventListener('input',function(){
+    if(editingId)return; // 编辑已有文章时不自动覆盖
+    clearTimeout(titleTimer);
+    titleTimer=setTimeout(function(){
+      var slug=$('edSlug');
+      if(slug.dataset.manual)return; // 用户手动修改过则不覆盖
+      slug.value=toSlug($('edTitle').value);
+    },300);
+  });
+  $('edSlug').addEventListener('input',function(){this.dataset.manual='1'});
   ed.addEventListener('input',function(){updatePreview()});
   ed.addEventListener('keydown',function(e){
     if(e.key==='Tab'){e.preventDefault();var s=this.selectionStart,end=this.selectionEnd;this.value=this.value.substring(0,s)+'  '+this.value.substring(end);this.selectionStart=this.selectionEnd=s+2;updatePreview()}
@@ -217,6 +230,7 @@ function renderEditor(){
       var a=d.article;
       $('edTitle').value=a.title||'';
       $('edDate').value=a.date||'';
+      $('edSlug').value=a.slug||'';
       $('edCat').value=a.category||'';
       var tags=[];try{tags=JSON.parse(a.tags)}catch(e){}
       $('edTags').value=tags.join(', ');
@@ -244,13 +258,21 @@ window._previewToggle=function(){
 };
 window._saveDraft=function(){saveArticle('draft')};
 window._saveArticle=function(){saveArticle('published')};
+function toSlug(str){
+  // 中文转拼音风格的 slug：去掉特殊字符，空格转连字符，小写
+  return str.toLowerCase()
+    .replace(/[\u4e00-\u9fff]/g,function(c){return c}) // 保留中文
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g,'-')
+    .replace(/^-+|-+$/g,'')
+    .slice(0,50);
+}
 function saveArticle(status){
   var title=$('edTitle').value.trim();
   var content=$('edContent').value;
   if(!title){toast('请输入标题');return}
   if(!content){toast('请输入内容');return}
   var tags=$('edTags').value.split(',').map(function(t){return t.trim()}).filter(Boolean);
-  var body={title:title,date:$('edDate').value,tags:tags,category:$('edCat').value.trim(),excerpt:$('edExcerpt').value.trim(),content:content,status:status};
+  var body={title:title,date:$('edDate').value,slug:$('edSlug').value.trim(),tags:tags,category:$('edCat').value.trim(),excerpt:$('edExcerpt').value.trim(),content:content,status:status};
   var p=editingId?api('PUT','/api/admin/articles/'+editingId,body):api('POST','/api/admin/articles',body);
   p.then(function(d){
     if(d.ok){toast(editingId?'已更新':'已创建');if(!editingId&&d.id){location.hash='#/editor/'+d.id;editingId=d.id}else{location.hash='#/articles'}}
@@ -259,37 +281,82 @@ function saveArticle(status){
 }
 
 // ════════════════════════════════════════
-//  评论管理
+//  评论管理（两栏式）
 // ════════════════════════════════════════
+var cmtSelectedPage='';
 function renderComments(){
   var c=$('content');
-  c.innerHTML='<div class="filter-bar"><select id="cmtPageFilter"><option value="">全部文章</option></select></div><div id="cmtList"><div class="empty">加载中…</div></div>';
-  loadComments()
+  c.innerHTML='<div class="cmt-layout">'
+    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
+    +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
+    +'</div>';
+  loadCommentArticles()
 }
-function loadComments(pageSlug){
-  var url='/api/admin/comments?limit=100';
-  if(pageSlug)url+='&page_slug='+encodeURIComponent(pageSlug);
-  api('GET',url).then(function(d){
+function loadCommentArticles(){
+  api('GET','/api/admin/comments?limit=1').then(function(d){
     cmtData=d;
-    var sel=$('cmtPageFilter');
-    if(sel&&d.pages){sel.innerHTML='<option value="">全部文章</option>'+d.pages.map(function(p){return '<option value="'+esc(p)+'"'+(p===pageSlug?' selected':'')+'>'+esc(p)+'</option>'}).join('');sel.onchange=function(){loadComments(this.value)}}
-    renderCmtList(d.comments)
+    var pages=d.pages||[];
+    var el=$('cmtArticleList');if(!el)return;
+    if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
+    // 加载每篇文章的评论数
+    el.innerHTML=pages.map(function(p){
+      return '<div class="cmt-art-item" data-page="'+esc(p)+'"><div class="cmt-art-name">'+esc(p)+'</div></div>'
+    }).join('');
+    el.addEventListener('click',function(e){
+      var item=e.target.closest('.cmt-art-item');
+      if(!item)return;
+      document.querySelectorAll('.cmt-art-item').forEach(function(i){i.classList.remove('active')});
+      item.classList.add('active');
+      cmtSelectedPage=item.dataset.page;
+      loadPageComments(cmtSelectedPage)
+    });
+    // 自动选中第一个
+    if(pages.length&&!cmtSelectedPage){
+      el.children[0].classList.add('active');
+      cmtSelectedPage=pages[0];
+      loadPageComments(cmtSelectedPage)
+    }else if(cmtSelectedPage){
+      var active=el.querySelector('[data-page="'+cmtSelectedPage.replace(/"/g,'\\"')+'"]');
+      if(active){active.classList.add('active');loadPageComments(cmtSelectedPage)}
+    }
   })
 }
-function renderCmtList(list){
+function loadPageComments(pageSlug){
+  $('cmtMainHeader').textContent=pageSlug;
+  $('cmtList').innerHTML='<div class="empty">加载中…</div>';
+  api('GET','/api/admin/comments?limit=200&page_slug='+encodeURIComponent(pageSlug)).then(function(d){
+    cmtData=d;
+    renderCmtTree(d.comments,pageSlug)
+  })
+}
+function renderCmtTree(list,pageSlug){
   var el=$('cmtList');if(!el)return;
   if(!list.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
-  el.innerHTML=list.map(function(c){
-    return '<div class="cmt-item" id="cmt-'+c.id+'">'
+  // 构建树形结构
+  var roots=[];
+  var byId={};
+  list.forEach(function(c){byId[c.id]=c;c._children=[]});
+  list.forEach(function(c){
+    if(c.parent_id&&byId[c.parent_id]){byId[c.parent_id]._children.push(c)}
+    else{roots.push(c)}
+  });
+  function renderNode(c,depth){
+    var indent=depth*24;
+    var h='<div class="cmt-item" id="cmt-'+c.id+'" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')
-      +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span><span class="cmt-page">'+esc(c.page_slug)+'</span></div>'
+      +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +'<div class="cmt-body">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
       +'<button class="md3-btn md3-btn-text" onclick="window._replyCmt('+c.id+',\''+esc(c.nickname).replace(/'/g,"\\'")+'\')">回复</button>'
       +'<button class="md3-btn md3-btn-text" onclick="window._likeCmt('+c.id+')">👍 '+(c.liked||0)+'</button>'
       +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delCmt('+c.id+')">删除</button>'
-      +'</div><div id="reply-'+c.id+'"></div></div>'
-  }).join('')
+      +'</div><div id="reply-'+c.id+'"></div></div>';
+    c._children.forEach(function(child){h+=renderNode(child,depth+1)});
+    return h
+  }
+  var html='';
+  roots.forEach(function(c){html+=renderNode(c,0)});
+  el.innerHTML=html
 }
 window._replyCmt=function(id,name){
   var el=$('reply-'+id);if(!el)return;
