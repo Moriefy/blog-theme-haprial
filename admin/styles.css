@@ -128,9 +128,11 @@ tr:hover td{background:var(--surface-container-high)}
 .cmt-sidebar-header{padding:16px 20px;font-size:14px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;background:inherit;z-index:1}
 .cmt-art-item{padding:12px 20px;cursor:pointer;border-bottom:1px solid var(--outline-variant);transition:background 150ms}
 .cmt-art-item:hover{background:var(--surface-container-high)}
-.cmt-art-item.active{background:var(--primary-container);color:var(--on-primary-container)}
-.cmt-art-item.active .cmt-art-name{color:var(--on-primary-container)}
-.cmt-art-name{font-size:13px;font-weight:500;color:var(--on-surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmt-art-item.active{background:var(--primary-container)}
+.cmt-art-item.active .cmt-art-title{color:var(--on-primary-container)}
+.cmt-art-item.active .cmt-art-slug{color:var(--on-primary-container);opacity:.7}
+.cmt-art-title{font-size:13px;font-weight:500;color:var(--on-surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+.cmt-art-slug{font-size:11px;color:var(--outline);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cmt-main{overflow-y:auto;display:flex;flex-direction:column}
 .cmt-main-header{padding:16px 20px;font-size:14px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;background:var(--surface);z-index:1}
 .cmt-main #cmtList{padding:0 20px 20px;flex:1}

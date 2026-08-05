@@ -120,10 +120,10 @@ function renderDashboard(){
       +sc(d.friends,'友链')+sc(d.trash,'回收站')+'</div>'
       +'<div class="card"><div class="card-title">快捷操作</div>'
       +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-      +'<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">✏️ 写文章</button>'
-      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/articles\'">📄 管理文章</button>'
-      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/comments\'">💬 管理评论</button>'
-      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/friends\'">🔗 管理友链</button>'
+      +'<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">写文章</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/articles\'">管理文章</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/comments\'">管理评论</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/friends\'">管理友链</button>'
       +'</div></div>'
   })
 }
@@ -215,6 +215,16 @@ function renderEditor(){
   });
   $('edSlug').addEventListener('input',function(){this.dataset.manual='1'});
   ed.addEventListener('input',function(){updatePreview()});
+  // 滚动同步：编辑器 → 预览
+  var scrollSyncTimer=null;
+  ed.addEventListener('scroll',function(){
+    clearTimeout(scrollSyncTimer);
+    scrollSyncTimer=setTimeout(function(){
+      var pct=ed.scrollTop/(ed.scrollHeight-ed.clientHeight||1);
+      var pp=$('edPreview');
+      pp.scrollTop=pct*(pp.scrollHeight-pp.clientHeight)
+    },16)
+  });
   ed.addEventListener('keydown',function(e){
     if(e.key==='Tab'){e.preventDefault();var s=this.selectionStart,end=this.selectionEnd;this.value=this.value.substring(0,s)+'  '+this.value.substring(end);this.selectionStart=this.selectionEnd=s+2;updatePreview()}
     if(e.ctrlKey||e.metaKey){
@@ -284,6 +294,7 @@ function saveArticle(status){
 //  评论管理（两栏式）
 // ════════════════════════════════════════
 var cmtSelectedPage='';
+var cmtArticles={};// slug -> {title, id}
 function renderComments(){
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
@@ -293,14 +304,29 @@ function renderComments(){
   loadCommentArticles()
 }
 function loadCommentArticles(){
-  api('GET','/api/admin/comments?limit=1').then(function(d){
+  // 同时加载文章列表和评论页面列表
+  Promise.all([
+    api('GET','/api/admin/articles?status=all'),
+    api('GET','/api/admin/comments?limit=1')
+  ]).then(function(results){
+    var arts=results[0].articles||[];
+    var d=results[1];
     cmtData=d;
+    // 建立 slug -> 文章 映射
+    cmtArticles={};
+    arts.forEach(function(a){cmtArticles['/posts/'+a.slug+'/']={title:a.title,id:a.id}});
     var pages=d.pages||[];
     var el=$('cmtArticleList');if(!el)return;
     if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
-    // 加载每篇文章的评论数
     el.innerHTML=pages.map(function(p){
-      return '<div class="cmt-art-item" data-page="'+esc(p)+'"><div class="cmt-art-name">'+esc(p)+'</div></div>'
+      var art=cmtArticles[p];
+      var title=art?art.title:p;
+      var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+      var artId=art?art.id:null;
+      return '<div class="cmt-art-item" data-page="'+esc(p)+'"'+(artId?' data-art-id="'+artId+'"':'')+'>'
+        +'<div class="cmt-art-title">'+esc(title)+'</div>'
+        +'<div class="cmt-art-slug">'+esc(slug)+'</div>'
+        +'</div>'
     }).join('');
     el.addEventListener('click',function(e){
       var item=e.target.closest('.cmt-art-item');
@@ -322,7 +348,13 @@ function loadCommentArticles(){
   })
 }
 function loadPageComments(pageSlug){
-  $('cmtMainHeader').textContent=pageSlug;
+  var art=cmtArticles[pageSlug];
+  var title=art?art.title:pageSlug;
+  var artId=art?art.id:null;
+  var headerHtml='<span>'+esc(title)+'</span>';
+  if(artId)headerHtml+=' <a href="#/editor/'+artId+'" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">编辑文章</a>';
+  headerHtml+=' <a href="https://pluslogic.eu.org'+pageSlug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
+  $('cmtMainHeader').innerHTML=headerHtml;
   $('cmtList').innerHTML='<div class="empty">加载中…</div>';
   api('GET','/api/admin/comments?limit=200&page_slug='+encodeURIComponent(pageSlug)).then(function(d){
     cmtData=d;
@@ -460,8 +492,8 @@ function renderSettings(){
     +'</div></div>'
     +'<div class="settings-section"><h3>数据管理</h3>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-    +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">📦 从 GitHub 导入数据</button>'
-    +'<button class="md3-btn md3-btn-outlined" onclick="window.open(API+\'/api/admin/export?token=\'+token,\'_blank\')">📤 导出全站数据</button>'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">从 GitHub 导入数据</button>'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._exportData()">导出全站数据</button>'
     +'</div></div>'
 }
 window._changePw=function(){
@@ -474,6 +506,7 @@ window._changePw=function(){
     else toast(d.error||'修改失败')
   }).catch(function(){toast('网络错误')})
 };
+window._exportData=function(){window.open(API+'/api/admin/export?token='+token,'_blank')};
 window._importData=function(){
   showDialog('<h3>从 GitHub 导入</h3><p>将从 GitHub 仓库的 content/blog/ 目录导入所有文章到 D1 数据库。</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._doImport()">开始导入</button></div>')
 };
@@ -487,19 +520,78 @@ window._doImport=function(){
 };
 
 // ════════════════════════════════════════
-//  简易 Markdown 解析 (预览用)
+//  Markdown 解析 (预览用)
 // ════════════════════════════════════════
 function mdToHtml(src){
-  var h=src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  h=h.replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>'<pre><code>'+c.replace(/\n$/,'')+'</code></pre>');
-  h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
-  h=h.replace(/^> (.+)$/gm,'<blockquote><p>$1</p></blockquote>');h=h.replace(/^---+$/gm,'<hr>');
-  h=h.replace(/^\s*[-*] (.+)$/gm,'<li>$1</li>');h=h.replace(/((?:<li>.*<\/li>\n?)+)/g,'<ul>$1</ul>');
-  h=h.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');h=h.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g,'<em>$1</em>');
-  h=h.replace(/~~(.+?)~~/g,'<del>$1</del>');h=h.replace(/`([^`]+?)`/g,'<code>$1</code>');
-  h=h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1">');h=h.replace(/\[([^\]]+?)\]\((https?:\/\/[^)]+?)\)/g,'<a href="$2" target="_blank">$1</a>');
-  h=h.replace(/\n{2,}/g,'</p><p>');h=h.replace(/\n/g,'<br>');h='<p>'+h+'</p>';h=h.replace(/<p>\s*<\/p>/g,'');
-  return h
+  var lines=src.split(/\r?\n/),html='',i=0;
+  var inCode=false,codeLang='',codeLines=[];
+  var inList=false,listType='';
+  var inTable=false,tableRows=[],tableAligns=[];
+  var inBq=false,bqLines=[];
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function inline(t){
+    t=t.replace(/\\\$/g,'$');
+    t=t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1" style="max-width:100%">');
+    t=t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+    t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+    t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    t=t.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    t=t.replace(/~~(.+?)~~/g,'<del>$1</del>');
+    t=t.replace(/`([^`]+)`/g,'<code style="background:var(--surface-container-high);padding:2px 6px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:.85em">$1</code>');
+    return t
+  }
+  function flushBq(){if(inBq&&bqLines.length){html+='<blockquote style="border-left:3px solid var(--primary);padding:8px 16px;margin:12px 0;background:var(--surface-container);border-radius:0 8px 8px 0"><p>'+inline(bqLines.join('<br>'))+'</p></blockquote>\n';bqLines=[];inBq=false}}
+  function flushList(){if(inList){html+=listType==='ul'?'</ul>\n':'</ol>\n';inList=false;listType=''}}
+  function flushTable(){
+    if(inTable&&tableRows.length){
+      html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px"><thead><tr>';
+      tableRows[0].forEach(function(h,ci){var a=tableAligns[ci]||'';html+='<th style="text-align:'+(a||'left')+';padding:8px 12px;border:1px solid var(--outline-variant);background:var(--surface-container)">'+inline(h.trim())+'</th>'});
+      html+='</tr></thead><tbody>';
+      for(var r=2;r<tableRows.length;r++){html+='<tr>';tableRows[r].forEach(function(c,ci){var a=tableAligns[ci]||'';html+='<td style="text-align:'+(a||'left')+';padding:8px 12px;border:1px solid var(--outline-variant)">'+inline(c.trim())+'</td>'});html+='</tr>'}
+      html+='</tbody></table></div>\n';tableRows=[];tableAligns=[];inTable=false
+    }
+  }
+  function flushAll(){flushBq();flushList();flushTable()}
+  while(i<lines.length){
+    var line=lines[i];
+    if(line.match(/^```/)){
+      if(inCode){html+='<pre style="background:#1e1e2e;color:#cdd6f4;padding:16px;border-radius:8px;overflow-x:auto;margin:12px 0"><code>'+esc(codeLines.join('\n'))+'</code></pre>\n';inCode=false;codeLines=[];codeLang=''}
+      else{flushAll();inCode=true;codeLang=line.replace(/^```/,'').trim()}
+      i++;continue
+    }
+    if(inCode){codeLines.push(line);i++;continue}
+    if(line.trim()===''){flushAll();i++;continue}
+    if(line.match(/^>\s?/)){flushList();flushTable();inBq=true;bqLines.push(line.replace(/^>\s?/,''));i++;continue}
+    else{flushBq()}
+    if(line.includes('|')&&(line.trim().startsWith('|')||line.trim().match(/^[^|]*\|/))){
+      flushBq();flushList();
+      var cells=line.split('|').filter(function(_,idx,arr){return idx>0&&idx<arr.length-1});
+      var nonEmpty=cells.filter(function(c){return c.trim()!==''});
+      var isSep=nonEmpty.length>0&&nonEmpty.every(function(c){return /^[:\s]*-{3,}[\s:]*$/.test(c.trim())});
+      if(isSep){tableAligns=cells.map(function(c){var t=c.trim();if(t.startsWith(':')&&t.endsWith(':'))return'center';if(t.endsWith(':'))return'right';if(t.startsWith(':'))return'left';return''});tableRows.push(cells);i++;continue}
+      if(!inTable){inTable=true;tableRows=[];tableAligns=[]}
+      tableRows.push(cells);i++;continue
+    }else{flushTable()}
+    var hm=line.match(/^(#{1,6})\s+(.+)$/);
+    if(hm){flushAll();var lv=hm[1].length;html+='<h'+lv+'>'+inline(hm[2].trim())+'</h'+lv+'>\n';i++;continue}
+    if(line.match(/^[-*_]{3,}\s*$/)){flushAll();html+='<hr>\n';i++;continue}
+    if(line.match(/^\s*[-*]\s+/)){
+      flushBq();flushTable();
+      if(!inList||listType!=='ul'){if(inList)flushList();html+='<ul>\n';inList=true;listType='ul'}
+      html+='<li>'+inline(line.replace(/^\s*[-*]\s+/,''))+'</li>\n';i++;continue
+    }
+    if(line.match(/^\s*\d+\.\s+/)){
+      flushBq();flushTable();
+      if(!inList||listType!=='ol'){if(inList)flushList();html+='<ol>\n';inList=true;listType='ol'}
+      html+='<li>'+inline(line.replace(/^\s*\d+\.\s+/,''))+'</li>\n';i++;continue
+    }
+    flushList();flushTable();
+    var para=[line];i++;
+    while(i<lines.length&&lines[i].trim()!==''&&!lines[i].match(/^(#{1,6}\s|```|>\s?|\s*[-*]\s+|\s*\d+\.\s+|[-*_]{3,}\s*$|\|)/)){para.push(lines[i]);i++}
+    html+='<p>'+inline(para.join('<br>'))+'</p>\n'
+  }
+  flushAll();
+  return html
 }
 
 // ── Init ──
