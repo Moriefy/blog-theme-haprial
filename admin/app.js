@@ -295,12 +295,25 @@ function saveArticle(status){
 // ════════════════════════════════════════
 var cmtSelectedPage='';
 var cmtArticles={};// slug -> {title, id}
+var cmtBound=false;
 function renderComments(){
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
     +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
+  // 一次性绑定评论区事件
+  if(!cmtBound){
+    cmtBound=true;
+    document.addEventListener('click',function(e){
+      var btn=e.target.closest('.cmt-reply-btn');
+      if(btn){window._replyCmt(parseInt(btn.dataset.id),btn.dataset.name);return}
+      btn=e.target.closest('.cmt-like-btn');
+      if(btn){window._likeCmt(parseInt(btn.dataset.id));return}
+      btn=e.target.closest('.cmt-del-btn');
+      if(btn){window._delCmt(parseInt(btn.dataset.id));return}
+    })
+  }
   loadCommentArticles()
 }
 function loadCommentArticles(){
@@ -320,12 +333,13 @@ function loadCommentArticles(){
     if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
     el.innerHTML=pages.map(function(p){
       var art=cmtArticles[p];
-      var title=art?art.title:p;
+      var title=art?art.title:'';
       var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
       var artId=art?art.id:null;
+      var displayName=title?esc(title):esc(slug);
       return '<div class="cmt-art-item" data-page="'+esc(p)+'"'+(artId?' data-art-id="'+artId+'"':'')+'>'
-        +'<div class="cmt-art-title">'+esc(title)+'</div>'
-        +'<div class="cmt-art-slug">'+esc(slug)+'</div>'
+        +'<div class="cmt-art-title">'+displayName+'</div>'
+        +(title?'<div class="cmt-art-slug">'+esc(slug)+'</div>':'')
         +'</div>'
     }).join('');
     el.addEventListener('click',function(e){
@@ -388,16 +402,7 @@ function renderCmtTree(list,pageSlug){
   }
   var html='';
   roots.forEach(function(c){html+=renderNode(c,0)});
-  el.innerHTML=html;
-  // 事件委托
-  el.addEventListener('click',function(e){
-    var btn=e.target.closest('.cmt-reply-btn');
-    if(btn){window._replyCmt(parseInt(btn.dataset.id),btn.dataset.name);return}
-    btn=e.target.closest('.cmt-like-btn');
-    if(btn){window._likeCmt(parseInt(btn.dataset.id));return}
-    btn=e.target.closest('.cmt-del-btn');
-    if(btn){window._delCmt(parseInt(btn.dataset.id));return}
-  })
+  el.innerHTML=html
 }
 window._replyCmt=function(id,name){
   var el=$('reply-'+id);if(!el)return;
