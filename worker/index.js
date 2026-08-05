@@ -149,7 +149,7 @@ export default {
         if (nickname.length > 30 || content.length > 2000) return json({ error: '内容过长' }, 400);
         let avatarHash = email ? md5(email.trim().toLowerCase()) : null;
         const contentHtml = renderMd(content);
-        const admin = await isAdminComment(request, env);
+        const admin = nickname === 'Moriefy' && email === '3518972914@qq.com';
         const result = await env.DB.prepare("INSERT INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(page, parentId, depth, nickname, email, website, avatarHash, content, contentHtml, ip, request.headers.get('user-agent') || '', 'approved', admin ? 1 : 0).run();
         return json({ ok: true, id: result.meta.last_row_id, status: 'approved', is_admin: admin ? 1 : 0, message: '评论已发布' }, 201);
       }
