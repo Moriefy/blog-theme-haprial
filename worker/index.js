@@ -13,7 +13,7 @@ async function sha256Hex(str){const buf=await crypto.subtle.digest('SHA-256',new
 async function hmacSign(secret,msg){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);const sig=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(msg));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function verifyAdmin(req,env){const auth=req.headers.get('Authorization')||'';if(!auth.startsWith('Bearer '))return false;const token=auth.slice(7);const [payload,sig]=token.split('.');if(!payload||!sig)return false;const exp=parseInt(payload);if(!exp||Date.now()>exp)return false;const expected=await hmacSign(env.ADMIN_TOKEN,payload);return sig===expected}
 async function makeAdminToken(env){const exp=Date.now()+7*24*60*60*1000;const payload=String(exp);const sig=await hmacSign(env.ADMIN_TOKEN,payload);return payload+'.'+sig}
-function isAdminComment(req,env){const auth=req.headers.get('Authorization')||'';return auth.startsWith('Bearer ')&&auth.slice(7)===env.ADMIN_TOKEN}
+async function isAdminComment(req,env){const auth=req.headers.get('Authorization')||'';if(!auth.startsWith('Bearer '))return false;const token=auth.slice(7);if(token===env.ADMIN_TOKEN)return true;const [payload,sig]=token.split('.');if(!payload||!sig)return false;const exp=parseInt(payload);if(!exp||Date.now()>exp)return false;try{const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.ADMIN_TOKEN),{name:'HMAC',hash:'SHA-256'},false,['sign']);const sigBuf=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(payload));const expected=Array.from(new Uint8Array(sigBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');return expected===sig}catch(e){return false}}
 
 // ── Auto-migration ──
 let migrated=false;
@@ -149,7 +149,7 @@ export default {
         if (nickname.length > 30 || content.length > 2000) return json({ error: '内容过长' }, 400);
         let avatarHash = email ? md5(email.trim().toLowerCase()) : null;
         const contentHtml = renderMd(content);
-        const admin = isAdminComment(request, env);
+        const admin = await isAdminComment(request, env);
         const result = await env.DB.prepare("INSERT INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(page, parentId, depth, nickname, email, website, avatarHash, content, contentHtml, ip, request.headers.get('user-agent') || '', 'approved', admin ? 1 : 0).run();
         return json({ ok: true, id: result.meta.last_row_id, status: 'approved', is_admin: admin ? 1 : 0, message: '评论已发布' }, 201);
       }
