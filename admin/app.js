@@ -1,11 +1,10 @@
 (function(){
 'use strict';
 var API='https://comments.pluslogic.eu.org';
-var token=localStorage.getItem('admin_token')||'';
-var currentPage='dashboard';
+var token='';
+var currentPage='';
 var articles=[],friends=[],trashList=[];
 var cmtData={comments:[],total:0,pages:[]};
-var stats={};
 var editingId=null;
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML};
@@ -21,78 +20,124 @@ function api(method,path,body){
   })
 }
 
-// ── Toast & Dialog ──
+// ── Toast ──
 function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},3000)}
+
+// ── Dialog ──
 function showDialog(html){$('dialog').innerHTML=html;$('dialogOverlay').classList.add('open')}
 function closeDialog(){$('dialogOverlay').classList.remove('open')}
 window.closeDialog=closeDialog;
 
-// ── Auth ──
+// ── 时间 ──
+function timeAgo(ds){var s=Math.floor((Date.now()-new Date(ds+'Z').getTime())/1000);if(s<60)return'刚刚';if(s<3600)return(s/60|0)+'分钟前';if(s<86400)return(s/3600|0)+'小时前';if(s<2592000)return(s/86400|0)+'天前';return new Date(ds+'Z').toLocaleDateString('zh-CN')}
+
+// ════════════════════════════════════════
+//  认证
+// ════════════════════════════════════════
 function checkAuth(){
+  try{token=localStorage.getItem('admin_token')||''}catch(e){}
   if(!token){showLogin();return}
   api('GET','/api/admin/verify').then(function(d){if(d.ok)showApp();else showLogin()}).catch(showLogin)
 }
-function showLogin(){$('loginPage').style.display='flex';$('app').style.display='none';$('loginPassword').focus()}
-function showApp(){$('loginPage').style.display='none';$('app').style.display='flex';navigate(currentPage)}
-function logout(){token='';localStorage.removeItem('admin_token');showLogin()}
+function showLogin(){
+  $('loginPage').style.display='flex';
+  $('app').style.display='none';
+  // 检查是否已设置密码
+  api('GET','/api/admin/setup/status').then(function(d){
+    if(!d.passwordSet){
+      $('loginTitle').textContent='🔑 首次设置';
+      $('loginDesc').textContent='这是你第一次使用，请设置管理密码';
+      $('loginBtn').textContent='设置密码';
+    }else{
+      $('loginTitle').textContent='🔐 管理后台';
+      $('loginDesc').textContent='输入密码登录 Haprial 博客管理系统';
+      $('loginBtn').textContent='登录';
+    }
+  }).catch(function(){});
+  $('loginPassword').focus()
+}
+function showApp(){$('loginPage').style.display='none';$('app').style.display='flex';route()}
+function logout(){token='';try{localStorage.removeItem('admin_token')}catch(e){};showLogin()}
 
 $('loginForm').addEventListener('submit',function(e){
   e.preventDefault();
   var pw=$('loginPassword').value;if(!pw)return;
   api('POST','/api/admin/auth',{password:pw}).then(function(d){
-    if(d.ok){token=d.token;localStorage.setItem('admin_token',token);showApp()}
+    if(d.ok){token=d.token;try{localStorage.setItem('admin_token',token)}catch(e){};showApp()}
     else{$('loginError').textContent=d.error||'登录失败';$('loginError').style.display='block'}
   }).catch(function(){$('loginError').textContent='网络错误';$('loginError').style.display='block'})
 });
 $('logoutBtn').addEventListener('click',logout);
 
-// ── Navigation ──
-var titles={dashboard:'仪表盘',articles:'文章管理',editor:'写文章',comments:'评论管理',friends:'友链管理',trash:'回收站'};
-function navigate(page){
-  if(page==='editor'&&editingId===null){/* new article */}
-  else if(page!=='editor'){editingId=null}
+// ════════════════════════════════════════
+//  路由 (Hash-based)
+// ════════════════════════════════════════
+var pageTitles={dashboard:'仪表盘',articles:'文章管理',editor:'写文章',comments:'评论管理',friends:'友链管理',trash:'回收站',settings:'设置'};
+var routes={
+  '/':function(){renderDashboard()},
+  '/articles':function(){renderArticles()},
+  '/editor':function(){renderEditor()},
+  '/comments':function(){renderComments()},
+  '/friends':function(){renderFriends()},
+  '/trash':function(){renderTrash()},
+  '/settings':function(){renderSettings()}
+};
+function parseHash(){var h=(location.hash||'').replace(/^#/,'')||'/';return h}
+function route(){
+  var path=parseHash();
+  var page='dashboard';
+  if(path==='/')page='dashboard';
+  else if(path==='/articles')page='articles';
+  else if(path==='/editor'){page='editor';editingId=null}
+  else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(path.match(/^\/editor\/(\d+)$/)[1])}
+  else if(path==='/comments')page='comments';
+  else if(path==='/friends')page='friends';
+  else if(path==='/trash')page='trash';
+  else if(path==='/settings')page='settings';
+  else page='dashboard';
   currentPage=page;
+  // 更新导航高亮
   document.querySelectorAll('.nav-item[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page)});
-  $('pageTitle').textContent=titles[page]||page;
+  document.querySelectorAll('.mobile-tab[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page)});
+  $('pageTitle').textContent=pageTitles[page]||page;
   $('topbarActions').innerHTML='';
-  var render={dashboard:renderDashboard,articles:renderArticles,editor:renderEditor,comments:renderComments,friends:renderFriends,trash:renderTrash};
-  if(render[page])render[page]()
+  // 渲染页面
+  var fn=routes[path]||routes['/'];
+  if(path.match(/^\/editor\/\d+$/))fn=routes['/editor'];
+  fn()
 }
-document.addEventListener('click',function(e){
-  var nav=e.target.closest('.nav-item[data-page]');
-  if(nav)navigate(nav.dataset.page)
-});
+window.addEventListener('hashchange',route);
 
-// ── Dashboard ──
+// ════════════════════════════════════════
+//  仪表盘
+// ════════════════════════════════════════
 function renderDashboard(){
   var c=$('content');
-  c.innerHTML='<div class="stats-grid"><div class="stat-card"><div class="stat-num">...</div><div class="stat-label">加载中</div></div></div>';
+  c.innerHTML='<div class="stats-grid"><div class="stat-card"><div class="stat-num">…</div><div class="stat-label">加载中</div></div></div>';
   api('GET','/api/admin/stats').then(function(d){
-    stats=d;
     c.innerHTML='<div class="stats-grid">'
-      +statCard(d.published,'已发布')+statCard(d.drafts,'草稿')+statCard(d.comments,'评论')
-      +statCard(d.friends,'友链')+statCard(d.trash,'回收站')+'</div>'
+      +sc(d.published,'已发布')+sc(d.drafts,'草稿')+sc(d.comments,'评论')
+      +sc(d.friends,'友链')+sc(d.trash,'回收站')+'</div>'
       +'<div class="card"><div class="card-title">快捷操作</div>'
       +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-      +'<button class="md3-btn md3-btn-filled" onclick="window._nav(\'editor\')">✏️ 写文章</button>'
-      +'<button class="md3-btn md3-btn-outlined" onclick="window._nav(\'articles\')">📄 管理文章</button>'
-      +'<button class="md3-btn md3-btn-outlined" onclick="window._nav(\'comments\')">💬 管理评论</button>'
-      +'<button class="md3-btn md3-btn-outlined" onclick="window._nav(\'friends\')">🔗 管理友链</button>'
-      +'<button class="md3-btn md3-btn-text" onclick="window._export()">📦 导出全站数据</button>'
+      +'<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">✏️ 写文章</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/articles\'">📄 管理文章</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/comments\'">💬 管理评论</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/friends\'">🔗 管理友链</button>'
       +'</div></div>'
   })
 }
-window._nav=function(p){navigate(p)};
-window._export=function(){window.open(API+'/api/admin/export?token='+token,'_blank')};
-function statCard(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div><div class="stat-label">'+l+'</div></div>'}
+function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div><div class="stat-label">'+l+'</div></div>'}
 
-// ── Articles ──
+// ════════════════════════════════════════
+//  文章管理
+// ════════════════════════════════════════
 function renderArticles(){
   var c=$('content');
   c.innerHTML='<div class="filter-bar"><select id="artFilter"><option value="all">全部</option><option value="published">已发布</option><option value="draft">草稿</option></select></div><div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>';
   $('artFilter').addEventListener('change',function(){loadArticles(this.value)});
   loadArticles('all');
-  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-filled" onclick="window._nav(\'editor\')">+ 新文章</button>'
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
 }
 function loadArticles(status){
   api('GET','/api/admin/articles'+(status&&status!=='all'?'?status='+status:'')).then(function(d){
@@ -102,14 +147,13 @@ function loadArticles(status){
     tb.innerHTML=articles.map(function(a){
       var tags=[];try{tags=JSON.parse(a.tags)}catch(e){}
       return '<tr><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
-      +'<button class="md3-btn md3-btn-text" onclick="window._editArt('+a.id+')">编辑</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
       +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
       +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
       +'</td></tr>'
     }).join('')
   })
 }
-window._editArt=function(id){editingId=id;navigate('editor')};
 window._togglePub=function(id){
   api('POST','/api/admin/articles/'+id+'/publish').then(function(d){
     if(d.ok){toast(d.status==='published'?'已发布':'已下架');loadArticles($('artFilter').value)}
@@ -123,7 +167,9 @@ window._confirmDelArt=function(id){
   api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadArticles($('artFilter').value)}})
 };
 
-// ── Editor ──
+// ════════════════════════════════════════
+//  编辑器
+// ════════════════════════════════════════
 function renderEditor(){
   var c=$('content');
   c.innerHTML='<div class="meta-grid">'
@@ -164,7 +210,6 @@ function renderEditor(){
       if(e.key==='i'){e.preventDefault();window._insMd('*','*')}
     }
   });
-  // Mobile preview toggle
   if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
   if(editingId){
     api('GET','/api/admin/articles/'+editingId).then(function(d){
@@ -208,16 +253,17 @@ function saveArticle(status){
   var body={title:title,date:$('edDate').value,tags:tags,category:$('edCat').value.trim(),excerpt:$('edExcerpt').value.trim(),content:content,status:status};
   var p=editingId?api('PUT','/api/admin/articles/'+editingId,body):api('POST','/api/admin/articles',body);
   p.then(function(d){
-    if(d.ok){toast(editingId?'已更新':'已创建');if(!editingId&&d.id){editingId=d.id}else{navigate('articles')}}
+    if(d.ok){toast(editingId?'已更新':'已创建');if(!editingId&&d.id){location.hash='#/editor/'+d.id;editingId=d.id}else{location.hash='#/articles'}}
     else toast(d.error||'保存失败')
   }).catch(function(){toast('网络错误')})
 }
 
-// ── Comments ──
+// ════════════════════════════════════════
+//  评论管理
+// ════════════════════════════════════════
 function renderComments(){
   var c=$('content');
   c.innerHTML='<div class="filter-bar"><select id="cmtPageFilter"><option value="">全部文章</option></select></div><div id="cmtList"><div class="empty">加载中…</div></div>';
-  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出</button><button class="md3-btn md3-btn-outlined" onclick="window._importComments()">导入</button>';
   loadComments()
 }
 function loadComments(pageSlug){
@@ -226,8 +272,7 @@ function loadComments(pageSlug){
   api('GET',url).then(function(d){
     cmtData=d;
     var sel=$('cmtPageFilter');
-    if(sel&&d.pages){sel.innerHTML='<option value="">全部文章</option>'+d.pages.map(function(p){return '<option value="'+esc(p)+'"'+(p===pageSlug?' selected':'')+'>'+esc(p)+'</option>'}).join('');
-    sel.onchange=function(){loadComments(this.value)}}
+    if(sel&&d.pages){sel.innerHTML='<option value="">全部文章</option>'+d.pages.map(function(p){return '<option value="'+esc(p)+'"'+(p===pageSlug?' selected':'')+'>'+esc(p)+'</option>'}).join('');sel.onchange=function(){loadComments(this.value)}}
     renderCmtList(d.comments)
   })
 }
@@ -246,7 +291,6 @@ function renderCmtList(list){
       +'</div><div id="reply-'+c.id+'"></div></div>'
   }).join('')
 }
-function timeAgo(ds){var s=Math.floor((Date.now()-new Date(ds+'Z').getTime())/1000);if(s<60)return'刚刚';if(s<3600)return(s/60|0)+'分钟前';if(s<86400)return(s/3600|0)+'小时前';if(s<2592000)return(s/86400|0)+'天前';return new Date(ds+'Z').toLocaleDateString('zh-CN')}
 window._replyCmt=function(id,name){
   var el=$('reply-'+id);if(!el)return;
   if(el.innerHTML){el.innerHTML='';return}
@@ -265,16 +309,10 @@ window._sendReply=function(id){
 window._likeCmt=function(id){api('POST','/api/admin/comments/'+id+'/like').then(function(d){if(d.ok)toast('已点赞 '+d.liked)})};
 window._delCmt=function(id){showDialog('<h3>确认删除</h3><p>此评论将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelCmt('+id+')">删除</button></div>')};
 window._confirmDelCmt=function(id){closeDialog();api('DELETE','/api/admin/comments/'+id).then(function(d){if(d.ok){toast('已删除');loadComments($('cmtPageFilter').value)}})};
-window._exportComments=function(){window.open(API+'/api/admin/comments/export','_blank')};
-window._importComments=function(){
-  showDialog('<h3>导入评论</h3><p>粘贴 JSON 格式的评论数据</p><textarea id="importData" style="width:100%;min-height:120px;margin-top:12px;padding:8px;border:1.5px solid var(--outline-variant);border-radius:var(--shape-s);font-family:JetBrains Mono,monospace;font-size:12px"></textarea><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._doImport()">导入</button></div>')
-};
-window._doImport=function(){
-  var raw=$('importData').value;try{var data=JSON.parse(raw);if(!Array.isArray(data)){toast('需要数组格式');return}
-  api('POST','/api/admin/comments/import',data).then(function(d){if(d.ok){toast('导入成功 '+d.imported+' 条');closeDialog();loadComments()}})}catch(e){toast('JSON 解析失败')}
-};
 
-// ── Friends ──
+// ════════════════════════════════════════
+//  友链管理
+// ════════════════════════════════════════
 function renderFriends(){
   var c=$('content');
   c.innerHTML='<div id="friendList"><div class="empty">加载中…</div></div>';
@@ -319,7 +357,9 @@ window._updateFriend=function(id){
 window._delFriend=function(id){showDialog('<h3>确认删除</h3><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelFriend('+id+')">删除</button></div>')};
 window._confirmDelFriend=function(id){closeDialog();api('DELETE','/api/admin/friends/'+id).then(function(d){if(d.ok){toast('已删除');loadFriends()}})};
 
-// ── Trash ──
+// ════════════════════════════════════════
+//  回收站
+// ════════════════════════════════════════
 function renderTrash(){
   var c=$('content');
   c.innerHTML='<div id="trashList"><div class="empty">加载中…</div></div>';
@@ -339,7 +379,49 @@ window._delTrash=function(id){api('DELETE','/api/admin/trash/'+id).then(function
 window._emptyTrash=function(){showDialog('<h3>清空回收站</h3><p>所有内容将被彻底删除，不可恢复</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmEmptyTrash()">清空</button></div>')};
 window._confirmEmptyTrash=function(){closeDialog();api('DELETE','/api/admin/trash').then(function(d){if(d.ok){toast('已清空');renderTrash()}})};
 
-// ── Simple Markdown Parser (preview 用) ──
+// ════════════════════════════════════════
+//  设置
+// ════════════════════════════════════════
+function renderSettings(){
+  var c=$('content');
+  c.innerHTML='<div class="settings-section"><h3>修改密码</h3>'
+    +'<div style="max-width:400px">'
+    +'<div style="margin-bottom:12px"><input class="md3-input" type="password" id="setOldPw" placeholder="当前密码"></div>'
+    +'<div style="margin-bottom:12px"><input class="md3-input" type="password" id="setNewPw" placeholder="新密码"></div>'
+    +'<div style="margin-bottom:16px"><input class="md3-input" type="password" id="setNewPw2" placeholder="确认新密码"></div>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._changePw()">修改密码</button>'
+    +'</div></div>'
+    +'<div class="settings-section"><h3>数据管理</h3>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">📦 从 GitHub 导入数据</button>'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window.open(API+\'/api/admin/export?token=\'+token,\'_blank\')">📤 导出全站数据</button>'
+    +'</div></div>'
+}
+window._changePw=function(){
+  var old=$('setOldPw').value,new1=$('setNewPw').value,new2=$('setNewPw2').value;
+  if(!old||!new1){toast('请填写完整');return}
+  if(new1!==new2){toast('两次输入的新密码不一致');return}
+  if(new1.length<6){toast('新密码至少6位');return}
+  api('POST','/api/admin/password',{old_password:old,new_password:new1}).then(function(d){
+    if(d.ok){toast('密码已修改');$('setOldPw').value='';$('setNewPw').value='';$('setNewPw2').value=''}
+    else toast(d.error||'修改失败')
+  }).catch(function(){toast('网络错误')})
+};
+window._importData=function(){
+  showDialog('<h3>从 GitHub 导入</h3><p>将从 GitHub 仓库的 content/blog/ 目录导入所有文章到 D1 数据库。</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._doImport()">开始导入</button></div>')
+};
+window._doImport=function(){
+  closeDialog();
+  toast('正在导入…');
+  api('POST','/api/admin/import-from-github').then(function(d){
+    if(d.ok)toast('导入完成: '+d.imported+' 篇文章');
+    else toast(d.error||'导入失败')
+  }).catch(function(){toast('导入失败')})
+};
+
+// ════════════════════════════════════════
+//  简易 Markdown 解析 (预览用)
+// ════════════════════════════════════════
 function mdToHtml(src){
   var h=src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   h=h.replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>'<pre><code>'+c.replace(/\n$/,'')+'</code></pre>');
