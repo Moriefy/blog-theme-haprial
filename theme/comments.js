@@ -121,52 +121,7 @@
     d.querySelector('.cs-cr').addEventListener('click', function () { self._cancel(); });
     this.discardBtn.addEventListener('click', function () { self._cancel(); });
 
-    // 博主认证入口 — 昵称和邮箱匹配时才显示
-    var selfApi = this.api;
-    var adminLink = null;
-    try {
-      if (!localStorage.getItem('cs_admin_token')) {
-        adminLink = document.createElement('a');
-        adminLink.className = 'cs-admin-link';
-        adminLink.textContent = '博主认证';
-        adminLink.href = 'javascript:void(0)';
-        adminLink.style.display = 'none';
-        adminLink.addEventListener('click', function () {
-          adminLink.textContent = '验证中…';
-          adminLink.style.pointerEvents = 'none';
-          fetch(selfApi + '/api/admin/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: '3518972914@qq.com' })
-          }).then(function (r) { return r.json(); }).then(function (d) {
-            if (d.ok && d.token) {
-              localStorage.setItem('cs_admin_token', d.token);
-              toast('认证成功，之后你的评论会显示博主标识');
-              adminLink.remove();
-            } else {
-              toast(d.error || '认证失败');
-              adminLink.textContent = '博主认证';
-              adminLink.style.pointerEvents = '';
-            }
-          }).catch(function () {
-            toast('验证请求失败，请稍后重试');
-            adminLink.textContent = '博主认证';
-            adminLink.style.pointerEvents = '';
-          });
-        });
-        this.el.appendChild(adminLink);
-      }
-    } catch (e) {}
-    // 监听昵称/邮箱输入，匹配时显示认证按钮
-    function checkAdminHint() {
-      if (!adminLink) return;
-      var nick = (self.f.nick.value || '').trim();
-      var em = (self.f.em.value || '').trim();
-      adminLink.style.display = (nick === 'Moriefy' && em === '3518972914@qq.com') ? '' : 'none';
-    }
-    self.f.nick.addEventListener('input', checkAdminHint);
-    self.f.em.addEventListener('input', checkAdminHint);
-    checkAdminHint();
+
     this.lw.addEventListener('click', function (e) {
       var a = e.target.closest('.cs-like'), b = e.target.closest('.cs-reply-btn'), c = e.target.closest('.cs-load-more'), d = e.target.closest('.cs-expand-btn');
       if (a) self._like(a); else if (b) self._reply(b); else if (c) self._load(1);
