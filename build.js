@@ -345,7 +345,7 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
 <script src="/theme/lightbox.js"></script>
-<script src="/theme/comments.js"></script>
+<script src="/theme/comments.js?v=1754400000"></script>
 <script defer src="/theme/app.js"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
@@ -481,7 +481,7 @@ ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/
 </footer>
 
 <script src="/theme/lightbox.js"></script>
-<script src="/theme/comments.js"></script>
+<script src="/theme/comments.js?v=1754400000"></script>
 <script>
 ${themeInitScript()}
 ${postPageScript()}
@@ -678,7 +678,7 @@ function seoPageFoot() {
   if (commentsEnabled && commentsApi) {
     body += '<link rel="stylesheet" href="/theme/comments.css?v=1785775352">';
     body += '<section class="comment-section"><div id="friendsCommentInner"></div></section>';
-    body += '<script src="/theme/comments.js"></script>';
+    body += '<script src="/theme/comments.js?v=1754400000"></script>';
     body += `<script>new window.HaprialComments(document.getElementById("friendsCommentInner"),{api:"${escHtml(commentsApi)}",page:"/friends/"})</script>`;
   }
   fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('友链', '这些站点值得关注。') + body + seoPageFoot());
