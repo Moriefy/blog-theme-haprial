@@ -122,6 +122,7 @@
     this.discardBtn.addEventListener('click', function () { self._cancel(); });
 
     // 博主认证入口（只在没认证时显示）
+    var selfApi = this.api;
     try {
       if (!localStorage.getItem('cs_admin_token')) {
         var adminLink = document.createElement('a');
@@ -130,11 +131,26 @@
         adminLink.href = 'javascript:void(0)';
         adminLink.addEventListener('click', function () {
           var t = prompt('输入管理 Token：');
-          if (t) {
-            localStorage.setItem('cs_admin_token', t);
-            toast('已认证，之后你的评论会显示博主标识');
-            adminLink.remove();
-          }
+          if (!t) return;
+          adminLink.textContent = '验证中…';
+          adminLink.style.pointerEvents = 'none';
+          fetch(selfApi + '/api/admin/verify', {
+            headers: { 'Authorization': 'Bearer ' + t }
+          }).then(function (r) { return r.json(); }).then(function (d) {
+            if (d.ok) {
+              localStorage.setItem('cs_admin_token', t);
+              toast('认证成功，之后你的评论会显示博主标识');
+              adminLink.remove();
+            } else {
+              toast('密码错误，认证失败');
+              adminLink.textContent = '博主认证';
+              adminLink.style.pointerEvents = '';
+            }
+          }).catch(function () {
+            toast('验证请求失败，请稍后重试');
+            adminLink.textContent = '博主认证';
+            adminLink.style.pointerEvents = '';
+          });
         });
         this.el.appendChild(adminLink);
       }
