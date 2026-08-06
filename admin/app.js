@@ -262,6 +262,7 @@ function renderEditor(){
     +'<button onclick="window._insMd(\'> \',\'\')">Quote</button>'
     +'<button onclick="window._insMd(\'- \',\'\')">List</button>'
     +'<button onclick="window._insMd(\'---\\n\',\'\')">HR</button>'
+    +'<label style="cursor:pointer;display:inline-flex;align-items:center"><input type="file" accept="image/*" multiple style="display:none" id="edImgUpload"><button type="button">Img+</button></label>'
     +'<span style="flex:1"></span>'
     +'<button class="md3-btn md3-btn-text" onclick="window._previewToggle()" id="previewToggleBtn" style="display:none">预览</button>'
     +'</div>'
@@ -299,6 +300,33 @@ function renderEditor(){
     }
   });
   if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
+  // 编辑器图片上传
+  var edImgInput=$('edImgUpload');
+  if(edImgInput){
+    edImgInput.addEventListener('change',function(e){
+      var files=e.target.files;if(!files||!files.length)return;
+      var dateVal=$('edDate').value||new Date().toISOString().slice(0,10);
+      var folder=dateVal.slice(0,4)+'/'+dateVal.slice(5,7);
+      var done=0,total=files.length;
+      toast('上传中… 0/'+total);
+      Array.from(files).forEach(function(file){
+        var reader=new FileReader();
+        reader.onload=function(){
+          var base64=reader.result.split(',')[1];
+          api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
+            done++;
+            if(d.ok){
+              window._insMd('![',']('+d.url+')');
+            }
+            if(done===total)toast('上传完成');
+            else toast('上传中… '+done+'/'+total);
+          }).catch(function(){done++;toast('上传失败: '+file.name)})
+        };
+        reader.readAsDataURL(file)
+      });
+      e.target.value=''
+    })
+  }
   if(editingId){
     api('GET','/api/admin/articles/'+editingId).then(function(d){
       if(!d.article)return;
@@ -665,7 +693,7 @@ function loadImages(){
     var html='';
     // 文件夹
     (d.folders||[]).forEach(function(f){
-      html+='<div style="padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" onclick="imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+\'/\'+\''+f+'\':\''+f+'\';renderImages()"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div></div>';
+      html+='<div style="position:relative;padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" onclick="_imgEnterFolder(this.dataset.name)" data-name="'+esc(f)+'"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div></div>';
     });
     // 图片
     (d.images||[]).forEach(function(img){
@@ -685,6 +713,10 @@ function loadImages(){
     grid.innerHTML=html
   })
 }
+window._imgEnterFolder=function(name){
+  imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
+  renderImages()
+};
 window.copyImageUrl=function(url){
   if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
   else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('URL 已复制')}
