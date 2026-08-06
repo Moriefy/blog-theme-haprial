@@ -140,11 +140,11 @@ var artSearchTimer=null;
 function renderArticles(){
   var c=$('content');
   c.innerHTML='<div class="filter-bar">'
-    +'<input class="md3-input" id="artSearch" placeholder="搜索…" style="max-width:160px">'
-    +'<select class="md3-input" id="artStatus"><option value="all">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
-    +'<select class="md3-input" id="artYearFilter"><option value="">全部年份</option></select>'
-    +'<select class="md3-input" id="artCatFilter"><option value="">全部分类</option></select>'
-    +'<select class="md3-input" id="artTagFilter"><option value="">全部标签</option></select>'
+    +'<input class="md3-input" id="artSearch" placeholder="搜索…" style="max-width:120px;min-width:80px">'
+    +'<select class="md3-input" id="artStatus"><option value="all">状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
+    +'<select class="md3-input" id="artYearFilter"><option value="">年份</option></select>'
+    +'<select class="md3-input" id="artCatFilter"><option value="">分类</option></select>'
+    +'<select class="md3-input" id="artTagFilter"><option value="">标签</option></select>'
     +'</div>'
     +'<div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
     +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';

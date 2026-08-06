@@ -211,7 +211,7 @@ tr:hover td{background:var(--surface-container-high)}
 /* ── 评论条目 ── */
 .cmt-item{padding:12px 0;border-bottom:1px solid var(--outline-variant)}
 .cmt-item:last-child{border-bottom:none}
-.cmt-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.cmt-header{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:nowrap;overflow:hidden}
 .cmt-nick{font-weight:600;font-size:14px}
 .cmt-badge{font-size:10px;background:var(--primary);color:var(--on-primary);padding:2px 8px;border-radius:6px;font-weight:600;line-height:1.4}
 .cmt-time{font-size:12px;color:var(--outline)}
@@ -287,12 +287,13 @@ tr:hover td{background:var(--surface-container-high)}
   z-index:100;justify-content:space-around;padding:4px 0;
 }
 .mobile-tab{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:6px 12px;font-size:10px;color:var(--on-surface-variant);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:6px 0;font-size:10px;color:var(--on-surface-variant);
   text-decoration:none;border-radius:0;transition:color 150ms;
-  min-width:48px;
+  flex:1;text-align:center;line-height:1;
 }
-.mobile-tab.active{color:var(--primary)}
+.mobile-tab.active{color:var(--primary);position:relative}
+.mobile-tab.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:48px;height:3px;background:var(--primary);border-radius:0 0 3px 3px}
 .mobile-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* ══════════════════════════════════════
@@ -310,9 +311,12 @@ tr:hover td{background:var(--surface-container-high)}
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:12px}
   
   /* 表格 */
-  table{font-size:12px}
-  th{padding:10px 12px;font-size:12px}
-  td{padding:10px 12px;font-size:12px}
+  .table-wrap{margin:0 -16px;padding:0 16px}
+  table{font-size:12px;table-layout:fixed}
+  th{padding:10px 8px;font-size:11px;white-space:nowrap}
+  td{padding:10px 8px;font-size:12px;vertical-align:middle}
+  .action-group{flex-wrap:nowrap}
+  .action-group .md3-btn{padding:0 6px;font-size:11px;height:28px;min-width:0;border-radius:14px}
   
   /* 筛选栏 */
   .filter-bar{gap:8px}
