@@ -304,7 +304,7 @@ tr:hover td{background:var(--surface-container-high)}
   .topbar{padding:0 16px;height:52px}
   .topbar-title{font-size:15px}
   .topbar-actions{gap:4px}
-  .content{padding:16px;padding-bottom:80px}
+  .content{padding:16px;padding-bottom:80px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   
   /* 统计 */
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:12px}
@@ -326,8 +326,18 @@ tr:hover td{background:var(--surface-container-high)}
   
   /* 筛选栏 */
   .filter-bar{gap:6px;flex-wrap:wrap}
-  .filter-bar .md3-input{flex:1;min-width:0;height:34px;font-size:12px;padding:0 8px}
-  .filter-bar input.md3-input{max-width:none;flex:1.5}
+  .filter-bar .md3-input{
+    flex:1;min-width:0;min-width:60px;
+    height:36px;font-size:12px;padding:0 10px;
+    border-radius:8px;line-height:36px;
+    -webkit-appearance:none;appearance:none;
+  }
+  .filter-bar input.md3-input{flex:1.5;padding:0 12px}
+  .filter-bar select.md3-input{
+    padding-right:24px;
+    background-position:right 6px center;
+    background-size:10px;
+  }
   
   /* 编辑器 */
   .meta-grid{grid-template-columns:1fr}
