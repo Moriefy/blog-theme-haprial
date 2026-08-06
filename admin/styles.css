@@ -126,7 +126,7 @@ tr:hover td{background:var(--surface-container-high)}
 /* ── 评论两栏布局 ── */
 .cmt-layout{display:grid;grid-template-columns:280px 1fr;gap:0;min-height:calc(100vh - 56px - 48px);margin:-24px}
 .cmt-sidebar{border-right:1px solid var(--outline-variant);overflow-y:auto;background:var(--surface-container-lowest)}
-.cmt-sidebar-header{padding:16px 20px;font-size:14px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;background:inherit;z-index:1}
+.cmt-sidebar-header{padding:16px 20px;font-size:14px;font-weight:600;color:var(--on-surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;background:var(--surface-container-lowest);z-index:2}
 .cmt-art-item{padding:12px 20px;cursor:pointer;border-bottom:1px solid var(--outline-variant);transition:background 150ms}
 .cmt-art-item:hover{background:var(--surface-container-high)}
 .cmt-art-item.active{background:var(--primary-container)}
@@ -190,17 +190,32 @@ tr:hover td{background:var(--surface-container-high)}
   .sidebar{display:none}
   .main{margin-left:0}
   .cmt-layout{grid-template-columns:1fr;min-height:auto}
-  .cmt-sidebar{border-right:none;border-bottom:1px solid var(--outline-variant);max-height:200px}
+  .cmt-sidebar{border-right:none;border-bottom:1px solid var(--outline-variant);max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .cmt-art-item{padding:14px 16px}
   .cmt-main #cmtList{padding:0 16px 16px}
+  .cmt-main-header{padding:12px 16px;font-size:13px}
+  .cmt-item{padding:10px 0}
+  .cmt-actions .md3-btn{padding:0 8px;height:36px;min-width:44px}
+  .reply-box{padding:10px}
+  .reply-box textarea{min-height:80px;font-size:14px}
   .editor-wrap{grid-template-columns:1fr;height:auto}
   .preview-pane{display:none}
   .preview-pane.show{display:block}
   .meta-grid{grid-template-columns:1fr}
   .content{padding:16px;padding-bottom:80px}
   .topbar{padding:0 16px}
+  .topbar-actions{gap:4px}
+  .topbar-actions .md3-btn{height:34px;padding:0 12px;font-size:12px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
   table{font-size:12px}
   th,td{padding:8px}
+  .filter-bar{gap:8px}
+  .filter-bar .md3-input{max-width:none;flex:1}
+  .filter-bar select{height:34px;font-size:12px}
+  .md3-btn{height:38px;padding:0 16px;font-size:13px}
+  .dialog{padding:20px;max-width:95%}
+  .friend-card{padding:12px;gap:12px}
+  .friend-avatar{width:40px;height:40px}
   .mobile-tabs{display:flex!important}
 }
 @media(min-width:769px){.mobile-tabs{display:none!important}}

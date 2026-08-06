@@ -269,16 +269,12 @@ function renderEditor(){
     +'</div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._saveDraft()">存草稿</button><button class="md3-btn md3-btn-filled" onclick="window._saveArticle()">发布</button>';
   var ed=$('edContent');
-  // 标题变化时自动生成备注
-  var titleTimer=null;
-  $('edTitle').addEventListener('input',function(){
-    if(editingId)return; // 编辑已有文章时不自动覆盖
-    clearTimeout(titleTimer);
-    titleTimer=setTimeout(function(){
-      var slug=$('edSlug');
-      if(slug.dataset.manual)return; // 用户手动修改过则不覆盖
-      slug.value=toSlug($('edTitle').value);
-    },300);
+  // 日期变化时自动填充备注前缀
+  $('edDate').addEventListener('change',function(){
+    if(editingId)return;
+    var slug=$('edSlug');
+    if(slug.dataset.manual)return;
+    slug.value=this.value.replace(/-/g,'');
   });
   $('edSlug').addEventListener('input',function(){this.dataset.manual='1'});
   ed.addEventListener('input',function(){updatePreview()});
@@ -317,6 +313,7 @@ function renderEditor(){
     })
   }else{
     $('edDate').value=new Date().toISOString().slice(0,10);
+    $('edSlug').value=new Date().toISOString().slice(0,10).replace(/-/g,'');
     // 从 localStorage 恢复未保存的草稿
     try{
       var saved=localStorage.getItem('haprial_draft_new');
@@ -503,7 +500,7 @@ function renderCmtTree(list,pageSlug){
       +'<div class="cmt-body">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
       +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
-      +'<button class="md3-btn md3-btn-text" onclick="_doLike('+c.id+')">'+(c.liked>0?'❤️ '+c.liked:'♡')+'</button>'
+      +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'" onclick="_doLike('+c.id+')">'+(c.liked>0?'<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg> '+c.liked:'<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>')+'</button>'
       +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_doDel('+c.id+')">删除</button>'
       +'</div><div id="reply-'+c.id+'"></div></div>';
     c._children.forEach(function(child){h+=renderNode(child,depth+1)});
@@ -531,16 +528,18 @@ window._doSendReply=function(id){
   })
 };
 window._doLike=function(id){
+  var heartFill='<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>';
+  var heartLine='<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>';
   var btn=document.querySelector('.cmt-like-btn[data-id="'+id+'"]');
-  if(btn&&!btn.dataset.liked){btn.innerHTML='❤️ …';btn.dataset.liked='1'}
+  if(btn&&!btn.dataset.liked){btn.innerHTML=heartFill+' …';btn.dataset.liked='1'}
   api('POST','/api/admin/comments/'+id+'/like').then(function(d){
     if(d.ok){
-      if(btn){btn.innerHTML='❤️ '+d.liked;btn.dataset.liked='1'}
+      if(btn){btn.innerHTML=heartFill+' '+d.liked;btn.dataset.liked='1'}
     }else{
-      if(btn){btn.innerHTML='♡';delete btn.dataset.liked}
+      if(btn){btn.innerHTML=heartLine;delete btn.dataset.liked}
       toast(d.error||'点赞失败')
     }
-  }).catch(function(){if(btn){btn.innerHTML='♡';delete btn.dataset.liked}})
+  }).catch(function(){if(btn){btn.innerHTML=heartLine;delete btn.dataset.liked}})
 };
 window._doDel=function(id){showDialog('<h3>确认删除</h3><p>此评论将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doConfirmDel('+id+')">删除</button></div>')};
 window._doConfirmDel=function(id){closeDialog();api('DELETE','/api/admin/comments/'+id).then(function(d){if(d.ok){toast('已删除');loadPageComments(cmtSelectedPage)}})};
