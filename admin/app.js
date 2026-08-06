@@ -362,10 +362,14 @@ window._previewToggle=function(){
 window._saveDraft=function(){saveArticle('draft')};
 window._saveArticle=function(){saveArticle('published')};
 function parseTags(t){
-  if(!t)return[];
+  if(!t||t==='null'||t==='undefined')return[];
   if(Array.isArray(t))return t;
-  try{var p=JSON.parse(t);if(Array.isArray(p))return p}catch(e){}
-  if(typeof t==='string')return t.split(',').map(function(s){return s.trim()}).filter(Boolean);
+  if(typeof t==='string'){
+    t=t.trim();
+    if(!t||t==='[]')return[];
+    if(t.charAt(0)==='['){try{return JSON.parse(t)}catch(e){}}
+    return t.split(',').map(function(s){return s.trim()}).filter(Boolean)
+  }
   return[]
 }
 function toSlug(str){
