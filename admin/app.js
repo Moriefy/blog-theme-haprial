@@ -132,12 +132,72 @@ function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div
 // ════════════════════════════════════════
 //  文章管理
 // ════════════════════════════════════════
+var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='';
 function renderArticles(){
   var c=$('content');
-  c.innerHTML='<div class="filter-bar"><select id="artFilter"><option value="all">全部</option><option value="published">已发布</option><option value="draft">草稿</option></select></div><div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>';
-  $('artFilter').addEventListener('change',function(){loadArticles(this.value)});
-  loadArticles('all');
+  c.innerHTML='<div class="filter-bar">'
+    +'<select id="artStatus"><option value="all">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
+    +'<select id="artYearFilter"><option value="">全部年份</option></select>'
+    +'<select id="artCatFilter"><option value="">全部分类</option></select>'
+    +'<select id="artTagFilter"><option value="">全部标签</option></select>'
+    +'</div>'
+    +'<div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
+    +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
+  $('artStatus').addEventListener('change',function(){artFilter=this.value;artPage=0;renderArtList()});
+  $('artYearFilter').addEventListener('change',function(){artYear=this.value;artPage=0;renderArtList()});
+  $('artCatFilter').addEventListener('change',function(){artCat=this.value;artPage=0;renderArtList()});
+  $('artTagFilter').addEventListener('change',function(){artTag=this.value;artPage=0;renderArtList()});
+  loadAllArticles();
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
+}
+function loadAllArticles(){
+  api('GET','/api/admin/articles?status=all').then(function(d){
+    articles=d.articles||[];
+    // 填充筛选下拉
+    var years={},cats={},tags={};
+    articles.forEach(function(a){
+      var y=(a.date||'').slice(0,4);if(y)years[y]=1;
+      if(a.category)cats[a.category]=1;
+      try{JSON.parse(a.tags).forEach(function(t){tags[t]=1})}catch(e){}
+    });
+    var ySel=$('artYearFilter');if(ySel)ySel.innerHTML='<option value="">全部年份</option>'+Object.keys(years).sort().reverse().map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join('');
+    var cSel=$('artCatFilter');if(cSel)cSel.innerHTML='<option value="">全部分类</option>'+Object.keys(cats).sort().map(function(c){return '<option value="'+c+'">'+c+'</option>'}).join('');
+    var tSel=$('artTagFilter');if(tSel)tSel.innerHTML='<option value="">全部标签</option>'+Object.keys(tags).sort().map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('');
+    renderArtList()
+  })
+}
+function getFilteredArticles(){
+  return articles.filter(function(a){
+    if(artFilter!=='all'&&a.status!==artFilter)return false;
+    if(artYear&&(a.date||'').slice(0,4)!==artYear)return false;
+    if(artCat&&a.category!==artCat)return false;
+    if(artTag){var tags=[];try{tags=JSON.parse(a.tags)}catch(e){};if(tags.indexOf(artTag)===-1)return false}
+    return true
+  })
+}
+function renderArtList(){
+  var filtered=getFilteredArticles();
+  var total=Math.ceil(filtered.length/artPerPage);if(total<1)total=1;
+  if(artPage>=total)artPage=total-1;if(artPage<0)artPage=0;
+  var start=artPage*artPerPage;
+  var pageItems=filtered.slice(start,start+artPerPage);
+  var tb=$('artBody');if(!tb)return;
+  if(!pageItems.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无文章</td></tr>'}
+  else{tb.innerHTML=pageItems.map(function(a){
+    var tags=[];try{tags=JSON.parse(a.tags)}catch(e){}
+    return '<tr><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
+    +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
+    +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
+    +'</td></tr>'
+  }).join('')}
+  // 分页
+  var pg=$('artPagination');if(!pg)return;
+  if(total<=1){pg.innerHTML='';return}
+  var h='<button class="md3-btn md3-btn-text"'+(artPage===0?' disabled':'')+' onclick="artPage--;renderArtList()">上一页</button>';
+  for(var i=0;i<total;i++)h+='<button class="md3-btn md3-btn-text'+(i===artPage?' md3-btn-filled':'')+'" onclick="artPage='+i+';renderArtList()">'+(i+1)+'</button>';
+  h+='<button class="md3-btn md3-btn-text"'+(artPage>=total-1?' disabled':'')+' onclick="artPage++;renderArtList()">下一页</button>';
+  pg.innerHTML=h
 }
 function loadArticles(status){
   api('GET','/api/admin/articles'+(status&&status!=='all'?'?status='+status:'')).then(function(d){
@@ -156,15 +216,15 @@ function loadArticles(status){
 }
 window._togglePub=function(id){
   api('POST','/api/admin/articles/'+id+'/publish').then(function(d){
-    if(d.ok){toast(d.status==='published'?'已发布':'已下架');loadArticles($('artFilter').value)}
+    if(d.ok){toast(d.status==='published'?'已发布':'已下架');loadAllArticles()}
   })
 };
 window._delArt=function(id){
-  showDialog('<h3>确认删除</h3><p>文章将移入回收站</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelArt('+id+')">删除</button></div>')
+  showDialog('<h3>确认删除</h3><p>文章将移入回收站，GitHub 文件将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelArt('+id+')">删除</button></div>')
 };
 window._confirmDelArt=function(id){
   closeDialog();
-  api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadArticles($('artFilter').value)}})
+  api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadAllArticles()}})
 };
 
 // ════════════════════════════════════════
@@ -295,29 +355,17 @@ function saveArticle(status){
 // ════════════════════════════════════════
 var cmtSelectedPage='';
 var cmtArticles={};// slug -> {title, id}
-var cmtBound=false;
+var adminWebsite='https://pluslogic.eu.org';
+try{var _w=localStorage.getItem('admin_website');if(_w)adminWebsite=_w}catch(e){}
 function renderComments(){
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
     +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
-  // 一次性绑定评论区事件
-  if(!cmtBound){
-    cmtBound=true;
-    document.addEventListener('click',function(e){
-      var btn=e.target.closest('.cmt-reply-btn');
-      if(btn){window._replyCmt(parseInt(btn.dataset.id),btn.dataset.name);return}
-      btn=e.target.closest('.cmt-like-btn');
-      if(btn){window._likeCmt(parseInt(btn.dataset.id));return}
-      btn=e.target.closest('.cmt-del-btn');
-      if(btn){window._delCmt(parseInt(btn.dataset.id));return}
-    })
-  }
   loadCommentArticles()
 }
 function loadCommentArticles(){
-  // 同时加载文章列表和评论页面列表
   Promise.all([
     api('GET','/api/admin/articles?status=all'),
     api('GET','/api/admin/comments?limit=1')
@@ -325,7 +373,7 @@ function loadCommentArticles(){
     var arts=results[0].articles||[];
     var d=results[1];
     cmtData=d;
-    // 建立 slug -> 文章 映射
+    // slug -> 文章映射
     cmtArticles={};
     arts.forEach(function(a){cmtArticles['/posts/'+a.slug+'/']={title:a.title,id:a.id}});
     var pages=d.pages||[];
@@ -335,29 +383,24 @@ function loadCommentArticles(){
       var art=cmtArticles[p];
       var title=art?art.title:'';
       var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
-      var artId=art?art.id:null;
       var displayName=title?esc(title):esc(slug);
-      return '<div class="cmt-art-item" data-page="'+esc(p)+'"'+(artId?' data-art-id="'+artId+'"':'')+'>'
+      return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
         +'<div class="cmt-art-title">'+displayName+'</div>'
-        +(title?'<div class="cmt-art-slug">'+esc(slug)+'</div>':'')
+        +'<div class="cmt-art-slug">'+esc(slug)+'</div>'
         +'</div>'
     }).join('');
-    el.addEventListener('click',function(e){
+    el.onclick=function(e){
       var item=e.target.closest('.cmt-art-item');
       if(!item)return;
-      document.querySelectorAll('.cmt-art-item').forEach(function(i){i.classList.remove('active')});
+      [].forEach.call(el.children,function(i){i.classList.remove('active')});
       item.classList.add('active');
       cmtSelectedPage=item.dataset.page;
       loadPageComments(cmtSelectedPage)
-    });
-    // 自动选中第一个
+    };
     if(pages.length&&!cmtSelectedPage){
       el.children[0].classList.add('active');
       cmtSelectedPage=pages[0];
       loadPageComments(cmtSelectedPage)
-    }else if(cmtSelectedPage){
-      var active=el.querySelector('[data-page="'+cmtSelectedPage.replace(/"/g,'\\"')+'"]');
-      if(active){active.classList.add('active');loadPageComments(cmtSelectedPage)}
     }
   })
 }
@@ -365,9 +408,10 @@ function loadPageComments(pageSlug){
   var art=cmtArticles[pageSlug];
   var title=art?art.title:pageSlug;
   var artId=art?art.id:null;
-  var headerHtml='<span>'+esc(title)+'</span>';
+  var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
+  var headerHtml='<span>'+esc(title||slug)+'</span>';
   if(artId)headerHtml+=' <a href="#/editor/'+artId+'" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">编辑文章</a>';
-  headerHtml+=' <a href="https://pluslogic.eu.org'+pageSlug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
+  headerHtml+=' <a href="https://pluslogic.eu.org/#/posts/'+slug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
   $('cmtMainHeader').innerHTML=headerHtml;
   $('cmtList').innerHTML='<div class="empty">加载中…</div>';
   api('GET','/api/admin/comments?limit=200&page_slug='+encodeURIComponent(pageSlug)).then(function(d){
@@ -378,7 +422,6 @@ function loadPageComments(pageSlug){
 function renderCmtTree(list,pageSlug){
   var el=$('cmtList');if(!el)return;
   if(!list.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
-  // 构建树形结构
   var roots=[];
   var byId={};
   list.forEach(function(c){byId[c.id]=c;c._children=[]});
@@ -388,14 +431,14 @@ function renderCmtTree(list,pageSlug){
   });
   function renderNode(c,depth){
     var indent=depth*24;
-    var h='<div class="cmt-item" id="cmt-'+c.id+'" data-cmt-id="'+c.id+'" data-cmt-name="'+esc(c.nickname)+'" style="margin-left:'+indent+'px">'
+    var h='<div class="cmt-item" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +'<div class="cmt-body">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
-      +'<button class="md3-btn md3-btn-text cmt-reply-btn" data-id="'+c.id+'" data-name="'+esc(c.nickname)+'">回复</button>'
-      +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'">'+(c.liked>0?'❤️ '+c.liked:'♡')+'</button>'
-      +'<button class="md3-btn md3-btn-text cmt-del-btn" data-id="'+c.id+'" style="color:var(--error)">删除</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_doLike('+c.id+')">'+(c.liked>0?'❤️ '+c.liked:'♡')+'</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_doDel('+c.id+')">删除</button>'
       +'</div><div id="reply-'+c.id+'"></div></div>';
     c._children.forEach(function(child){h+=renderNode(child,depth+1)});
     return h
@@ -404,24 +447,25 @@ function renderCmtTree(list,pageSlug){
   roots.forEach(function(c){html+=renderNode(c,0)});
   el.innerHTML=html
 }
-window._replyCmt=function(id,name){
-  var el=$('reply-'+id);if(!el)return;
+window._doReply=function(id){
+  var el=document.getElementById('reply-'+id);if(!el)return;
   if(el.innerHTML){el.innerHTML='';return}
-  el.innerHTML='<div class="reply-box"><textarea id="replyInput-'+id+'" placeholder="回复 '+name+'…"></textarea><div class="reply-actions"><button class="md3-btn md3-btn-text" onclick="window._cancelReply('+id+')">取消</button><button class="md3-btn md3-btn-filled" onclick="window._sendReply('+id+')">回复</button></div></div>';
-  $('replyInput-'+id).focus()
+  el.innerHTML='<div class="reply-box"><textarea id="replyInput-'+id+'" placeholder="回复…"></textarea><div class="reply-actions"><button class="md3-btn md3-btn-text" onclick="_doCancelReply('+id+')">取消</button><button class="md3-btn md3-btn-filled" onclick="_doSendReply('+id+')">回复</button></div></div>';
+  document.getElementById('replyInput-'+id).focus()
 };
-window._cancelReply=function(id){var el=$('reply-'+id);if(el)el.innerHTML=''};
-window._sendReply=function(id){
-  var input=$('replyInput-'+id);if(!input||!input.value.trim())return;
+window._doCancelReply=function(id){var el=document.getElementById('reply-'+id);if(el)el.innerHTML=''};
+window._doSendReply=function(id){
+  var input=document.getElementById('replyInput-'+id);if(!input||!input.value.trim())return;
   var parent=cmtData.comments.find(function(c){return c.id===id});
   var page=parent?parent.page_slug:'';
-  api('POST','/api/admin/comments',{page:page,parent_id:id,depth:parent?parent.depth+1:1,nickname:'Moriefy',email:'3518972914@qq.com',website:'https://pluslogic.eu.org',content:input.value.trim()}).then(function(d){
-    if(d.ok){toast('已回复');loadComments($('cmtPageFilter').value)}
+  if(!page){toast('找不到评论所属页面');return}
+  api('POST','/api/admin/comments',{page:page,parent_id:id,depth:parent?parent.depth+1:1,nickname:'Moriefy',email:'3518972914@qq.com',website:adminWebsite,content:input.value.trim()}).then(function(d){
+    if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
   })
 };
-window._likeCmt=function(id){api('POST','/api/admin/comments/'+id+'/like').then(function(d){if(d.ok)toast('已点赞 '+d.liked)})};
-window._delCmt=function(id){showDialog('<h3>确认删除</h3><p>此评论将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelCmt('+id+')">删除</button></div>')};
-window._confirmDelCmt=function(id){closeDialog();api('DELETE','/api/admin/comments/'+id).then(function(d){if(d.ok){toast('已删除');loadComments($('cmtPageFilter').value)}})};
+window._doLike=function(id){api('POST','/api/admin/comments/'+id+'/like').then(function(d){if(d.ok)toast('已点赞 '+d.liked)})};
+window._doDel=function(id){showDialog('<h3>确认删除</h3><p>此评论将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doConfirmDel('+id+')">删除</button></div>')};
+window._doConfirmDel=function(id){closeDialog();api('DELETE','/api/admin/comments/'+id).then(function(d){if(d.ok){toast('已删除');loadPageComments(cmtSelectedPage)}})};
 
 // ════════════════════════════════════════
 //  友链管理
@@ -504,12 +548,24 @@ function renderSettings(){
     +'<div style="margin-bottom:16px"><input class="md3-input" type="password" id="setNewPw2" placeholder="确认新密码"></div>'
     +'<button class="md3-btn md3-btn-filled" onclick="window._changePw()">修改密码</button>'
     +'</div></div>'
+    +'<div class="settings-section"><h3>管理员评论设置</h3>'
+    +'<div style="max-width:400px">'
+    +'<div style="margin-bottom:12px"><label style="display:block;font-size:12px;font-weight:600;color:var(--on-surface-variant);margin-bottom:4px">网站地址</label><input class="md3-input" id="setWebsite" value="'+esc(adminWebsite)+'" placeholder="https://pluslogic.eu.org"></div>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._saveWebsite()">保存</button>'
+    +'</div></div>'
     +'<div class="settings-section"><h3>数据管理</h3>'
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">从 GitHub 导入数据</button>'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._exportData()">导出全站数据</button>'
     +'</div></div>'
 }
+window._saveWebsite=function(){
+  var w=$('setWebsite').value.trim();
+  if(!w){toast('请输入网站地址');return}
+  adminWebsite=w;
+  try{localStorage.setItem('admin_website',w)}catch(e){}
+  toast('网站地址已保存')
+};
 window._changePw=function(){
   var old=$('setOldPw').value,new1=$('setNewPw').value,new2=$('setNewPw2').value;
   if(!old||!new1){toast('请填写完整');return}

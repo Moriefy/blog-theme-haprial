@@ -358,13 +358,22 @@ export default {
           return json({ ok: true });
         }
 
-        // POST /api/admin/articles/:id/publish — 发布/取消发布
+        // POST /api/admin/articles/:id/publish — 发布/下架
         if (method === 'POST' && /^\/api\/admin\/articles\/\d+\/publish$/.test(path)) {
           const id = parseInt(path.split('/')[4]);
-          const art = await env.DB.prepare("SELECT status FROM articles WHERE id=?").bind(id).first();
+          const art = await env.DB.prepare("SELECT * FROM articles WHERE id=?").bind(id).first();
           if (!art) return json({ error: '文章不存在' }, 404);
           const newStatus = art.status === 'published' ? 'draft' : 'published';
           await env.DB.prepare("UPDATE articles SET status=?, updated_at=datetime('now') WHERE id=?").bind(newStatus, id).run();
+          // 下架：从 GitHub 删除文件
+          if (newStatus === 'draft' && art.status === 'published') {
+            await githubDelete(env, `content/blog/${art.slug}.md`, `blog unpublish: ${art.title}`).catch(e => console.error('GitHub delete failed:', e));
+          }
+          // 发布：推送到 GitHub
+          if (newStatus === 'published') {
+            const md = buildMd(art);
+            await githubPush(env, `content/blog/${art.slug}.md`, md, `blog publish: ${art.title}`).catch(e => console.error('GitHub push failed:', e));
+          }
           return json({ ok: true, status: newStatus });
         }
 
