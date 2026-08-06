@@ -765,7 +765,8 @@ articleOrder.forEach(id => {
   rss += `    <guid>${SITE_CONFIG.url}/posts/${id}/</guid>\n`;
   rss += `    <pubDate>${a.dateISO ? new Date(a.dateISO).toUTCString() : ''}</pubDate>\n`;
   rss += `    <description>${escHtml(a.excerpt)}</description>\n`;
-  rss += `    <content:encoded><![CDATA[${a.content}]]></content:encoded>\n`;
+  // 只输出摘要，不包含全文，避免RSS文件过大
+  // rss += `    <content:encoded><![CDATA[${a.content}]]></content:encoded>\n`;
   rss += '  </item>\n';
 });
 rss += '</channel>\n</rss>';
