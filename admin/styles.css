@@ -309,16 +309,16 @@ tr:hover td{background:var(--surface-container-high)}
   /* 统计 */
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:12px}
   
-  /* 表格 — 隐藏分类/标签列，标题更宽 */
-  .table-wrap{margin:0 -16px;padding:0 8px;overflow-x:auto}
-  table{font-size:12px}
-  th,td{padding:8px 6px;font-size:11px}
-  /* 隐藏分类和标签列 */
-  th:nth-child(3),td:nth-child(3),
-  th:nth-child(4),td:nth-child(4){visibility:collapse;width:0;padding:0;overflow:hidden}
-  /* 标题列更宽 */
-  th:first-child,td:first-child{max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  /* 状态列紧凑 */
+  /* 表格 — 横向滚动，不隐藏列 */
+  .table-wrap{margin:0 -16px;padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{font-size:12px;min-width:600px}
+  th{padding:8px 6px;font-size:11px;white-space:nowrap}
+  td{padding:8px 6px;font-size:12px;white-space:nowrap}
+  /* 标题列 */
+  th:first-child,td:first-child{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 标签紧凑 */
+  .tag-chip{font-size:10px;padding:1px 6px}
+  /* 状态列 */
   .status-badge{font-size:10px;padding:1px 6px}
   /* 操作按钮 */
   .action-group{gap:2px;flex-wrap:nowrap}
