@@ -410,12 +410,10 @@ excerpt: "一篇写给每一个在题海中挣扎、在手机前犹豫、在深�
 **Python编程要点：**
 
 ```python
-# 变量和数据类型
 a = 10        # 整数
 b = 3.14      # 浮点数
 s = "hello"   # 字符串
 
-# 条件判断
 if a > 5:
     print("大于5")
 elif a == 5:
@@ -423,14 +421,12 @@ elif a == 5:
 else:
     print("小于5")
 
-# 循环
 for i in range(10):  # 0到9
     print(i)
 
 while a > 0:
     a = a - 1
 
-# 列表
 lst = [1, 2, 3, 4, 5]
 lst.append(6)      # 添加元素
 lst.sort()         # 排序

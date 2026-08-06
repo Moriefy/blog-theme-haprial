@@ -372,7 +372,6 @@ import this
 Python的代码风格和C++形成了鲜明的对比。同样一个"读取文件并统计行数"的功能:
 
 ```python
-# Python
 with open('file.txt') as f:
     line_count = sum(1 for line in f)
 print(f'Lines: {line_count}')
