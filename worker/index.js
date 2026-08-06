@@ -426,8 +426,8 @@ export default {
           await env.DB.prepare("INSERT INTO trash (original_id,type,title,slug,data) VALUES (?,?,?,?,?)").bind(art.id, 'article', art.title, art.slug, JSON.stringify(art)).run();
           await env.DB.prepare("DELETE FROM articles WHERE id=?").bind(id).run();
           // Delete from GitHub
-          githubDelete(env, `content/blog/${art.slug}.md`, `blog delete: ${art.title}`).catch(()=>{});
-          return json({ ok: true });
+          const gh = await githubDelete(env, `content/blog/${art.slug}.md`, `blog delete: ${art.title}`);
+          return json({ ok: true, github: gh });
         }
 
         // POST /api/admin/articles/:id/publish — 发布/下架
@@ -437,16 +437,17 @@ export default {
           if (!art) return json({ error: '文章不存在' }, 404);
           const newStatus = art.status === 'published' ? 'draft' : 'published';
           await env.DB.prepare("UPDATE articles SET status=?, updated_at=datetime('now') WHERE id=?").bind(newStatus, id).run();
+          let ghResult = { ok: true };
           // 下架：从 GitHub 删除文件
           if (newStatus === 'draft' && art.status === 'published') {
-            await githubDelete(env, `content/blog/${art.slug}.md`, `blog unpublish: ${art.title}`).catch(e => console.error('GitHub delete failed:', e));
+            ghResult = await githubDelete(env, `content/blog/${art.slug}.md`, `blog unpublish: ${art.title}`);
           }
           // 发布：推送到 GitHub
           if (newStatus === 'published') {
             const md = buildMd(art);
-            await githubPush(env, `content/blog/${art.slug}.md`, md, `blog publish: ${art.title}`).catch(e => console.error('GitHub push failed:', e));
+            ghResult = await githubPush(env, `content/blog/${art.slug}.md`, md, `blog publish: ${art.title}`);
           }
-          return json({ ok: true, status: newStatus });
+          return json({ ok: true, status: newStatus, github: ghResult });
         }
 
         // ── 评论管理 ──
@@ -578,7 +579,8 @@ export default {
             await env.DB.prepare("INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status,pinned) VALUES (?,?,?,?,?,?,?,?,?)").bind(art.slug, art.title, art.date, art.tags, art.category, art.excerpt, art.content, art.status||'draft', art.pinned||0).run();
             // Push to GitHub
             const md = buildMd(art);
-            githubPush(env, `content/blog/${art.slug}.md`, md, `blog restore: ${art.title}`).catch(()=>{});
+            const gh = await githubPush(env, `content/blog/${art.slug}.md`, md, `blog restore: ${art.title}`);
+            if (!gh.ok) console.error('GitHub restore failed:', gh);
           }
           await env.DB.prepare("DELETE FROM trash WHERE id=?").bind(id).run();
           return json({ ok: true });

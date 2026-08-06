@@ -1,6 +1,7 @@
 (function(){
 'use strict';
 var API='https://comments.pluslogic.eu.org';
+var SITE_URL='https://pluslogic.eu.org';
 var token='';
 var currentPage='';
 var articles=[],friends=[],trashList=[];
@@ -97,6 +98,10 @@ function route(){
   else if(path==='/trash')page='trash';
   else if(path==='/settings')page='settings';
   else page='dashboard';
+  if(path!=='editor'&&!path.match(/^\/editor\/\d+$/)){
+    clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+    window._autoSaveLocal=null;window._autoSaveD1=null
+  }
   currentPage=page;
   // 更新导航高亮
   document.querySelectorAll('.nav-item[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page)});
@@ -209,21 +214,7 @@ function renderArtList(){
   h+='<button class="md3-btn md3-btn-text"'+(artPage>=total-1?' disabled':'')+' onclick="_artNext()">下一页</button>';
   pg.innerHTML=h
 }
-function loadArticles(status){
-  api('GET','/api/admin/articles'+(status&&status!=='all'?'?status='+status:'')).then(function(d){
-    articles=d.articles||[];
-    var tb=$('artBody');if(!tb)return;
-    if(!articles.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无文章</td></tr>';return}
-    tb.innerHTML=articles.map(function(a){
-      var tags=[];try{tags=parseTags(a.tags)}catch(e){}
-      return '<tr><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
-      +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
-      +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
-      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
-      +'</td></tr>'
-    }).join('')
-  })
-}
+
 window._togglePub=function(id){
   api('POST','/api/admin/articles/'+id+'/publish').then(function(d){
     if(d.ok){toast(d.status==='published'?'已发布':'已下架');loadAllArticles()}
@@ -302,6 +293,7 @@ function renderEditor(){
     }
   });
   if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
+  window.addEventListener('resize',function(){var btn=$('previewToggleBtn');if(btn)btn.style.display=window.innerWidth<=768?'':'none'});
   // 编辑器图片上传
   var edImgInput=$('edImgUpload');
   if(edImgInput){
@@ -391,8 +383,13 @@ window._insMd=function(before,after){
 window._previewToggle=function(){
   var pp=$('edPreview');pp.classList.toggle('show')
 };
+var _saveDebounce=null;
 window._saveDraft=function(){saveArticle('draft')};
-window._saveArticle=function(){saveArticle('published')};
+window._saveArticle=function(){
+  if(_saveDebounce)return;
+  _saveDebounce=true;setTimeout(function(){_saveDebounce=false},2000);
+  saveArticle('published')
+};
 function parseTags(t){
   if(!t||t==='null'||t==='undefined')return[];
   if(Array.isArray(t))return t;
@@ -404,14 +401,7 @@ function parseTags(t){
   }
   return[]
 }
-function toSlug(str){
-  // 中文转拼音风格的 slug：去掉特殊字符，空格转连字符，小写
-  return str.toLowerCase()
-    .replace(/[\u4e00-\u9fff]/g,function(c){return c}) // 保留中文
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g,'-')
-    .replace(/^-+|-+$/g,'')
-    .slice(0,50);
-}
+
 function saveArticle(status){
   var title=$('edTitle').value.trim();
   var content=$('edContent').value;
@@ -456,9 +446,10 @@ function saveArticle(status){
 var cmtSelectedPage='';
 var cmtArticles={};// slug -> {title, id}
 var cmtAllArticles=[];// 完整文章列表
-var adminWebsite='https://pluslogic.eu.org';
+var adminWebsite=SITE_URL;
 try{var _w=localStorage.getItem('admin_website');if(_w)adminWebsite=_w}catch(e){}
 function renderComments(){
+  cmtSelectedPage='';
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
     +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
@@ -522,7 +513,7 @@ function loadPageComments(pageSlug){
   var artId=art?art.id:null;
   var headerHtml='<span>'+esc(title)+'</span>';
   if(artId)headerHtml+=' <a href="#/editor/'+artId+'" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">编辑文章</a>';
-  headerHtml+=' <a href="https://pluslogic.eu.org/#/posts/'+slug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
+  headerHtml+=' <a href="'+SITE_URL+'/#/posts/'+slug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
   $('cmtMainHeader').innerHTML=headerHtml;
   $('cmtList').innerHTML='<div class="empty">加载中…</div>';
   api('GET','/api/admin/comments?limit=200&page_slug='+encodeURIComponent(pageSlug)).then(function(d){
@@ -543,7 +534,7 @@ function renderCmtTree(list,pageSlug){
   function renderNode(c,depth){
     var indent=depth*24;
     var pinIcon='<svg viewBox="0 0 16 16" width="13" height="13" fill="'+(c.pinned?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M9.83 2.17a1.41 1.41 0 0 0-2 0L3.29 6.71a1 1 0 0 0-.29.71V8a1 1 0 0 0 1 1h1l-3 5h2l3-3v4l1-1 1 1v-4l3 3h2l-3-5h1a1 1 0 0 0 1-1v-.59a1 1 0 0 0-.29-.71z"/></svg>';
-    var h='<div class="cmt-item" style="margin-left:'+indent+'px">'
+    var h='<div class="cmt-item" data-depth="'+depth+'" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +'<div class="cmt-body">'+c.content_html+'</div>'
@@ -570,9 +561,10 @@ window._doCancelReply=function(id){var el=document.getElementById('reply-'+id);i
 window._doSendReply=function(id){
   var input=document.getElementById('replyInput-'+id);if(!input||!input.value.trim())return;
   if(!cmtSelectedPage){toast('请先选择一篇文章');return}
-  var parent=null;
-  if(cmtData&&cmtData.comments){parent=cmtData.comments.find(function(c){return c.id===id})}
-  var depth=parent?parent.depth+1:0;
+  var depth=0;
+  // 从已渲染的 DOM 中获取 depth
+  var item=document.getElementById('reply-'+id);
+  if(item){var parentItem=item.closest('.cmt-item');if(parentItem)depth=(parseInt(parentItem.dataset.depth||'0'))+1}
   api('POST','/api/admin/comments',{page:cmtSelectedPage,parent_id:id,depth:depth,nickname:'Moriefy',email:'3518972914@qq.com',website:adminWebsite,content:input.value.trim()}).then(function(d){
     if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
   })
@@ -706,13 +698,13 @@ function loadImages(){
     if(imgCurrentFolder){
       bcHtml+='<a href="javascript:void(0)" onclick="_imgGoBack()" style="color:var(--primary);cursor:pointer;margin-right:8px">← 返回</a>';
     }
-    bcHtml+='<a href="javascript:void(0)" onclick="imgCurrentFolder=\'\';renderImages()" style="color:var(--primary);cursor:pointer">图片</a>';
+    bcHtml+='<a href="javascript:void(0)" onclick="_imgGotoFolder(\'\')" style="color:var(--primary);cursor:pointer">图片</a>';
     if(imgCurrentFolder){
       var parts=imgCurrentFolder.split('/');
       var path='';
       parts.forEach(function(p,i){
         path+=(i>0?'/':'')+p;
-        bcHtml+=' / <a href="javascript:void(0)" onclick="imgCurrentFolder=\''+path+'\';renderImages()" style="color:var(--primary);cursor:pointer">'+p+'</a>';
+        bcHtml+=' / <a href="javascript:void(0)" onclick="_imgGotoFolder(\''+path+'\')" style="color:var(--primary);cursor:pointer">'+p+'</a>';
       });
     }
     bc.innerHTML=bcHtml;
@@ -730,7 +722,7 @@ function loadImages(){
     });
     // 图片
     (d.images||[]).forEach(function(img){
-      var fullUrl='https://pluslogic.eu.org'+img.url;
+      var fullUrl=SITE_URL+img.url;
       var imgPath=imgCurrentFolder?imgCurrentFolder+'/'+img.name:img.name;
       html+='<div class="img-card" data-path="'+esc(imgPath)+'" data-url="'+esc(fullUrl)+'" style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms">'
         +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="if(!window.imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
@@ -757,6 +749,11 @@ window._imgGoBack=function(){
   var parts=imgCurrentFolder.split('/');
   parts.pop();
   imgCurrentFolder=parts.join('/');
+  history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
+  loadImages()
+};
+window._imgGotoFolder=function(folder){
+  imgCurrentFolder=folder;
   history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
   loadImages()
 };
@@ -789,7 +786,15 @@ window._imgDeleteFolder=function(path){
 window._doDeleteFolder=function(path){
   closeDialog();
   api('DELETE','/api/admin/images/folder/'+path).then(function(d){
-    if(d.ok){toast('文件夹已删除');loadImages()}
+    if(d.ok){
+      toast('文件夹已删除');
+      // 如果删除的文件夹在剪贴板中，清空剪贴板
+      if(imgClipboard&&imgClipboard.paths){
+        var affected=imgClipboard.paths.filter(function(p){return p.indexOf(path+'/')===0||p===path});
+        if(affected.length){imgClipboard=null;_imgUpdatePasteBar()}
+      }
+      loadImages()
+    }
     else toast(d.error||'删除失败')
   })
 };
@@ -849,9 +854,12 @@ window._imgBatchDelete=function(){
 };
 window._doBatchDelete=function(){
   closeDialog();
-  var paths=Array.from(window.imgSelected);var done=0;
+  var paths=Array.from(window.imgSelected);var done=0,failed=0;
   paths.forEach(function(p){
-    api('DELETE','/api/admin/images/'+p).then(function(){done++;if(done===paths.length){toast('已删除 '+paths.length+' 项');_imgToggleSelect();loadImages()}})
+    api('DELETE','/api/admin/images/'+p).then(function(d){
+      if(d.ok)done++;else failed++;
+      if(done+failed===paths.length){toast('已删除 '+done+' 项'+(failed?'，失败 '+failed+' 项':''));window.imgSelectMode=false;window.imgSelected.clear();var btn=$('imgSelectBtn');if(btn)btn.textContent='选择';loadImages()}
+    }).catch(function(){failed++;if(done+failed===paths.length){toast('完成，失败 '+failed+' 项');loadImages()}})
   })
 };
 window._imgPreview=function(url){
@@ -1033,7 +1041,11 @@ window.deleteImage=function(name){
 window._doDeleteImage=function(name){
   closeDialog();
   api('DELETE','/api/admin/images/'+name).then(function(d){
-    if(d.ok){toast('已删除');loadImages()}
+    if(d.ok){
+      toast('已删除');
+      if(imgClipboard&&imgClipboard.paths&&imgClipboard.paths.indexOf(name)!==-1){imgClipboard=null;_imgUpdatePasteBar()}
+      loadImages()
+    }
     else toast(d.error||'删除失败')
   }).catch(function(e){toast('删除失败: '+e.message)})
 };
