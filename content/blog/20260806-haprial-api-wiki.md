@@ -16,6 +16,7 @@ Haprial 博客系统的后端基于 **Cloudflare Worker** + **D1 数据库**，�
 - 认证方式：HMAC-SHA256 Token（7天有效期）
 - 图片存储：GitHub 仓库 `static/images/` 目录
 - 图片 CDN：`https://pluslogic.eu.org/images/`
+- GitHub 同步：文章的创建、更新、删除、发布、下架、恢复都会自动同步到 GitHub，触发 Vercel 重新部署
 
 ---
 
@@ -71,8 +72,16 @@ Authorization: Bearer {token}
 
 **响应：**
 ```json
-{ "ok": true }
+{
+  "ok": true,
+  "hasGithubToken": true,
+  "repo": "Moriefy/Blog_Astro"
+}
 ```
+
+**字段说明：**
+- `hasGithubToken`：Worker 是否配置了 GitHub Token
+- `repo`：当前配置的 GitHub 仓库名
 
 ---
 
@@ -236,6 +245,31 @@ Authorization: Bearer {token}
 
 ---
 
+#### GET /api/admin/github-test
+
+测试 GitHub Token 是否有效（需要管理员认证）。
+
+**响应（成功）：**
+```json
+{
+  "ok": true,
+  "repo": "Moriefy/Blog_Astro",
+  "private": true,
+  "pushAccess": true
+}
+```
+
+**响应（失败）：**
+```json
+{
+  "ok": false,
+  "status": 401,
+  "error": "Bad credentials"
+}
+```
+
+---
+
 #### POST /api/admin/password
 
 修改密码。
@@ -353,12 +387,19 @@ Authorization: Bearer {token}
 - 无自定义 slug：`{日期前缀}-{标题}`，如 `20260806-文章标题`
 - 日期前缀格式：`YYYYMMDD`
 
-**副作用：** 如果 status 为 `published`，会自动推送到 GitHub 仓库。
+**GitHub 同步：** 创建时自动推送到 GitHub 仓库。
 
 **响应：**
 ```json
-{ "ok": true, "id": 1, "slug": "20260806-custom-slug" }
+{
+  "ok": true,
+  "id": 1,
+  "slug": "20260806-custom-slug",
+  "github": { "ok": true }
+}
 ```
+
+**注意：** `github` 字段反映 GitHub 同步结果。如果 `github.ok` 为 `false`，`github.error` 包含错误信息（如 `"GITHUB_TOKEN not set in Worker env"`）。
 
 ---
 
@@ -368,7 +409,15 @@ Authorization: Bearer {token}
 
 **请求体：** 同创建，所有字段可选。
 
-**副作用：** 如果文章状态为 `published`，会自动推送到 GitHub。
+**GitHub 同步：** 更新时自动推送到 GitHub。
+
+**响应：**
+```json
+{
+  "ok": true,
+  "github": { "ok": true }
+}
+```
 
 ---
 
@@ -376,10 +425,20 @@ Authorization: Bearer {token}
 
 删除文章（移到回收站）。
 
-**副作用：**
-- 文章数据存入 trash 表
-- 从 articles 表删除
-- 从 GitHub 仓库删除对应文件
+**执行顺序：**
+1. 文章数据存入 trash 表
+2. 从 articles 表删除
+3. 从 GitHub 仓库删除对应 `.md` 文件
+
+**响应：**
+```json
+{
+  "ok": true,
+  "github": { "ok": true }
+}
+```
+
+**注意：** 如果 GitHub 删除失败（如 Token 无效），文章仍会从 D1 移入回收站，但 `github.ok` 为 `false`。
 
 ---
 
@@ -393,7 +452,11 @@ Authorization: Bearer {token}
 
 **响应：**
 ```json
-{ "ok": true, "status": "published" }
+{
+  "ok": true,
+  "status": "published",
+  "github": { "ok": true }
+}
 ```
 
 ---
@@ -564,11 +627,16 @@ Authorization: Bearer {token}
 
 恢复文章。
 
-**逻辑：**
-- 从 trash 表读取 data 字段
-- 重新插入 articles 表
-- 如果原状态为 published，推送到 GitHub
-- 从 trash 表删除
+**执行顺序：**
+1. 从 trash 表读取 data 字段
+2. 重新插入 articles 表
+3. 如果原状态为 published，推送到 GitHub
+4. 从 trash 表删除
+
+**响应：**
+```json
+{ "ok": true }
+```
 
 ---
 
@@ -621,7 +689,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**注意：** 上传后需要等待 Vercel 重新部署，图片才能通过 CDN 访问。
+**注意：** 上传后需要等待 Vercel 重新部署，图片才能通过 CDN 访问（约 15-60 秒）。
 
 ---
 
@@ -650,6 +718,49 @@ Authorization: Bearer {token}
 ```
 
 **注意：** `url` 是相对路径，完整 URL 需要拼接 `https://pluslogic.eu.org`。
+
+---
+
+#### POST /api/admin/images/copy
+
+复制或移动图片文件。所有操作在 Worker 和 GitHub API 之间直接完成，不经过前端中转 base64。
+
+**请求体：**
+```json
+{
+  "srcPath": "2026/08/image.png",
+  "destFolder": "2026/09",
+  "mode": "copy"
+}
+```
+
+**字段说明：**
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| srcPath | string | 是 | 源文件路径（相对于 `static/images/`） |
+| destFolder | string | 否 | 目标文件夹，空字符串表示根目录 |
+| mode | string | 是 | `copy`（复制）或 `cut`（移动） |
+
+**执行逻辑：**
+1. 从 GitHub 读取源文件（保留原始 base64）
+2. 检查目标路径是否已存在（存在则更新）
+3. 写入目标路径
+4. 如果 mode 为 `cut`，删除源文件
+
+**响应：**
+```json
+{
+  "ok": true,
+  "url": "/images/2026/09/image.png",
+  "name": "image.png"
+}
+```
+
+**错误响应：**
+```json
+{ "error": "源文件不存在" }
+{ "error": "写入失败: ..." }
+```
 
 ---
 
@@ -872,6 +983,17 @@ Authorization: Bearer {token}
 3. 点击图片 → 预览大图
 ```
 
+**复制/移动流程：**
+```
+1. GET /api/admin/images/list → 浏览到目标文件夹
+2. POST /api/admin/images/copy {
+     srcPath: "2026/08/image.png",
+     destFolder: "2026/09",
+     mode: "copy"  // 或 "cut"
+   }
+3. 刷新列表
+```
+
 **删除流程：**
 ```
 1. 确认删除
@@ -906,7 +1028,28 @@ POST /api/admin/comments
 **CDN URL：** `https://pluslogic.eu.org/images/{year}/{month}/{filename}`
 **文章引用：** `![描述](https://pluslogic.eu.org/images/2026/08/xxx.png)`
 
-### 4.6 错误处理
+### 4.6 GitHub 同步状态检查
+
+所有涉及 GitHub 操作的接口（文章创建/更新/删除/发布、图片复制/移动）都会在响应中返回 `github` 字段：
+
+```json
+{
+  "ok": true,
+  "github": { "ok": true }
+}
+```
+
+如果 GitHub 同步失败：
+```json
+{
+  "ok": true,
+  "github": { "ok": false, "error": "GITHUB_TOKEN not set in Worker env" }
+}
+```
+
+**建议：** 客户端应检查 `github.ok`，如果为 `false`，提示用户 GitHub 同步失败但本地操作已成功。
+
+### 4.7 错误处理
 
 所有接口错误响应格式：
 ```json
@@ -929,7 +1072,7 @@ POST /api/admin/comments
 | 变量名 | 说明 |
 |--------|------|
 | ADMIN_TOKEN | HMAC 签名密钥 |
-| GITHUB_TOKEN | GitHub Personal Access Token |
+| GITHUB_TOKEN | GitHub Personal Access Token（需要 `repo` 权限） |
 | GITHUB_REPO | GitHub 仓库名，默认 `Moriefy/Blog_Astro` |
 | WEBHOOK_SECRET | GitHub Webhook 签名密钥 |
 
@@ -1048,3 +1191,6 @@ OPTIONS 请求直接返回 204。
 6. **博主标识：** 昵称 `Moriefy` + 邮箱 `3518972914@qq.com` 自动标识
 7. **Webhook：** GitHub push event 触发时，只同步 added/modified 文件，不处理 removed
 8. **频率限制：** 评论接口每 IP 每分钟 5 次
+9. **GitHub 同步：** 所有文章和图片操作都会同步到 GitHub，响应中的 `github` 字段反映同步状态
+10. **图片复制/移动：** 使用 `POST /api/admin/images/copy`，不经过前端中转 base64，避免数据损坏
+11. **图片 CDN 延迟：** 上传/复制后需等待 Vercel 重新部署（约 15-60 秒），图片才能通过公网 URL 访问
