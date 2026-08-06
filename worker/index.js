@@ -676,8 +676,10 @@ export default {
         // POST /api/admin/images/upload — 上传图片
         if (method === 'POST' && path === '/api/admin/images/upload') {
           let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
-          const { data, name, folder } = body;
+          let { data, name, folder } = body;
           if (!data || !name) return json({ error: '缺少图片数据或文件名' }, 400);
+          // 去掉 base64 中的空白字符（换行、空格等）
+          data = data.replace(/\s/g, '');
           const imgFolder = folder || new Date().toISOString().slice(0,7).replace('-','/');
           const ext = name.split('.').pop().toLowerCase();
           if (!['jpg','jpeg','png','gif','webp','svg','ico'].includes(ext)) return json({ error: '不支持的格式' }, 400);
@@ -711,7 +713,6 @@ export default {
           const imgPath = decodeURIComponent(path.replace('/api/admin/images/file/', ''));
           if (!imgPath || imgPath.includes('..')) return json({ error: '无效路径' }, 400);
           const fullPath = `static/images/${imgPath}`;
-          // 直接获取 GitHub 原始 base64（二进制文件不能经 UTF-8 中转）
           const token2 = env.GITHUB_TOKEN;
           const repo2 = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
           if (!token2) return json({ error: '未配置 token' }, 500);
@@ -720,7 +721,9 @@ export default {
           });
           if (!ghResp.ok) return json({ error: '文件不存在' }, 404);
           const ghData = await ghResp.json();
-          return json({ ok: true, data: ghData.content, name: imgPath.split('/').pop() });
+          // 去掉 GitHub base64 中的换行符，防止 JSON 传输后损坏
+          const cleanBase64 = (ghData.content || '').replace(/\s/g, '');
+          return json({ ok: true, data: cleanBase64, name: imgPath.split('/').pop() });
         }
 
         // DELETE /api/admin/images/:path — 删除图片
