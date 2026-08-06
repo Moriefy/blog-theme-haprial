@@ -667,6 +667,28 @@ export default {
           return json({ ok: true });
         }
 
+        // DELETE /api/admin/images/folder/:path — 删除文件夹
+        if (method === 'DELETE' && path.startsWith('/api/admin/images/folder/')) {
+          const folderPath = decodeURIComponent(path.replace('/api/admin/images/folder/', ''));
+          if (!folderPath || folderPath.includes('..')) return json({ error: '无效路径' }, 400);
+          const token = env.GITHUB_TOKEN;
+          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          // 列出文件夹内所有文件
+          const listResp = await fetch(`https://api.github.com/repos/${repo}/contents/static/images/${folderPath}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (!listResp.ok) return json({ error: '文件夹不存在' }, 404);
+          const items = await listResp.json();
+          let deleted = 0;
+          for (const item of items) {
+            if (item.type === 'file') {
+              const r = await githubDelete(env, item.path, `delete: ${item.path}`);
+              if (r.ok) deleted++;
+            }
+          }
+          return json({ ok: true, deleted });
+        }
+
         // GET /api/admin/images/references/:url — 查找引用
         if (method === 'GET' && path.startsWith('/api/admin/images/references/')) {
           const imgUrl = decodeURIComponent(path.replace('/api/admin/images/references/', ''));

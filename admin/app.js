@@ -666,12 +666,16 @@ window._confirmEmptyTrash=function(){closeDialog();api('DELETE','/api/admin/tras
 //  图片管理
 // ════════════════════════════════════════
 var imgCurrentFolder='';
+var imgSelectMode=false;
+var imgSelected=new Set();
 function renderImages(){
+  imgSelectMode=false;imgSelected.clear();
   var c=$('content');
   c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
     +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>'
+    +'<div id="imgBatchBar" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--on-surface);color:var(--surface);padding:10px 20px;border-radius:20px;z-index:200;gap:12px;align-items:center;box-shadow:var(--e3);font-size:13px"></div>'
     +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
-  $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传图片</label>';
+  $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button>';
   $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
   loadImages()
 }
@@ -681,8 +685,12 @@ function loadImages(){
   api('GET',url).then(function(d){
     var grid=$('imgGrid');if(!grid)return;
     var bc=$('imgBreadcrumb');
-    // 面包屑
-    var bcHtml='<a href="javascript:void(0)" onclick="imgCurrentFolder=\'\';renderImages()" style="color:var(--primary);cursor:pointer">图片</a>';
+    // 面包屑 + 返回按钮
+    var bcHtml='';
+    if(imgCurrentFolder){
+      bcHtml+='<a href="javascript:void(0)" onclick="_imgGoBack()" style="color:var(--primary);cursor:pointer;margin-right:8px">← 返回</a>';
+    }
+    bcHtml+='<a href="javascript:void(0)" onclick="imgCurrentFolder=\'\';renderImages()" style="color:var(--primary);cursor:pointer">图片</a>';
     if(imgCurrentFolder){
       var parts=imgCurrentFolder.split('/');
       var path='';
@@ -695,29 +703,136 @@ function loadImages(){
     var html='';
     // 文件夹
     (d.folders||[]).forEach(function(f){
-      html+='<div style="position:relative;padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" onclick="_imgEnterFolder(this.dataset.name)" data-name="'+esc(f)+'"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div></div>';
+      var folderPath=imgCurrentFolder?imgCurrentFolder+'/'+f:f;
+      html+='<div style="position:relative;padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" data-folder="'+esc(f)+'" onclick="if(!imgSelectMode)_imgEnterFolder(this.dataset.folder)">'
+        +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
+        +'<button class="md3-btn md3-btn-text" style="width:24px;height:24px;padding:0;min-width:0;font-size:14px;background:rgba(0,0,0,.4);color:#fff;border-radius:12px;line-height:1" onclick="_imgFolderMenu(event,\''+esc(folderPath)+'\')">⋯</button>'
+        +'</div>'
+        +'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+        +'<div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div>'
+        +'</div>';
     });
     // 图片
     (d.images||[]).forEach(function(img){
       var fullUrl='https://pluslogic.eu.org'+img.url;
       var imgPath=imgCurrentFolder?imgCurrentFolder+'/'+img.name:img.name;
-      html+='<div style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms" onmouseover="this.style.borderColor=\'var(--primary)\'" onmouseout="this.style.borderColor=\'var(--outline-variant)\'">'
-        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="_imgPreview(\''+fullUrl+'\')">'
+      html+='<div class="img-card" data-path="'+esc(imgPath)+'" data-url="'+esc(fullUrl)+'" style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms">'
+        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="if(!imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
         +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" style="max-width:100%;max-height:100%;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">'
         +'</div>'
         +'<div style="padding:8px;font-size:11px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(img.name)+'</div>'
+        +'<div class="img-check" style="display:none;position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3);align-items:center;justify-content:center;font-size:12px;color:#fff"></div>'
         +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
-        +'<button class="md3-btn md3-btn-text" style="width:28px;height:28px;padding:0;min-width:0;font-size:16px;background:rgba(0,0,0,.5);color:#fff;border-radius:14px;line-height:1" onclick="_imgMenu(event,\''+fullUrl+'\',\''+esc(imgPath)+'\')">⋯</button>'
+        +'<button class="md3-btn md3-btn-text" style="width:24px;height:24px;padding:0;min-width:0;font-size:14px;background:rgba(0,0,0,.5);color:#fff;border-radius:12px;line-height:1" onclick="_imgMenu(event,\''+fullUrl+'\',\''+esc(imgPath)+'\')">⋯</button>'
         +'</div>'
         +'</div>';
     });
     if(!html)html='<div class="empty">暂无图片</div>';
-    grid.innerHTML=html
+    grid.innerHTML=html;
+    _imgUpdateSelectUI()
   })
 }
 window._imgEnterFolder=function(name){
   imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
   renderImages()
+};
+window._imgGoBack=function(){
+  var parts=imgCurrentFolder.split('/');
+  parts.pop();
+  imgCurrentFolder=parts.join('/');
+  renderImages()
+};
+window._imgFolderMenu=function(e,path){
+  e.stopPropagation();
+  var old=document.querySelector('.img-ctx-menu');if(old)old.remove();
+  var menu=document.createElement('div');
+  menu.className='img-ctx-menu';
+  menu.style.cssText='position:fixed;z-index:300;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:var(--e3);padding:4px 0;min-width:140px';
+  menu.style.left=Math.min(e.clientX,innerWidth-160)+'px';
+  menu.style.top=Math.min(e.clientY,innerHeight-80)+'px';
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="_imgDeleteFolder(\''+path+'\');this.parentElement.remove()">删除文件夹</button>';
+  document.body.appendChild(menu);
+  setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
+};
+window._imgDeleteFolder=function(path){
+  showDialog('<h3>确认删除</h3><p>文件夹 "'+esc(path)+'" 及其所有内容将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doDeleteFolder(\''+esc(path)+'\')">删除</button></div>')
+};
+window._doDeleteFolder=function(path){
+  closeDialog();
+  api('DELETE','/api/admin/images/folder/'+path).then(function(d){
+    if(d.ok){toast('文件夹已删除');loadImages()}
+    else toast(d.error||'删除失败')
+  })
+};
+window._imgToggleSelect=function(){
+  imgSelectMode=!imgSelectMode;
+  imgSelected.clear();
+  var btn=$('imgSelectBtn');
+  if(btn)btn.textContent=imgSelectMode?'取消':'选择';
+  _imgUpdateSelectUI()
+};
+window._imgToggleItem=function(el){
+  var path=el.dataset.path;
+  if(!path)return;
+  if(imgSelected.has(path))imgSelected.delete(path);
+  else imgSelected.add(path);
+  _imgUpdateSelectUI()
+};
+function _imgUpdateSelectUI(){
+  // 显示/隐藏复选框
+  document.querySelectorAll('.img-card').forEach(function(el){
+    var cb=el.querySelector('.img-check');
+    if(!cb)return;
+    cb.style.display=imgSelectMode?'flex':'none';
+    var path=el.dataset.path;
+    cb.textContent=imgSelected.has(path)?'✓':'';
+    cb.style.background=imgSelected.has(path)?'var(--primary)':'rgba(0,0,0,.3)';
+    el.style.borderColor=imgSelected.has(path)?'var(--primary)':'var(--outline-variant)';
+  });
+  // 批量操作栏
+  var bar=$('imgBatchBar');
+  if(!bar)return;
+  if(imgSelectMode&&imgSelected.size>0){
+    bar.style.display='flex';
+    bar.innerHTML='<span>'+imgSelected.size+' 项</span>'
+      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCopy()">复制</button>'
+      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCut()">剪切</button>'
+      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#FF8A80;border-radius:16px" onclick="_imgBatchDelete()">删除</button>'
+  }else{
+    bar.style.display='none'
+  }
+}
+window._imgBatchCopy=function(){
+  var urls=[];
+  imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
+  var text=urls.join('\n');
+  if(navigator.clipboard){navigator.clipboard.writeText(text)}
+  else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
+  toast('已复制 '+urls.length+' 个链接');
+  _imgToggleSelect()
+};
+window._imgBatchCut=function(){
+  var urls=[];
+  imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
+  var text=urls.join('\n');
+  if(navigator.clipboard){navigator.clipboard.writeText(text)}
+  else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
+  toast('已复制 '+urls.length+' 个链接，正在删除原文件…');
+  var paths=Array.from(imgSelected);var done=0;
+  paths.forEach(function(p){
+    api('DELETE','/api/admin/images/'+p).then(function(){done++;if(done===paths.length){toast('剪切完成');_imgToggleSelect();loadImages()}})
+  })
+};
+window._imgBatchDelete=function(){
+  var count=imgSelected.size;
+  showDialog('<h3>批量删除</h3><p>确认删除 '+count+' 个项目？</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doBatchDelete()">删除</button></div>')
+};
+window._doBatchDelete=function(){
+  closeDialog();
+  var paths=Array.from(imgSelected);var done=0;
+  paths.forEach(function(p){
+    api('DELETE','/api/admin/images/'+p).then(function(){done++;if(done===paths.length){toast('已删除 '+paths.length+' 项');_imgToggleSelect();loadImages()}})
+  })
 };
 window._imgPreview=function(url){
   var lb=$('imgLightbox');var img=$('imgLightboxImg');
