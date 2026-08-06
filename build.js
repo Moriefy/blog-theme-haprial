@@ -189,10 +189,11 @@ function computeCatMap(articles) {
 // ── Generate article card HTML ──────────────────────────────────────────────
 function articleCardHtml(id, art) {
   const pinHtml = art.pinned ? '<span class="pin-badge">📌 置顶</span>' : '';
-  const tagHtml = art.tags.length
-    ? '<span class="tag">' + escHtml(art.tags[0]) + '</span>'
-    : '';
-  return `<article class="card" data-id="${id}" data-title="${escHtml(art.title)}" data-excerpt="${escHtml(art.excerpt)}" data-tags="${escHtml(art.tags.join('\u001f'))}"><div class="card-date">${escHtml(art.date)}${pinHtml}</div><h2 class="card-title">${escHtml(art.title)}</h2><p class="card-excerpt">${escHtml(art.excerpt)}</p><div class="card-meta">${tagHtml}<span class="reading-time">${escHtml(art.rt)}</span></div></article>`;
+  const catObj = SITE_CONFIG.categories.find(c => c.slug === art.category);
+  const catHtml = catObj
+    ? '<span class="tag" style="background:' + catObj.color + ';color:#fff">' + escHtml(catObj.name) + '</span>'
+    : (art.category ? '<span class="tag">' + escHtml(art.category) + '</span>' : '');
+  return `<article class="card" data-id="${id}" data-title="${escHtml(art.title)}" data-excerpt="${escHtml(art.excerpt)}" data-tags="${escHtml(art.tags.join('\u001f'))}"><div class="card-date">${escHtml(art.date)}${pinHtml}</div><h2 class="card-title">${escHtml(art.title)}</h2><p class="card-excerpt">${escHtml(art.excerpt)}</p><div class="card-meta">${catHtml}<span class="reading-time">${escHtml(art.rt)}</span></div></article>`;
 }
 
 // ── Shared JS Helpers ───────────────────────────────────────────────────────
