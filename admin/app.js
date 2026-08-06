@@ -749,8 +749,7 @@ window.deleteImage=function(name){
 };
 window._doDeleteImage=function(name){
   closeDialog();
-  var path=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
-  api('DELETE','/api/admin/images/'+path).then(function(d){
+  api('DELETE','/api/admin/images/'+name).then(function(d){
     if(d.ok){toast('已删除');loadImages()}
     else toast(d.error||'删除失败')
   }).catch(function(e){toast('删除失败: '+e.message)})
