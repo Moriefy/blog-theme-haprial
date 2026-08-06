@@ -1,6 +1,6 @@
 ---
 title: "Haprial 后台 API 完整文档 — 安卓客户端开发指南"
-date: "2026-08-06"
+date: "2026-08-05"
 tags: ["API", "开发文档", "Cloudflare", "安卓"]
 category: "tech"
 excerpt: "Haprial 博客系统后台 API 的完整文档，涵盖认证、文章、评论、友链、图片管理、回收站等所有接口，适用于安卓客户端开发。"
