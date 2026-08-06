@@ -237,11 +237,11 @@ export default {
         try { payload = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
         if (!payload.commits || !Array.isArray(payload.commits)) return json({ ok: true, msg: 'no commits' });
         const blogPrefix = 'content/blog/';
-        const added = [], modified = [], removed = [];
+        const added = [], modified = [];
         for (const commit of payload.commits) {
           (commit.added || []).forEach(f => { if (f.startsWith(blogPrefix) && f.endsWith('.md')) added.push(f); });
           (commit.modified || []).forEach(f => { if (f.startsWith(blogPrefix) && f.endsWith('.md')) modified.push(f); });
-          (commit.removed || []).forEach(f => { if (f.startsWith(blogPrefix) && f.endsWith('.md')) removed.push(f); });
+          // 注意：不处理 removed — 下架文章由 admin 接口处理，webhook 不删 D1
         }
         const toSync = [...new Set([...added, ...modified])];
         let synced = 0;
@@ -269,11 +269,7 @@ export default {
             .bind(slug, meta.title || slug, meta.date || '', tags, meta.category || '', meta.excerpt || '', body, 'published').run();
           synced++;
         }
-        for (const filePath of removed) {
-          const slug = filePath.replace(blogPrefix, '').replace(/\.md$/, '');
-          await env.DB.prepare("DELETE FROM articles WHERE slug=?").bind(slug).run();
-        }
-        return json({ ok: true, synced, removed: removed.length });
+        return json({ ok: true, synced });
       }
 
       // 以下所有 /api/admin/* 路由需要认证

@@ -132,14 +132,15 @@ function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div
 // ════════════════════════════════════════
 //  文章管理
 // ════════════════════════════════════════
-var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='';
-window.artPage=artPage;
+var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='',artSearch='';
 window._artNav=function(p){artPage=p;renderArtList()};
 window._artPrev=function(){artPage--;renderArtList()};
 window._artNext=function(){artPage++;renderArtList()};
+var artSearchTimer=null;
 function renderArticles(){
   var c=$('content');
   c.innerHTML='<div class="filter-bar">'
+    +'<input class="md3-input" id="artSearch" placeholder="搜索文章标题…" style="height:36px;font-size:13px;max-width:200px">'
     +'<select id="artStatus"><option value="all">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
     +'<select id="artYearFilter"><option value="">全部年份</option></select>'
     +'<select id="artCatFilter"><option value="">全部分类</option></select>'
@@ -147,6 +148,7 @@ function renderArticles(){
     +'</div>'
     +'<div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
     +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
+  $('artSearch').addEventListener('input',function(){clearTimeout(artSearchTimer);artSearchTimer=setTimeout(function(){artSearch=$('artSearch').value.trim().toLowerCase();artPage=0;renderArtList()},300)});
   $('artStatus').addEventListener('change',function(){artFilter=this.value;artPage=0;renderArtList()});
   $('artYearFilter').addEventListener('change',function(){artYear=this.value;artPage=0;renderArtList()});
   $('artCatFilter').addEventListener('change',function(){artCat=this.value;artPage=0;renderArtList()});
@@ -172,6 +174,7 @@ function loadAllArticles(){
 }
 function getFilteredArticles(){
   return articles.filter(function(a){
+    if(artSearch&&(a.title||'').toLowerCase().indexOf(artSearch)===-1)return false;
     if(artFilter!=='all'&&a.status!==artFilter)return false;
     if(artYear&&(a.date||'').slice(0,4)!==artYear)return false;
     if(artCat&&a.category!==artCat)return false;
@@ -314,8 +317,37 @@ function renderEditor(){
     })
   }else{
     $('edDate').value=new Date().toISOString().slice(0,10);
+    // 从 localStorage 恢复未保存的草稿
+    try{
+      var saved=localStorage.getItem('haprial_draft_new');
+      if(saved){
+        var d=JSON.parse(saved);
+        if(d.title)$('edTitle').value=d.title;
+        if(d.date)$('edDate').value=d.date;
+        if(d.slug)$('edSlug').value=d.slug;
+        if(d.cat)$('edCat').value=d.cat;
+        if(d.tags)$('edTags').value=d.tags;
+        if(d.excerpt)$('edExcerpt').value=d.excerpt;
+        if(d.content)ed.value=d.content;
+      }
+    }catch(e){}
     updatePreview()
   }
+  // 自动保存
+  clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+  window._autoSaveLocal=setInterval(function(){
+    try{
+      var key=editingId?'haprial_draft_'+editingId:'haprial_draft_new';
+      localStorage.setItem(key,JSON.stringify({
+        title:$('edTitle').value,date:$('edDate').value,slug:$('edSlug').value,
+        cat:$('edCat').value,tags:$('edTags').value,excerpt:$('edExcerpt').value,
+        content:$('edContent').value
+      }))
+    }catch(e){}
+  },5000);
+  window._autoSaveD1=setInterval(function(){
+    if(editingId)saveArticle('draft');
+  },60000)
 }
 function updatePreview(){
   var raw=$('edContent').value;
@@ -349,7 +381,26 @@ function saveArticle(status){
   var body={title:title,date:$('edDate').value,slug:$('edSlug').value.trim(),tags:tags,category:$('edCat').value.trim(),excerpt:$('edExcerpt').value.trim(),content:content,status:status};
   var p=editingId?api('PUT','/api/admin/articles/'+editingId,body):api('POST','/api/admin/articles',body);
   p.then(function(d){
-    if(d.ok){toast(editingId?'已更新':'已创建');if(!editingId&&d.id){location.hash='#/editor/'+d.id;editingId=d.id}else{location.hash='#/articles'}}
+    if(d.ok){
+      toast(editingId?'已更新':'已创建');
+      if(!editingId&&d.id){
+        // 新建文章后：清除新建草稿缓存，设置 editingId
+        try{localStorage.removeItem('haprial_draft_new')}catch(e){}
+        editingId=d.id;
+        location.hash='#/editor/'+d.id;
+        // 重新设置自动保存（使用新的 editingId）
+        clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+        window._autoSaveLocal=setInterval(function(){
+          try{localStorage.setItem('haprial_draft_'+editingId,JSON.stringify({title:$('edTitle').value,date:$('edDate').value,slug:$('edSlug').value,cat:$('edCat').value,tags:$('edTags').value,excerpt:$('edExcerpt').value,content:$('edContent').value}))}catch(e){}
+        },5000);
+        window._autoSaveD1=setInterval(function(){if(editingId)saveArticle('draft')},60000)
+      }else if(status==='published'){
+        // 发布后：停止自动保存，清除草稿缓存
+        clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+        try{localStorage.removeItem('haprial_draft_'+editingId)}catch(e){}
+        location.hash='#/articles'
+      }
+    }
     else toast(d.error||'保存失败')
   }).catch(function(){toast('网络错误')})
 }
@@ -371,9 +422,13 @@ function renderComments(){
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
   loadCommentArticles()
 }
-window._exportComments=function(){window.open(API+'/api/admin/comments/export','_blank')};
+window._exportComments=function(){window.open(API+'/api/admin/comments/export?token='+token,'_blank')};
 function findArtBySlug(slug){
+  // 精确匹配
   for(var i=0;i<cmtAllArticles.length;i++){if(cmtAllArticles[i].slug===slug)return cmtAllArticles[i]}
+  // 按日期前缀模糊匹配
+  var datePrefix=slug.replace(/-.*$/,'');
+  for(var i=0;i<cmtAllArticles.length;i++){if(cmtAllArticles[i].slug.indexOf(datePrefix)===0)return cmtAllArticles[i]}
   return null
 }
 function loadCommentArticles(){
@@ -392,7 +447,7 @@ function loadCommentArticles(){
     if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
     el.innerHTML=pages.map(function(p){
       var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
-      var art=cmtArticles[slug];
+      var art=findArtBySlug(slug);
       var title=art?art.title:'';
       var displayName=title?esc(title):esc(slug);
       return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
@@ -417,7 +472,7 @@ function loadCommentArticles(){
 }
 function loadPageComments(pageSlug){
   var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
-  var art=cmtArticles[slug];
+  var art=findArtBySlug(slug);
   var title=art?art.title:slug;
   var artId=art?art.id:null;
   var headerHtml='<span>'+esc(title)+'</span>';
@@ -475,7 +530,18 @@ window._doSendReply=function(id){
     if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
   })
 };
-window._doLike=function(id){api('POST','/api/admin/comments/'+id+'/like').then(function(d){if(d.ok)toast('已点赞 '+d.liked)})};
+window._doLike=function(id){
+  var btn=document.querySelector('.cmt-like-btn[data-id="'+id+'"]');
+  if(btn&&!btn.dataset.liked){btn.innerHTML='❤️ …';btn.dataset.liked='1'}
+  api('POST','/api/admin/comments/'+id+'/like').then(function(d){
+    if(d.ok){
+      if(btn){btn.innerHTML='❤️ '+d.liked;btn.dataset.liked='1'}
+    }else{
+      if(btn){btn.innerHTML='♡';delete btn.dataset.liked}
+      toast(d.error||'点赞失败')
+    }
+  }).catch(function(){if(btn){btn.innerHTML='♡';delete btn.dataset.liked}})
+};
 window._doDel=function(id){showDialog('<h3>确认删除</h3><p>此评论将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doConfirmDel('+id+')">删除</button></div>')};
 window._doConfirmDel=function(id){closeDialog();api('DELETE','/api/admin/comments/'+id).then(function(d){if(d.ok){toast('已删除');loadPageComments(cmtSelectedPage)}})};
 
@@ -569,6 +635,7 @@ function renderSettings(){
     +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">从 GitHub 导入数据</button>'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._exportData()">导出全站数据</button>'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论数据</button>'
     +'</div></div>'
 }
 window._saveWebsite=function(){

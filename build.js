@@ -287,8 +287,8 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352
   <span class="logo" id="logoBtn">Moriefy</span>
   <div class="spacer"></div>
   <button class="icon-btn" id="searchBtn" aria-label="搜索"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
-  <a class="icon-btn" href="/rss.xml" target="_blank" aria-label="RSS" style="text-decoration:none"><svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1" fill="currentColor"/></svg></a>
   <button class="icon-btn" id="themeBtn" aria-label="切换主题" aria-pressed="false"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
+  <a class="icon-btn" href="/rss.xml" target="_blank" aria-label="RSS" style="text-decoration:none"><svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1" fill="currentColor"/></svg></a>
 </header>
 
 <nav class="page-tabs" id="pageTabs" role="navigation" aria-label="主导航">
