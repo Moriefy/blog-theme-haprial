@@ -100,7 +100,7 @@ function loadArticles(prevCache, globalFp) {
     const dateISO = isValidISO ? dateVal : '';
 
     // Auto-calculate reading time
-    const plainText = body.replace(/<[^>]+>/g, '').replace(/[#*`~\[\]()!>\-|]/g, '');
+    const plainText = content.replace(/<[^>]+>/g, '').replace(/[#*`~\[\]()!>\-|]/g, '');
     const cnChars = (plainText.match(/[\u4e00-\u9fff]/g) || []).length;
     const enWords = (plainText.match(/[a-zA-Z]+/g) || []).length;
     const totalMin = Math.ceil((cnChars / 400) + (enWords / 200));
