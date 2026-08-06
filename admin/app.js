@@ -133,6 +133,10 @@ function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div
 //  文章管理
 // ════════════════════════════════════════
 var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='';
+window.artPage=artPage;
+window._artNav=function(p){artPage=p;renderArtList()};
+window._artPrev=function(){artPage--;renderArtList()};
+window._artNext=function(){artPage++;renderArtList()};
 function renderArticles(){
   var c=$('content');
   c.innerHTML='<div class="filter-bar">'
@@ -194,9 +198,9 @@ function renderArtList(){
   // 分页
   var pg=$('artPagination');if(!pg)return;
   if(total<=1){pg.innerHTML='';return}
-  var h='<button class="md3-btn md3-btn-text"'+(artPage===0?' disabled':'')+' onclick="artPage--;renderArtList()">上一页</button>';
-  for(var i=0;i<total;i++)h+='<button class="md3-btn md3-btn-text'+(i===artPage?' md3-btn-filled':'')+'" onclick="artPage='+i+';renderArtList()">'+(i+1)+'</button>';
-  h+='<button class="md3-btn md3-btn-text"'+(artPage>=total-1?' disabled':'')+' onclick="artPage++;renderArtList()">下一页</button>';
+  var h='<button class="md3-btn md3-btn-text"'+(artPage===0?' disabled':'')+' onclick="_artPrev()">上一页</button>';
+  for(var i=0;i<total;i++)h+='<button class="md3-btn md3-btn-text'+(i===artPage?' md3-btn-filled':'')+'" onclick="_artNav('+i+')">'+(i+1)+'</button>';
+  h+='<button class="md3-btn md3-btn-text"'+(artPage>=total-1?' disabled':'')+' onclick="_artNext()">下一页</button>';
   pg.innerHTML=h
 }
 function loadArticles(status){
@@ -355,6 +359,7 @@ function saveArticle(status){
 // ════════════════════════════════════════
 var cmtSelectedPage='';
 var cmtArticles={};// slug -> {title, id}
+var cmtAllArticles=[];// 完整文章列表
 var adminWebsite='https://pluslogic.eu.org';
 try{var _w=localStorage.getItem('admin_website');if(_w)adminWebsite=_w}catch(e){}
 function renderComments(){
@@ -363,30 +368,36 @@ function renderComments(){
     +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
   loadCommentArticles()
+}
+window._exportComments=function(){window.open(API+'/api/admin/comments/export','_blank')};
+function findArtBySlug(slug){
+  for(var i=0;i<cmtAllArticles.length;i++){if(cmtAllArticles[i].slug===slug)return cmtAllArticles[i]}
+  return null
 }
 function loadCommentArticles(){
   Promise.all([
     api('GET','/api/admin/articles?status=all'),
     api('GET','/api/admin/comments?limit=1')
   ]).then(function(results){
-    var arts=results[0].articles||[];
+    cmtAllArticles=results[0].articles||[];
     var d=results[1];
     cmtData=d;
-    // slug -> 文章映射
+    // 建立 slug -> 文章映射
     cmtArticles={};
-    arts.forEach(function(a){cmtArticles['/posts/'+a.slug+'/']={title:a.title,id:a.id}});
+    cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
     var pages=d.pages||[];
     var el=$('cmtArticleList');if(!el)return;
     if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
     el.innerHTML=pages.map(function(p){
-      var art=cmtArticles[p];
-      var title=art?art.title:'';
       var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+      var art=cmtArticles[slug];
+      var title=art?art.title:'';
       var displayName=title?esc(title):esc(slug);
       return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
         +'<div class="cmt-art-title">'+displayName+'</div>'
-        +'<div class="cmt-art-slug">'+esc(slug)+'</div>'
+        +'<div class="cmt-art-slug">'+esc(p)+'</div>'
         +'</div>'
     }).join('');
     el.onclick=function(e){
@@ -405,11 +416,11 @@ function loadCommentArticles(){
   })
 }
 function loadPageComments(pageSlug){
-  var art=cmtArticles[pageSlug];
-  var title=art?art.title:pageSlug;
-  var artId=art?art.id:null;
   var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
-  var headerHtml='<span>'+esc(title||slug)+'</span>';
+  var art=cmtArticles[slug];
+  var title=art?art.title:slug;
+  var artId=art?art.id:null;
+  var headerHtml='<span>'+esc(title)+'</span>';
   if(artId)headerHtml+=' <a href="#/editor/'+artId+'" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">编辑文章</a>';
   headerHtml+=' <a href="https://pluslogic.eu.org/#/posts/'+slug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
   $('cmtMainHeader').innerHTML=headerHtml;
@@ -456,10 +467,11 @@ window._doReply=function(id){
 window._doCancelReply=function(id){var el=document.getElementById('reply-'+id);if(el)el.innerHTML=''};
 window._doSendReply=function(id){
   var input=document.getElementById('replyInput-'+id);if(!input||!input.value.trim())return;
-  var parent=cmtData.comments.find(function(c){return c.id===id});
-  var page=parent?parent.page_slug:'';
-  if(!page){toast('找不到评论所属页面');return}
-  api('POST','/api/admin/comments',{page:page,parent_id:id,depth:parent?parent.depth+1:1,nickname:'Moriefy',email:'3518972914@qq.com',website:adminWebsite,content:input.value.trim()}).then(function(d){
+  if(!cmtSelectedPage){toast('请先选择一篇文章');return}
+  var parent=null;
+  if(cmtData&&cmtData.comments){parent=cmtData.comments.find(function(c){return c.id===id})}
+  var depth=parent?parent.depth+1:0;
+  api('POST','/api/admin/comments',{page:cmtSelectedPage,parent_id:id,depth:depth,nickname:'Moriefy',email:'3518972914@qq.com',website:adminWebsite,content:input.value.trim()}).then(function(d){
     if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
   })
 };
