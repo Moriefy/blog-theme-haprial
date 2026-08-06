@@ -657,6 +657,23 @@ export default {
           return json({ images, folders });
         }
 
+        // GET /api/admin/images/file/:path — 获取单个图片 base64 内容
+        if (method === 'GET' && path.startsWith('/api/admin/images/file/')) {
+          const imgPath = decodeURIComponent(path.replace('/api/admin/images/file/', ''));
+          if (!imgPath || imgPath.includes('..')) return json({ error: '无效路径' }, 400);
+          const fullPath = `static/images/${imgPath}`;
+          // 直接获取 GitHub 原始 base64（二进制文件不能经 UTF-8 中转）
+          const token2 = env.GITHUB_TOKEN;
+          const repo2 = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          if (!token2) return json({ error: '未配置 token' }, 500);
+          const ghResp = await fetch(`https://api.github.com/repos/${repo2}/contents/${fullPath}`, {
+            headers: { 'Authorization': `token ${token2}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (!ghResp.ok) return json({ error: '文件不存在' }, 404);
+          const ghData = await ghResp.json();
+          return json({ ok: true, data: ghData.content, name: imgPath.split('/').pop() });
+        }
+
         // DELETE /api/admin/images/:path — 删除图片
         if (method === 'DELETE' && path.startsWith('/api/admin/images/') && !path.includes('/references/')) {
           const imgPath = decodeURIComponent(path.replace('/api/admin/images/', ''));

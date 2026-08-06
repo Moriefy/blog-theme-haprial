@@ -668,12 +668,15 @@ window._confirmEmptyTrash=function(){closeDialog();api('DELETE','/api/admin/tras
 var imgCurrentFolder='';
 window.imgSelectMode=false;
 window.imgSelected=new Set();
+// 文件管理剪贴板
+var imgClipboard=null; // {type:'copy'|'cut', path:'2026/08/img.jpg'}
 function renderImages(){
   window.imgSelectMode=false;window.imgSelected.clear();
   var c=$('content');
   c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
     +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>'
     +'<div id="imgBatchBar" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--on-surface);color:var(--surface);padding:10px 20px;border-radius:20px;z-index:200;gap:12px;align-items:center;box-shadow:var(--e3);font-size:13px"></div>'
+    +'<div id="imgPasteBar" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--primary);color:var(--on-primary);padding:10px 20px;border-radius:20px;z-index:200;gap:12px;align-items:center;box-shadow:var(--e3);font-size:13px"></div>'
     +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
   $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button>';
   $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
@@ -795,33 +798,24 @@ function _imgUpdateSelectUI(){
   if(window.imgSelectMode&&window.imgSelected.size>0){
     bar.style.display='flex';
     bar.innerHTML='<span>'+window.imgSelected.size+' 项</span>'
-      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCopy()">复制</button>'
-      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCut()">剪切</button>'
-      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#FF8A80;border-radius:16px" onclick="_imgBatchDelete()">删除</button>'
+      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCopy()">📋 复制</button>'
+      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCut()">✂️ 剪切</button>'
+      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#FF8A80;border-radius:16px" onclick="_imgBatchDelete()">🗑️ 删除</button>'
   }else{
     bar.style.display='none'
   }
 }
 window._imgBatchCopy=function(){
-  var urls=[];
-  window.imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
-  var text=urls.join('\n');
-  if(navigator.clipboard){navigator.clipboard.writeText(text)}
-  else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
-  toast('已复制 '+urls.length+' 个链接');
-  _imgToggleSelect()
+  imgClipboard={type:'copy',paths:Array.from(window.imgSelected)};
+  _imgToggleSelect();
+  _imgUpdatePasteBar();
+  toast('已复制 '+imgClipboard.paths.length+' 项，请选择目标文件夹后粘贴')
 };
 window._imgBatchCut=function(){
-  var urls=[];
-  window.imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
-  var text=urls.join('\n');
-  if(navigator.clipboard){navigator.clipboard.writeText(text)}
-  else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
-  toast('已复制 '+urls.length+' 个链接，正在删除原文件…');
-  var paths=Array.from(window.imgSelected);var done=0;
-  paths.forEach(function(p){
-    api('DELETE','/api/admin/images/'+p).then(function(){done++;if(done===paths.length){toast('剪切完成');_imgToggleSelect();loadImages()}})
-  })
+  imgClipboard={type:'cut',paths:Array.from(window.imgSelected)};
+  _imgToggleSelect();
+  _imgUpdatePasteBar();
+  toast('已剪切 '+imgClipboard.paths.length+' 项，请选择目标文件夹后粘贴')
 };
 window._imgBatchDelete=function(){
   var count=window.imgSelected.size;
@@ -841,20 +835,111 @@ window._imgPreview=function(url){
 };
 window._imgMenu=function(e,url,path){
   e.stopPropagation();
-  // 关闭已有的菜单
   var old=document.querySelector('.img-ctx-menu');if(old)old.remove();
   var menu=document.createElement('div');
   menu.className='img-ctx-menu';
-  menu.style.cssText='position:fixed;z-index:300;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:var(--e3);padding:4px 0;min-width:140px';
-  menu.style.left=Math.min(e.clientX,innerWidth-160)+'px';
-  menu.style.top=Math.min(e.clientY,innerHeight-120)+'px';
-  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
+  menu.style.cssText='position:fixed;z-index:300;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:var(--e3);padding:4px 0;min-width:160px';
+  menu.style.left=Math.min(e.clientX,innerWidth-180)+'px';
+  menu.style.top=Math.min(e.clientY,innerHeight-200)+'px';
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">📋 复制</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">✂️ 剪切</button>'
+    +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(\''+url+'\',\'_blank\');this.parentElement.remove()">新窗口打开</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgFindRefs(\''+url+'\');this.parentElement.remove()">查找引用</button>'
+    +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="deleteImage(\''+path+'\');this.parentElement.remove()">删除</button>';
   document.body.appendChild(menu);
   setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
 };
+
+// ── 文件管理：复制/剪切/粘贴 ──
+window._imgCopy=function(path){
+  imgClipboard={type:'copy',paths:[path]};
+  _imgUpdatePasteBar();
+  toast('已复制，请选择目标文件夹后粘贴')
+};
+window._imgCut=function(path){
+  imgClipboard={type:'cut',paths:[path]};
+  _imgUpdatePasteBar();
+  toast('已剪切，请选择目标文件夹后粘贴')
+};
+function _imgUpdatePasteBar(){
+  var bar=$('imgPasteBar');if(!bar)return;
+  if(!imgClipboard||!imgClipboard.paths.length){bar.style.display='none';return}
+  var count=imgClipboard.paths.length;
+  var label=imgClipboard.type==='copy'?'复制':'剪切';
+  bar.style.display='flex';
+  bar.innerHTML='<span>'+label+' '+count+' 项</span>'
+    +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:16px" onclick="_imgShowPastePicker()">选择目标并粘贴</button>'
+    +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 8px;font-size:12px;color:rgba(255,255,255,.7);border-radius:16px" onclick="imgClipboard=null;_imgUpdatePasteBar()">✕</button>'
+}
+window._imgShowPastePicker=function(){
+  if(!imgClipboard||!imgClipboard.paths.length){toast('剪贴板为空');return}
+  var count=imgClipboard.paths.length;
+  var label=imgClipboard.type==='copy'?'复制':'移动';
+  // 加载文件夹列表供选择
+  var foldersHtml='<div style="padding:8px 0"><div class="fp-item" data-folder="" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px" onclick="window._fpSelect(this,\'\')">'
+    +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> 根目录</div>';
+  api('GET','/api/admin/images/list').then(function(d){
+    (d.folders||[]).forEach(function(f){
+      foldersHtml+='<div class="fp-item" data-folder="'+esc(f)+'" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px" onclick="window._fpSelect(this,\''+esc(f)+'\')">'
+        +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> '+esc(f)+'</div>'
+    });
+    foldersHtml+='</div>';
+    showDialog('<h3>'+label+'到…</h3><p style="margin-bottom:8px">选择目标文件夹（'+count+' 个项目）：</p>'+foldersHtml
+      +'<div style="padding:8px 0;font-size:12px;color:var(--outline)" id="fpSelected">当前选择：根目录</div>'
+      +'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button>'
+      +'<button class="md3-btn md3-btn-filled" onclick="window._fpDoPaste()">粘贴到此</button></div>');
+    window._fpTargetFolder='';
+  })
+};
+window._fpSelect=function(el,folder){
+  document.querySelectorAll('.fp-item').forEach(function(i){i.style.background='';i.style.color=''});
+  el.style.background='var(--primary-container)';
+  el.style.color='var(--on-primary-container)';
+  window._fpTargetFolder=folder;
+  var label=folder||'根目录';
+  var sel=$('fpSelected');if(sel)sel.textContent='当前选择：'+label
+};
+window._fpDoPaste=function(){
+  if(!imgClipboard||!imgClipboard.paths.length){closeDialog();return}
+  var dest=window._fpTargetFolder||'';
+  var type=imgClipboard.type;
+  var paths=imgClipboard.paths;
+  var total=paths.length,done=0,failed=0;
+  closeDialog();
+  toast('处理中… 0/'+total);
+  paths.forEach(function(srcPath){
+    var fileName=srcPath.split('/').pop();
+    var destPath=dest?dest+'/'+fileName:fileName;
+    // 1. 获取源文件
+    api('GET','/api/admin/images/file/'+encodeURIComponent(srcPath)).then(function(d){
+      if(!d.ok){failed++;_fpCheckDone(done,failed,total,type);return}
+      // 2. 写入目标
+      api('POST','/api/admin/images/upload',{data:d.data,name:fileName,folder:dest}).then(function(r){
+        if(r.ok){
+          // 3. 如果是剪切，删除源文件
+          if(type==='cut'){
+            api('DELETE','/api/admin/images/'+srcPath).then(function(){
+              done++;_fpCheckDone(done,failed,total,type)
+            }).catch(function(){done++;_fpCheckDone(done,failed,total,type)})
+          }else{
+            done++;_fpCheckDone(done,failed,total,type)
+          }
+        }else{failed++;_fpCheckDone(done,failed,total,type)}
+      }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
+    }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
+  })
+};
+function _fpCheckDone(done,failed,total,type){
+  if(done+failed<total){toast('处理中… '+(done+failed)+'/'+total);return}
+  imgClipboard=null;
+  _imgUpdatePasteBar();
+  loadImages();
+  if(failed===0)toast((type==='cut'?'移动':'复制')+'完成：'+done+' 项');
+  else toast('完成 '+done+' 项，失败 '+failed+' 项')
+}
 window.copyImageUrl=function(url){
   if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
   else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('URL 已复制')}
