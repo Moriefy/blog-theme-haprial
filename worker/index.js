@@ -257,11 +257,12 @@ export default {
           const meta = {};
           if (fmMatch) {
             fmMatch[1].split(/\r?\n/).forEach(line => {
-              const m = line.match(/^(\w+):\s*"?([^"]*)"?$/);
-              if (m) {
-                let val = m[2].trim();
+              const fm = line.match(/^(\w+):\s*"([^"]*)"$/);
+              const fn = line.match(/^(\w+):\s*(.+)$/);
+              if (fm) { meta[fm[1]] = fm[2]; } else if (fn) {
+                let val = fn[2].trim();
                 if (val.startsWith('[')) try { val = JSON.parse(val); } catch {}
-                meta[m[1]] = val;
+                meta[fn[1]] = val;
               }
             });
           }
@@ -571,11 +572,12 @@ export default {
             const meta = {};
             if (fmMatch) {
               fmMatch[1].split(/\r?\n/).forEach(line => {
-                const m = line.match(/^(\w+):\s*"?([^"]*)"?$/);
-                if (m) {
-                  let val = m[2].trim();
+                const fm = line.match(/^(\w+):\s*"([^"]*)"$/);
+                const fn = line.match(/^(\w+):\s*(.+)$/);
+                if (fm) { meta[fm[1]] = fm[2]; } else if (fn) {
+                  let val = fn[2].trim();
                   if (val.startsWith('[')) try { val = JSON.parse(val); } catch {}
-                  meta[m[1]] = val;
+                  meta[fn[1]] = val;
                 }
               });
             }

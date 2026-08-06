@@ -254,10 +254,11 @@
 
 .cs-meta {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .cs-nickname {
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
@@ -580,8 +581,7 @@
     padding-left: 10px;
   }
   .cs-meta {
-    flex-direction: column;
-    gap: 2px;
+    gap: 4px;
   }
   .cs-form {
     padding: 16px;

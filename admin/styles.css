@@ -315,7 +315,7 @@ tr:hover td{background:var(--surface-container-high)}
   th,td{padding:8px 6px;font-size:11px}
   /* 隐藏分类和标签列 */
   th:nth-child(3),td:nth-child(3),
-  th:nth-child(4),td:nth-child(4){display:none}
+  th:nth-child(4),td:nth-child(4){visibility:collapse;width:0;padding:0;overflow:hidden}
   /* 标题列更宽 */
   th:first-child,td:first-child{max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* 状态列紧凑 */
