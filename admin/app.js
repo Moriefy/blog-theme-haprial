@@ -93,7 +93,7 @@ function route(){
   else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(path.match(/^\/editor\/(\d+)$/)[1])}
   else if(path==='/comments')page='comments';
   else if(path==='/friends')page='friends';
-  else if(path==='/images')page='images';
+  else if(path==='/images'||path.match(/^\/images\//)){page='images'};
   else if(path==='/trash')page='trash';
   else if(path==='/settings')page='settings';
   else page='dashboard';
@@ -106,6 +106,7 @@ function route(){
   // 渲染页面
   var fn=routes[path]||routes['/'];
   if(path.match(/^\/editor\/\d+$/))fn=routes['/editor'];
+  if(path.match(/^\/images\//))fn=routes['/images'];
   fn()
 }
 window.addEventListener('hashchange',route);
@@ -672,6 +673,11 @@ window.imgSelected=new Set();
 var imgClipboard=null; // {type:'copy'|'cut', path:'2026/08/img.jpg'}
 function renderImages(){
   window.imgSelectMode=false;window.imgSelected.clear();
+  // 从 hash 恢复文件夹路径
+  var h=(location.hash||'').replace(/^#/,'');
+  var m=h.match(/^\/images\/?(.*)/);
+  if(m&&m[1])imgCurrentFolder=decodeURIComponent(m[1]);
+  else if(h==='/images')imgCurrentFolder='';
   var c=$('content');
   c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
     +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>'
@@ -680,7 +686,9 @@ function renderImages(){
     +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
   $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button>';
   $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
-  loadImages()
+  loadImages();
+  // 更新粘贴条
+  _imgUpdatePasteBar()
 }
 function loadImages(){
   var url='/api/admin/images/list';
@@ -737,14 +745,27 @@ function loadImages(){
 }
 window._imgEnterFolder=function(name){
   imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
-  renderImages()
+  history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
+  loadImages()
 };
 window._imgGoBack=function(){
   var parts=imgCurrentFolder.split('/');
   parts.pop();
   imgCurrentFolder=parts.join('/');
-  renderImages()
+  history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
+  loadImages()
 };
+
+// 手机返回键：子文件夹内按返回→回到上一级，而不是退出图片管理
+window.addEventListener('popstate',function(){
+  if(currentPage!=='images')return;
+  var h=(location.hash||'').replace(/^#/,'');
+  var m=h.match(/^\/images\/?(.*)/);
+  if(m){
+    imgCurrentFolder=decodeURIComponent(m[1]||'');
+    loadImages()
+  }
+});
 window._imgFolderMenu=function(e,path){
   e.stopPropagation();
   var old=document.querySelector('.img-ctx-menu');if(old)old.remove();
@@ -878,59 +899,14 @@ window._imgShowPastePicker=function(){
   if(!imgClipboard||!imgClipboard.paths.length){toast('剪贴板为空');return}
   var count=imgClipboard.paths.length;
   var label=imgClipboard.type==='copy'?'复制':'移动';
-  // 加载文件夹列表供选择
-  var foldersHtml='<div style="padding:8px 0"><div class="fp-item" data-folder="" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px" onclick="window._fpSelect(this,\'\')">'
-    +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> 根目录</div>';
-  api('GET','/api/admin/images/list').then(function(d){
-    (d.folders||[]).forEach(function(f){
-      foldersHtml+='<div class="fp-item" data-folder="'+esc(f)+'" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px" onclick="window._fpSelect(this,\''+esc(f)+'\')">'
-        +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> '+esc(f)+'</div>'
-    });
-    foldersHtml+='</div>';
-    showDialog('<h3>'+label+'到…</h3><p style="margin-bottom:8px">选择目标文件夹（'+count+' 个项目）：</p>'+foldersHtml
-      +'<div style="padding:8px 0;font-size:12px;color:var(--outline)" id="fpSelected">当前选择：根目录</div>'
-      +'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button>'
-      +'<button class="md3-btn md3-btn-filled" onclick="window._fpDoPaste()">粘贴到此</button></div>');
-    window._fpTargetFolder='';
-  })
-};
-window._fpSelect=function(el,folder){
-  document.querySelectorAll('.fp-item').forEach(function(i){i.style.background='';i.style.color=''});
-  el.style.background='var(--primary-container)';
-  el.style.color='var(--on-primary-container)';
-  window._fpTargetFolder=folder;
-  var label=folder||'根目录';
-  var sel=$('fpSelected');if(sel)sel.textContent='当前选择：'+label
-};
-window._fpDoPaste=function(){
-  if(!imgClipboard||!imgClipboard.paths.length){closeDialog();return}
-  var dest=window._fpTargetFolder||'';
-  var type=imgClipboard.type;
-  var paths=imgClipboard.paths;
-  var total=paths.length,done=0,failed=0;
-  closeDialog();
-  toast('处理中… 0/'+total);
-  paths.forEach(function(srcPath){
-    var fileName=srcPath.split('/').pop();
-    var destPath=dest?dest+'/'+fileName:fileName;
-    // 1. 获取源文件
-    api('GET','/api/admin/images/file/'+encodeURIComponent(srcPath)).then(function(d){
-      if(!d.ok){failed++;_fpCheckDone(done,failed,total,type);return}
-      // 2. 写入目标
-      api('POST','/api/admin/images/upload',{data:d.data,name:fileName,folder:dest}).then(function(r){
-        if(r.ok){
-          // 3. 如果是剪切，删除源文件
-          if(type==='cut'){
-            api('DELETE','/api/admin/images/'+srcPath).then(function(){
-              done++;_fpCheckDone(done,failed,total,type)
-            }).catch(function(){done++;_fpCheckDone(done,failed,total,type)})
-          }else{
-            done++;_fpCheckDone(done,failed,total,type)
-          }
-        }else{failed++;_fpCheckDone(done,failed,total,type)}
-      }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
-    }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
-  })
+  _fpPath='';_fpCache={};window._fpTargetFolder='';
+  showDialog('<h3>'+label+'到…</h3>'
+    +'<div id="fpBreadcrumb" style="font-size:13px;color:var(--on-surface-variant);margin-bottom:8px">根目录</div>'
+    +'<div id="fpBody" style="max-height:320px;overflow-y:auto;border:1px solid var(--outline-variant);border-radius:12px;padding:4px"></div>'
+    +'<div style="padding:8px 0;font-size:12px;color:var(--outline)" id="fpSelected">当前选择：根目录</div>'
+    +'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._fpDoPaste()">粘贴到此</button></div>');
+  _fpRender()
 };
 function _fpCheckDone(done,failed,total,type){
   if(done+failed<total){toast('处理中… '+(done+failed)+'/'+total);return}
@@ -940,6 +916,115 @@ function _fpCheckDone(done,failed,total,type){
   if(failed===0)toast((type==='cut'?'移动':'复制')+'完成：'+done+' 项');
   else toast('完成 '+done+' 项，失败 '+failed+' 项')
 }
+
+// ── 文件夹选择器（支持展开子文件夹）──
+var _fpPath='';
+var _fpCache={};
+function _fpLoad(path){
+  return new Promise(function(resolve,reject){
+    if(_fpCache[path+':']){resolve(_fpCache[path+':']);return}
+    var url='/api/admin/images/list'+(path?'?folder='+encodeURIComponent(path):'');
+    api('GET',url).then(function(d){
+      _fpCache[path+':']=d.folders||[];
+      resolve(d.folders||[])
+    }).catch(reject)
+  })
+}
+function _fpRender(){
+  var el=document.getElementById('fpBody');if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--outline);font-size:13px">加载中…</div>';
+  _fpLoad(_fpPath).then(function(folders){
+    var html='';
+    // 返回上一级
+    if(_fpPath){
+      html+='<div class="fp-row" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;color:var(--primary)" onclick="_fpUp()">'
+        +'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> 返回上一级</div>'
+    }
+    // 当前文件夹选项
+    var label=_fpPath||'根目录';
+    html+='<div class="fp-row" data-folder="'+esc(_fpPath)+'" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:600" onclick="_fpSelect(this,\''+esc(_fpPath)+'\')">'
+      +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+      +'<span>'+esc(label)+'</span>'
+      +'<span style="margin-left:auto;font-size:12px;color:var(--primary)">← 选择此处</span></div>';
+    // 子文件夹列表
+    if(folders.length){
+      html+='<div style="border-top:1px solid var(--outline-variant);margin:4px 0;padding-top:4px">';
+      folders.forEach(function(f){
+        html+='<div class="fp-row" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px" onclick="_fpOpen(\''+esc(f)+'\')">'
+          +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+          +'<span>'+esc(f)+'</span>'
+          +'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--outline)" stroke-width="1.5" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg></div>'
+      });
+      html+='</div>'
+    }else if(!_fpPath){
+      html+='<div style="padding:16px;text-align:center;font-size:13px;color:var(--outline)">暂无文件夹</div>'
+    }
+    el.innerHTML=html;
+    // 更新面包屑
+    var bc=document.getElementById('fpBreadcrumb');
+    if(bc){
+      var bcHtml='<span style="cursor:pointer;color:var(--primary)" onclick="_fpGoto(\'\')">根目录</span>';
+      if(_fpPath){
+        var parts=_fpPath.split('/');var acc='';
+        parts.forEach(function(p,i){
+          acc+=(i?'/':'')+p;
+          bcHtml+=' / <span style="cursor:pointer;color:var(--primary)" onclick="_fpGoto(\''+esc(acc)+'\')">'+esc(p)+'</span>'
+        })
+      }
+      bc.innerHTML=bcHtml
+    }
+    // 更新选择状态
+    window._fpTargetFolder=_fpPath;
+    _fpUpdateSel()
+  })
+}
+function _fpUpdateSel(){
+  var sel=document.getElementById('fpSelected');
+  if(sel)sel.textContent='当前选择：'+(window._fpTargetFolder||'根目录')
+}
+window._fpOpen=function(name){
+  _fpPath=_fpPath?_fpPath+'/'+name:name;
+  _fpRender()
+};
+window._fpUp=function(){
+  var parts=_fpPath.split('/');parts.pop();
+  _fpPath=parts.join('/');
+  _fpRender()
+};
+window._fpGoto=function(path){
+  _fpPath=path;
+  _fpRender()
+};
+window._fpSelect=function(el,folder){
+  window._fpTargetFolder=folder;
+  document.querySelectorAll('.fp-row').forEach(function(r){r.style.background='';r.style.color=''});
+  el.style.background='var(--primary-container)';
+  el.style.color='var(--on-primary-container)';
+  _fpUpdateSel()
+};
+window._fpDoPaste=function(){
+  if(!imgClipboard||!imgClipboard.paths.length){closeDialog();return}
+  var dest=window._fpTargetFolder;
+  if(dest===undefined){toast('请选择目标文件夹');return}
+  var type=imgClipboard.type;
+  var paths=imgClipboard.paths;
+  var total=paths.length,done=0,failed=0;
+  closeDialog();
+  toast('处理中… 0/'+total);
+  paths.forEach(function(srcPath){
+    var fileName=srcPath.split('/').pop();
+    api('GET','/api/admin/images/file/'+encodeURIComponent(srcPath)).then(function(d){
+      if(!d.ok){failed++;_fpCheckDone(done,failed,total,type);return}
+      api('POST','/api/admin/images/upload',{data:d.data,name:fileName,folder:dest}).then(function(r){
+        if(r.ok){
+          if(type==='cut'){
+            api('DELETE','/api/admin/images/'+srcPath).then(function(){done++;_fpCheckDone(done,failed,total,type)}).catch(function(){done++;_fpCheckDone(done,failed,total,type)})
+          }else{done++;_fpCheckDone(done,failed,total,type)}
+        }else{failed++;_fpCheckDone(done,failed,total,type)}
+      }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
+    }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
+  })
+};
 window.copyImageUrl=function(url){
   if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
   else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('URL 已复制')}
