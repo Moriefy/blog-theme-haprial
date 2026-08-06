@@ -708,22 +708,58 @@ export default {
           return json({ images, folders });
         }
 
-        // GET /api/admin/images/file/:path — 获取单个图片 base64 内容
-        if (method === 'GET' && path.startsWith('/api/admin/images/file/')) {
-          const imgPath = decodeURIComponent(path.replace('/api/admin/images/file/', ''));
-          if (!imgPath || imgPath.includes('..')) return json({ error: '无效路径' }, 400);
-          const fullPath = `static/images/${imgPath}`;
-          const token2 = env.GITHUB_TOKEN;
-          const repo2 = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
-          if (!token2) return json({ error: '未配置 token' }, 500);
-          const ghResp = await fetch(`https://api.github.com/repos/${repo2}/contents/${fullPath}`, {
-            headers: { 'Authorization': `token ${token2}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+        // POST /api/admin/images/copy — 复制/移动文件（Worker 内部完成，不经前端中转 base64）
+        if (method === 'POST' && path === '/api/admin/images/copy') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const { srcPath, destFolder, mode } = body; // mode: 'copy' | 'cut'
+          if (!srcPath) return json({ error: '缺少 srcPath' }, 400);
+          const fileName = srcPath.split('/').pop();
+          const srcFullPath = `static/images/${srcPath}`;
+          const destFolderClean = (destFolder || '').replace(/^\/+|\/+$/g, '');
+          const destFullPath = destFolderClean ? `static/images/${destFolderClean}/${fileName}` : `static/images/${fileName}`;
+
+          // 1. 从 GitHub 读取源文件（保留原始 base64）
+          const ghToken = env.GITHUB_TOKEN;
+          const ghRepo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          if (!ghToken) return json({ error: '未配置 GITHUB_TOKEN' }, 500);
+          const getResp = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${srcFullPath}`, {
+            headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
           });
-          if (!ghResp.ok) return json({ error: '文件不存在' }, 404);
-          const ghData = await ghResp.json();
-          // 去掉 GitHub base64 中的换行符，防止 JSON 传输后损坏
-          const cleanBase64 = (ghData.content || '').replace(/\s/g, '');
-          return json({ ok: true, data: cleanBase64, name: imgPath.split('/').pop() });
+          if (!getResp.ok) return json({ error: '源文件不存在' }, 404);
+          const srcData = await getResp.json();
+
+          // 2. 检查目标是否已存在
+          let destSha = null;
+          const checkResp = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${destFullPath}`, {
+            headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (checkResp.ok) { const d = await checkResp.json(); destSha = d.sha; }
+
+          // 3. 写入目标
+          const putBody = { message: `${mode === 'cut' ? 'move' : 'copy'}: ${fileName}`, content: srcData.content, branch: 'main' };
+          if (destSha) putBody.sha = destSha;
+          const putResp = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${destFullPath}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+            body: JSON.stringify(putBody)
+          });
+          if (!putResp.ok) {
+            let err = '';
+            try { const d = await putResp.json(); err = d.message; } catch(e) { err = putResp.statusText; }
+            return json({ error: '写入失败: ' + err }, 500);
+          }
+
+          // 4. 如果是 cut，删除源文件
+          if (mode === 'cut') {
+            await fetch(`https://api.github.com/repos/${ghRepo}/contents/${srcFullPath}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+              body: JSON.stringify({ message: `move: ${fileName}`, sha: srcData.sha, branch: 'main' })
+            });
+          }
+
+          const url = destFolderClean ? `/images/${destFolderClean}/${fileName}` : `/images/${fileName}`;
+          return json({ ok: true, url, name: fileName });
         }
 
         // DELETE /api/admin/images/:path — 删除图片

@@ -1017,16 +1017,9 @@ window._fpDoPaste=function(){
   closeDialog();
   toast('处理中… 0/'+total);
   paths.forEach(function(srcPath){
-    var fileName=srcPath.split('/').pop();
-    api('GET','/api/admin/images/file/'+encodeURIComponent(srcPath)).then(function(d){
-      if(!d.ok){failed++;_fpCheckDone(done,failed,total,type);return}
-      api('POST','/api/admin/images/upload',{data:d.data,name:fileName,folder:dest}).then(function(r){
-        if(r.ok){
-          if(type==='cut'){
-            api('DELETE','/api/admin/images/'+srcPath).then(function(){done++;_fpCheckDone(done,failed,total,type)}).catch(function(){done++;_fpCheckDone(done,failed,total,type)})
-          }else{done++;_fpCheckDone(done,failed,total,type)}
-        }else{failed++;_fpCheckDone(done,failed,total,type)}
-      }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
+    api('POST','/api/admin/images/copy',{srcPath:srcPath,destFolder:dest,mode:type}).then(function(d){
+      if(d.ok)done++;else failed++;
+      _fpCheckDone(done,failed,total,type)
     }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
   })
 };
