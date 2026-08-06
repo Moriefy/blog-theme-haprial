@@ -63,7 +63,7 @@ async function ensureTables(db){
 async function githubPush(env, filePath, content, message) {
   const token = env.GITHUB_TOKEN;
   const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
-  if (!token) return { ok: false, error: 'no token' };
+  if (!token) return { ok: false, error: 'GITHUB_TOKEN not set in Worker env' };
 
   // Get current file SHA (if exists)
   let sha = null;
@@ -77,19 +77,28 @@ async function githubPush(env, filePath, content, message) {
   const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: 'main' };
   if (sha) body.sha = sha;
 
-  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
-    method: 'PUT',
-    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
-    body: JSON.stringify(body)
-  });
-  return { ok: resp.ok, status: resp.status };
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      let errDetail = '';
+      try { const d = await resp.json(); errDetail = d.message || JSON.stringify(d); } catch(e) { errDetail = resp.statusText; }
+      return { ok: false, status: resp.status, error: errDetail };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message || 'network error' };
+  }
 }
 
 // ── GitHub Push Binary (base64 direct, no re-encode) ──
 async function githubPushBinary(env, filePath, base64Content, message) {
   const token = env.GITHUB_TOKEN;
   const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
-  if (!token) return { ok: false, error: 'no token' };
+  if (!token) return { ok: false, error: 'GITHUB_TOKEN not set' };
   let sha = null;
   try {
     const getReq = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
@@ -99,18 +108,27 @@ async function githubPushBinary(env, filePath, base64Content, message) {
   } catch (e) {}
   const body = { message, content: base64Content, branch: 'main' };
   if (sha) body.sha = sha;
-  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
-    method: 'PUT',
-    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
-    body: JSON.stringify(body)
-  });
-  return { ok: resp.ok, status: resp.status };
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      let errDetail = '';
+      try { const d = await resp.json(); errDetail = d.message || JSON.stringify(d); } catch(e) { errDetail = resp.statusText; }
+      return { ok: false, status: resp.status, error: errDetail };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 }
 
 async function githubDelete(env, filePath, message) {
   const token = env.GITHUB_TOKEN;
   const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
-  if (!token) return { ok: false, error: 'no token' };
+  if (!token) return { ok: false, error: 'GITHUB_TOKEN not set' };
 
   let sha = null;
   try {
@@ -119,14 +137,23 @@ async function githubDelete(env, filePath, message) {
     });
     if (getReq.ok) { const d = await getReq.json(); sha = d.sha; }
   } catch (e) {}
-  if (!sha) return { ok: false, error: 'file not found' };
+  if (!sha) return { ok: false, error: 'file not found on GitHub' };
 
-  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
-    body: JSON.stringify({ message, sha, branch: 'main' })
-  });
-  return { ok: resp.ok };
+  try {
+    const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+      body: JSON.stringify({ message, sha, branch: 'main' })
+    });
+    if (!resp.ok) {
+      let errDetail = '';
+      try { const d = await resp.json(); errDetail = d.message || JSON.stringify(d); } catch(e) { errDetail = resp.statusText; }
+      return { ok: false, status: resp.status, error: errDetail };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 }
 
 function buildMd(article) {
@@ -164,7 +191,28 @@ export default {
       // ════════════════════════════════════════
       //  PUBLIC API (评论系统)
       // ════════════════════════════════════════
-      if (path === '/api/health') return json({ ok: true });
+      if (path === '/api/health') return json({ ok: true, hasGithubToken: !!env.GITHUB_TOKEN, repo: env.GITHUB_REPO || 'Moriefy/Blog_Astro' });
+
+      // GET /api/admin/github-test — 测试 GitHub token 是否有效
+      if (method === 'GET' && path === '/api/admin/github-test') {
+        const token = env.GITHUB_TOKEN;
+        if (!token) return json({ ok: false, error: 'GITHUB_TOKEN 未设置' });
+        const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+        try {
+          const resp = await fetch(`https://api.github.com/repos/${repo}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (!resp.ok) {
+            let err = '';
+            try { const d = await resp.json(); err = d.message; } catch(e) { err = resp.statusText; }
+            return json({ ok: false, status: resp.status, error: err });
+          }
+          const d = await resp.json();
+          return json({ ok: true, repo: d.full_name, private: d.private, pushAccess: true });
+        } catch (e) {
+          return json({ ok: false, error: e.message });
+        }
+      }
 
       // GET /api/comments
       if (method === 'GET' && path === '/api/comments') {
@@ -337,8 +385,8 @@ export default {
           const result = await env.DB.prepare("INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status,pinned) VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET title=excluded.title,date=excluded.date,tags=excluded.tags,category=excluded.category,excerpt=excluded.excerpt,content=excluded.content,status=excluded.status,updated_at=datetime('now')").bind(slug, title, date || new Date().toISOString().slice(0, 10), tagsStr, category || '', excerpt || '', content, status || 'draft', pinned ? 1 : 0).run();
           // Push to GitHub
           const md = buildMd({ title, date: date || new Date().toISOString().slice(0, 10), tags: tags, category: category || '', excerpt: excerpt || '', content });
-          githubPush(env, `content/blog/${slug}.md`, md, `blog: ${title}`).catch(()=>{});
-          return json({ ok: true, id: result.meta.last_row_id, slug }, 201);
+          const gh = await githubPush(env, `content/blog/${slug}.md`, md, `blog: ${title}`);
+          return json({ ok: true, id: result.meta.last_row_id, slug, github: gh }, 201);
         }
 
         // PUT /api/admin/articles/:id — 更新
@@ -362,11 +410,12 @@ export default {
           await env.DB.prepare("UPDATE articles SET " + fields.join(',') + " WHERE id=?").bind(...params).run();
           // Push to GitHub
           const updated = await env.DB.prepare("SELECT * FROM articles WHERE id=?").bind(id).first();
+          let gh = { ok: false, error: 'not found' };
           if (updated) {
             const md = buildMd(updated);
-            githubPush(env, `content/blog/${updated.slug}.md`, md, `blog update: ${updated.title}`).catch(()=>{});
+            gh = await githubPush(env, `content/blog/${updated.slug}.md`, md, `blog update: ${updated.title}`);
           }
-          return json({ ok: true });
+          return json({ ok: true, github: gh });
         }
 
         // DELETE /api/admin/articles/:id — 移到回收站

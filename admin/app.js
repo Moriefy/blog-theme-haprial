@@ -422,7 +422,12 @@ function saveArticle(status){
   var p=editingId?api('PUT','/api/admin/articles/'+editingId,body):api('POST','/api/admin/articles',body);
   p.then(function(d){
     if(d.ok){
-      toast(editingId?'已更新':'已创建');
+      var ghMsg='';
+      if(d.github){
+        if(d.github.ok)ghMsg=' · GitHub 已同步';
+        else if(d.github.error)ghMsg=' · GitHub 失败: '+d.github.error
+      }
+      toast((editingId?'已更新':'已创建')+ghMsg);
       if(!editingId&&d.id){
         // 新建文章后：清除新建草稿缓存，设置 editingId
         try{localStorage.removeItem('haprial_draft_new')}catch(e){}
