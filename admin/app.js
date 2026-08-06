@@ -735,6 +735,7 @@ window._imgMenu=function(e,url,path){
   menu.style.top=Math.min(e.clientY,innerHeight-120)+'px';
   menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(\''+url+'\',\'_blank\');this.parentElement.remove()">新窗口打开</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgFindRefs(\''+url+'\');this.parentElement.remove()">查找引用</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="deleteImage(\''+path+'\');this.parentElement.remove()">删除</button>';
   document.body.appendChild(menu);
   setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
@@ -751,7 +752,16 @@ window._doDeleteImage=function(name){
   var path=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
   api('DELETE','/api/admin/images/'+path).then(function(d){
     if(d.ok){toast('已删除');loadImages()}
-    else toast('删除失败')
+    else toast(d.error||'删除失败')
+  }).catch(function(e){toast('删除失败: '+e.message)})
+};
+window._imgFindRefs=function(url){
+  var fileName=url.split('/').pop();
+  api('GET','/api/admin/images/references/'+encodeURIComponent(url)).then(function(d){
+    var arts=d.articles||[];
+    if(!arts.length){showDialog('<h3>查找引用</h3><p>图片 "'+esc(fileName)+'" 未被任何文章引用。</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">关闭</button></div>');return}
+    var list=arts.map(function(a){return '<div style="padding:8px 0;border-bottom:1px solid var(--outline-variant)"><a href="#/editor/'+a.id+'" style="color:var(--primary);font-weight:500" onclick="closeDialog()">'+esc(a.title)+'</a><div style="font-size:12px;color:var(--outline);margin-top:2px">'+esc(a.slug)+'</div></div>'}).join('');
+    showDialog('<h3>查找引用</h3><p>图片 "'+esc(fileName)+'" 被以下 '+arts.length+' 篇文章引用：</p>'+list+'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">关闭</button></div>')
   })
 };
 function uploadImages(files){

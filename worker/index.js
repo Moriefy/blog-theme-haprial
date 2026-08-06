@@ -119,7 +119,7 @@ async function githubDelete(env, filePath, message) {
     });
     if (getReq.ok) { const d = await getReq.json(); sha = d.sha; }
   } catch (e) {}
-  if (!sha) return { ok: true, msg: 'file not found' };
+  if (!sha) return { ok: false, error: 'file not found' };
 
   const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
     method: 'DELETE',
@@ -658,11 +658,22 @@ export default {
         }
 
         // DELETE /api/admin/images/:path — 删除图片
-        if (method === 'DELETE' && path.startsWith('/api/admin/images/')) {
-          const imgPath = path.replace('/api/admin/images/', '');
+        if (method === 'DELETE' && path.startsWith('/api/admin/images/') && !path.includes('/references/')) {
+          const imgPath = decodeURIComponent(path.replace('/api/admin/images/', ''));
           if (!imgPath || imgPath.includes('..')) return json({ error: '无效路径' }, 400);
-          const result = await githubDelete(env, `static/images/${imgPath}`, `image delete: ${imgPath}`);
-          return json({ ok: result.ok });
+          const fullPath = `static/images/${imgPath}`;
+          const result = await githubDelete(env, fullPath, `image delete: ${imgPath}`);
+          if (!result.ok) return json({ error: result.error || '删除失败' }, 500);
+          return json({ ok: true });
+        }
+
+        // GET /api/admin/images/references/:url — 查找引用
+        if (method === 'GET' && path.startsWith('/api/admin/images/references/')) {
+          const imgUrl = decodeURIComponent(path.replace('/api/admin/images/references/', ''));
+          if (!imgUrl) return json({ articles: [] });
+          const likePattern = '%' + imgUrl.split('/').pop() + '%';
+          const { results } = await env.DB.prepare('SELECT id,title,slug FROM articles WHERE content LIKE ?').bind(likePattern).all();
+          return json({ articles: results });
         }
       }
 
