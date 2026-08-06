@@ -52,6 +52,10 @@ async function ensureTables(db){
     db.prepare(`CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(status)`),
     db.prepare(`CREATE INDEX IF NOT EXISTS idx_articles_slug ON articles(slug)`),
   ]);
+  // 迁移：给 comments 表加 pinned 字段
+  try { await db.prepare("SELECT pinned FROM comments LIMIT 1").first(); } catch(e) {
+    await db.prepare("ALTER TABLE comments ADD COLUMN pinned INTEGER DEFAULT 0").run();
+  }
   migrated=true;
 }
 
@@ -147,8 +151,8 @@ export default {
         const limit = Math.min(100, parseInt(url.searchParams.get('limit')) || 50);
         if (!page) return json({ error: '缺少 page 参数' }, 400);
         const stmt = cursor > 0
-          ? env.DB.prepare("SELECT id,parent_id,depth,nickname,avatar_hash,website,content_html,liked,is_admin,created_at,updated_at FROM comments WHERE page_slug=? AND status='approved' AND id<? ORDER BY id DESC LIMIT ?").bind(page, cursor, limit)
-          : env.DB.prepare("SELECT id,parent_id,depth,nickname,avatar_hash,website,content_html,liked,is_admin,created_at,updated_at FROM comments WHERE page_slug=? AND status='approved' ORDER BY id DESC LIMIT ?").bind(page, limit);
+          ? env.DB.prepare("SELECT id,parent_id,depth,nickname,avatar_hash,website,content_html,liked,is_admin,pinned,created_at,updated_at FROM comments WHERE page_slug=? AND status='approved' AND id<? ORDER BY pinned DESC, id DESC LIMIT ?").bind(page, cursor, limit)
+          : env.DB.prepare("SELECT id,parent_id,depth,nickname,avatar_hash,website,content_html,liked,is_admin,pinned,created_at,updated_at FROM comments WHERE page_slug=? AND status='approved' ORDER BY pinned DESC, id DESC LIMIT ?").bind(page, limit);
         const { results } = await stmt.all();
         const countRow = await env.DB.prepare("SELECT COUNT(*) as total FROM comments WHERE page_slug=? AND status='approved'").bind(page).first();
         return json({ comments: results, total: countRow.total, cursor: results.length ? results[results.length - 1].id : null, hasMore: results.length >= limit });
@@ -379,10 +383,10 @@ export default {
           const page = url.searchParams.get('page_slug');
           const limit = Math.min(200, parseInt(url.searchParams.get('limit')) || 50);
           const offset = parseInt(url.searchParams.get('offset')) || 0;
-          let sql = "SELECT id,parent_id,depth,nickname,avatar_hash,website,content_html,liked,is_admin,created_at,updated_at FROM comments WHERE status='approved'";
+          let sql = "SELECT id,parent_id,depth,nickname,avatar_hash,website,content_html,liked,is_admin,pinned,created_at,updated_at FROM comments WHERE status='approved'";
           const params = [];
           if (page) { sql += " AND page_slug=?"; params.push(page); }
-          sql += " ORDER BY id DESC LIMIT ? OFFSET ?";
+          sql += " ORDER BY pinned DESC, id DESC LIMIT ? OFFSET ?";
           params.push(limit, offset);
           const { results } = await env.DB.prepare(sql).bind(...params).all();
           const countSql = "SELECT COUNT(*) as total FROM comments WHERE status='approved'" + (page ? " AND page_slug=?" : "");
@@ -416,6 +420,16 @@ export default {
           await env.DB.prepare("UPDATE comments SET liked=liked+1 WHERE id=?").bind(id).run();
           const row = await env.DB.prepare("SELECT liked FROM comments WHERE id=?").bind(id).first();
           return json({ ok: true, liked: row.liked });
+        }
+
+        // POST /api/admin/comments/:id/pin — 置顶/取消置顶
+        if (method === 'POST' && /^\/api\/admin\/comments\/\d+\/pin$/.test(path)) {
+          const id = parseInt(path.split('/')[4]);
+          const comment = await env.DB.prepare("SELECT pinned FROM comments WHERE id=?").bind(id).first();
+          if (!comment) return json({ error: '评论不存在' }, 404);
+          const newPinned = comment.pinned ? 0 : 1;
+          await env.DB.prepare("UPDATE comments SET pinned=? WHERE id=?").bind(newPinned, id).run();
+          return json({ ok: true, pinned: newPinned });
         }
 
         // GET /api/admin/comments/export — 导出

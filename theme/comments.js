@@ -41,7 +41,7 @@
     var nm = c.website
       ? '<a href="' + esc(c.website) + '" rel="noopener noreferrer nofollow" target="_blank">' + esc(c.nickname) + '</a>'
       : esc(c.nickname);
-    var badge = c.is_admin ? '<span class="cs-badge">艾德密</span>' : '' ;
+    var badge = (c.is_admin ? '<span class="cs-badge">艾德密</span>' : '') + (c.pinned ? '<span class="cs-badge" style="background:var(--on-surface-variant)">置顶</span>' : '');
     var contentLen = (c.content_html || '').replace(/<[^>]+>/g, '').length;
     var longCls = contentLen > 300 ? ' cs-long' : '';
     return '<li class="cs-item" data-id="' + c.id + '" data-depth="' + c.depth + '">'
@@ -174,7 +174,7 @@
       return r.json();
     }).then(function (d) {
       self.comments = ap ? self.comments.concat(d.comments) : d.comments;
-      self.comments.sort(function(a, b) { return b.id - a.id; });
+      self.comments.sort(function(a, b) { return (b.pinned||0) - (a.pinned||0) || b.id - a.id; });
       self.cursor = d.cursor; self.more = d.hasMore;
       self._show(d.total);
       self._applyLikedState();

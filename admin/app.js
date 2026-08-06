@@ -140,11 +140,11 @@ var artSearchTimer=null;
 function renderArticles(){
   var c=$('content');
   c.innerHTML='<div class="filter-bar">'
-    +'<input class="md3-input" id="artSearch" placeholder="搜索文章标题…" style="height:36px;font-size:13px;max-width:200px">'
-    +'<select id="artStatus"><option value="all">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
-    +'<select id="artYearFilter"><option value="">全部年份</option></select>'
-    +'<select id="artCatFilter"><option value="">全部分类</option></select>'
-    +'<select id="artTagFilter"><option value="">全部标签</option></select>'
+    +'<input class="md3-input" id="artSearch" placeholder="搜索…" style="max-width:160px">'
+    +'<select class="md3-input" id="artStatus"><option value="all">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
+    +'<select class="md3-input" id="artYearFilter"><option value="">全部年份</option></select>'
+    +'<select class="md3-input" id="artCatFilter"><option value="">全部分类</option></select>'
+    +'<select class="md3-input" id="artTagFilter"><option value="">全部标签</option></select>'
     +'</div>'
     +'<div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
     +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
@@ -164,7 +164,7 @@ function loadAllArticles(){
     articles.forEach(function(a){
       var y=(a.date||'').slice(0,4);if(y)years[y]=1;
       if(a.category)cats[a.category]=1;
-      try{JSON.parse(a.tags).forEach(function(t){tags[t]=1})}catch(e){}
+      try{parseTags(a.tags).forEach(function(t){tags[t]=1})}catch(e){}
     });
     var ySel=$('artYearFilter');if(ySel)ySel.innerHTML='<option value="">全部年份</option>'+Object.keys(years).sort().reverse().map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join('');
     var cSel=$('artCatFilter');if(cSel)cSel.innerHTML='<option value="">全部分类</option>'+Object.keys(cats).sort().map(function(c){return '<option value="'+c+'">'+c+'</option>'}).join('');
@@ -178,7 +178,7 @@ function getFilteredArticles(){
     if(artFilter!=='all'&&a.status!==artFilter)return false;
     if(artYear&&(a.date||'').slice(0,4)!==artYear)return false;
     if(artCat&&a.category!==artCat)return false;
-    if(artTag){var tags=[];try{tags=JSON.parse(a.tags)}catch(e){};if(tags.indexOf(artTag)===-1)return false}
+    if(artTag){var tags=[];try{tags=parseTags(a.tags)}catch(e){};if(tags.indexOf(artTag)===-1)return false}
     return true
   })
 }
@@ -191,7 +191,7 @@ function renderArtList(){
   var tb=$('artBody');if(!tb)return;
   if(!pageItems.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无文章</td></tr>'}
   else{tb.innerHTML=pageItems.map(function(a){
-    var tags=[];try{tags=JSON.parse(a.tags)}catch(e){}
+    var tags=[];try{tags=parseTags(a.tags)}catch(e){}
     return '<tr><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
     +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
     +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
@@ -212,7 +212,7 @@ function loadArticles(status){
     var tb=$('artBody');if(!tb)return;
     if(!articles.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无文章</td></tr>';return}
     tb.innerHTML=articles.map(function(a){
-      var tags=[];try{tags=JSON.parse(a.tags)}catch(e){}
+      var tags=[];try{tags=parseTags(a.tags)}catch(e){}
       return '<tr><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
       +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
       +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
@@ -305,7 +305,7 @@ function renderEditor(){
       $('edDate').value=a.date||'';
       $('edSlug').value=a.slug||'';
       $('edCat').value=a.category||'';
-      var tags=[];try{tags=JSON.parse(a.tags)}catch(e){}
+      var tags=[];try{tags=parseTags(a.tags)}catch(e){}
       $('edTags').value=tags.join(', ');
       $('edExcerpt').value=a.excerpt||'';
       ed.value=a.content||'';
@@ -361,6 +361,13 @@ window._previewToggle=function(){
 };
 window._saveDraft=function(){saveArticle('draft')};
 window._saveArticle=function(){saveArticle('published')};
+function parseTags(t){
+  if(!t)return[];
+  if(Array.isArray(t))return t;
+  try{var p=JSON.parse(t);if(Array.isArray(p))return p}catch(e){}
+  if(typeof t==='string')return t.split(',').map(function(s){return s.trim()}).filter(Boolean);
+  return[]
+}
 function toSlug(str){
   // 中文转拼音风格的 slug：去掉特殊字符，空格转连字符，小写
   return str.toLowerCase()
@@ -494,13 +501,15 @@ function renderCmtTree(list,pageSlug){
   });
   function renderNode(c,depth){
     var indent=depth*24;
+    var pinIcon='<svg viewBox="0 0 16 16" width="13" height="13" fill="'+(c.pinned?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M9.83 2.17a1.41 1.41 0 0 0-2 0L3.29 6.71a1 1 0 0 0-.29.71V8a1 1 0 0 0 1 1h1l-3 5h2l3-3v4l1-1 1 1v-4l3 3h2l-3-5h1a1 1 0 0 0 1-1v-.59a1 1 0 0 0-.29-.71z"/></svg>';
     var h='<div class="cmt-item" style="margin-left:'+indent+'px">'
-      +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')
+      +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +'<div class="cmt-body">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
       +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
       +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'" onclick="_doLike('+c.id+')">'+(c.liked>0?'<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg> '+c.liked:'<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>')+'</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_doPin('+c.id+')" title="'+(c.pinned?'取消置顶':'置顶')+'">'+pinIcon+'</button>'
       +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_doDel('+c.id+')">删除</button>'
       +'</div><div id="reply-'+c.id+'"></div></div>';
     c._children.forEach(function(child){h+=renderNode(child,depth+1)});
@@ -525,6 +534,11 @@ window._doSendReply=function(id){
   var depth=parent?parent.depth+1:0;
   api('POST','/api/admin/comments',{page:cmtSelectedPage,parent_id:id,depth:depth,nickname:'Moriefy',email:'3518972914@qq.com',website:adminWebsite,content:input.value.trim()}).then(function(d){
     if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
+  })
+};
+window._doPin=function(id){
+  api('POST','/api/admin/comments/'+id+'/pin').then(function(d){
+    if(d.ok){toast(d.pinned?'已置顶':'已取消置顶');loadPageComments(cmtSelectedPage)}
   })
 };
 window._doLike=function(id){
