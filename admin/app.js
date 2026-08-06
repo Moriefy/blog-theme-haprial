@@ -666,10 +666,10 @@ window._confirmEmptyTrash=function(){closeDialog();api('DELETE','/api/admin/tras
 //  图片管理
 // ════════════════════════════════════════
 var imgCurrentFolder='';
-var imgSelectMode=false;
-var imgSelected=new Set();
+window.imgSelectMode=false;
+window.imgSelected=new Set();
 function renderImages(){
-  imgSelectMode=false;imgSelected.clear();
+  window.imgSelectMode=false;window.imgSelected.clear();
   var c=$('content');
   c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
     +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>'
@@ -704,7 +704,7 @@ function loadImages(){
     // 文件夹
     (d.folders||[]).forEach(function(f){
       var folderPath=imgCurrentFolder?imgCurrentFolder+'/'+f:f;
-      html+='<div style="position:relative;padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" data-folder="'+esc(f)+'" onclick="if(!imgSelectMode)_imgEnterFolder(this.dataset.folder)">'
+      html+='<div style="position:relative;padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" data-folder="'+esc(f)+'" onclick="if(!window.imgSelectMode)_imgEnterFolder(this.dataset.folder)">'
         +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
         +'<button class="md3-btn md3-btn-text" style="width:24px;height:24px;padding:0;min-width:0;font-size:14px;background:rgba(0,0,0,.4);color:#fff;border-radius:12px;line-height:1" onclick="_imgFolderMenu(event,\''+esc(folderPath)+'\')">⋯</button>'
         +'</div>'
@@ -717,7 +717,7 @@ function loadImages(){
       var fullUrl='https://pluslogic.eu.org'+img.url;
       var imgPath=imgCurrentFolder?imgCurrentFolder+'/'+img.name:img.name;
       html+='<div class="img-card" data-path="'+esc(imgPath)+'" data-url="'+esc(fullUrl)+'" style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms">'
-        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="if(!imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
+        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="if(!window.imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
         +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" style="max-width:100%;max-height:100%;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">'
         +'</div>'
         +'<div style="padding:8px;font-size:11px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(img.name)+'</div>'
@@ -765,17 +765,17 @@ window._doDeleteFolder=function(path){
   })
 };
 window._imgToggleSelect=function(){
-  imgSelectMode=!imgSelectMode;
-  imgSelected.clear();
+  window.imgSelectMode=!window.imgSelectMode;
+  window.imgSelected.clear();
   var btn=$('imgSelectBtn');
-  if(btn)btn.textContent=imgSelectMode?'取消':'选择';
+  if(btn)btn.textContent=window.imgSelectMode?'取消':'选择';
   _imgUpdateSelectUI()
 };
 window._imgToggleItem=function(el){
   var path=el.dataset.path;
   if(!path)return;
-  if(imgSelected.has(path))imgSelected.delete(path);
-  else imgSelected.add(path);
+  if(window.imgSelected.has(path))window.imgSelected.delete(path);
+  else window.imgSelected.add(path);
   _imgUpdateSelectUI()
 };
 function _imgUpdateSelectUI(){
@@ -783,18 +783,18 @@ function _imgUpdateSelectUI(){
   document.querySelectorAll('.img-card').forEach(function(el){
     var cb=el.querySelector('.img-check');
     if(!cb)return;
-    cb.style.display=imgSelectMode?'flex':'none';
+    cb.style.display=window.imgSelectMode?'flex':'none';
     var path=el.dataset.path;
-    cb.textContent=imgSelected.has(path)?'✓':'';
-    cb.style.background=imgSelected.has(path)?'var(--primary)':'rgba(0,0,0,.3)';
-    el.style.borderColor=imgSelected.has(path)?'var(--primary)':'var(--outline-variant)';
+    cb.textContent=window.imgSelected.has(path)?'✓':'';
+    cb.style.background=window.imgSelected.has(path)?'var(--primary)':'rgba(0,0,0,.3)';
+    el.style.borderColor=window.imgSelected.has(path)?'var(--primary)':'var(--outline-variant)';
   });
   // 批量操作栏
   var bar=$('imgBatchBar');
   if(!bar)return;
-  if(imgSelectMode&&imgSelected.size>0){
+  if(window.imgSelectMode&&window.imgSelected.size>0){
     bar.style.display='flex';
-    bar.innerHTML='<span>'+imgSelected.size+' 项</span>'
+    bar.innerHTML='<span>'+window.imgSelected.size+' 项</span>'
       +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCopy()">复制</button>'
       +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCut()">剪切</button>'
       +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#FF8A80;border-radius:16px" onclick="_imgBatchDelete()">删除</button>'
@@ -804,7 +804,7 @@ function _imgUpdateSelectUI(){
 }
 window._imgBatchCopy=function(){
   var urls=[];
-  imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
+  window.imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
   var text=urls.join('\n');
   if(navigator.clipboard){navigator.clipboard.writeText(text)}
   else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
@@ -813,23 +813,23 @@ window._imgBatchCopy=function(){
 };
 window._imgBatchCut=function(){
   var urls=[];
-  imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
+  window.imgSelected.forEach(function(p){urls.push('https://pluslogic.eu.org/images/'+p)});
   var text=urls.join('\n');
   if(navigator.clipboard){navigator.clipboard.writeText(text)}
   else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
   toast('已复制 '+urls.length+' 个链接，正在删除原文件…');
-  var paths=Array.from(imgSelected);var done=0;
+  var paths=Array.from(window.imgSelected);var done=0;
   paths.forEach(function(p){
     api('DELETE','/api/admin/images/'+p).then(function(){done++;if(done===paths.length){toast('剪切完成');_imgToggleSelect();loadImages()}})
   })
 };
 window._imgBatchDelete=function(){
-  var count=imgSelected.size;
+  var count=window.imgSelected.size;
   showDialog('<h3>批量删除</h3><p>确认删除 '+count+' 个项目？</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doBatchDelete()">删除</button></div>')
 };
 window._doBatchDelete=function(){
   closeDialog();
-  var paths=Array.from(imgSelected);var done=0;
+  var paths=Array.from(window.imgSelected);var done=0;
   paths.forEach(function(p){
     api('DELETE','/api/admin/images/'+p).then(function(){done++;if(done===paths.length){toast('已删除 '+paths.length+' 项');_imgToggleSelect();loadImages()}})
   })
