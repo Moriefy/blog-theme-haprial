@@ -93,7 +93,7 @@ function route(){
   else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(path.match(/^\/editor\/(\d+)$/)[1])}
   else if(path==='/comments')page='comments';
   else if(path==='/friends')page='friends';
-  else if(path==='/images'||path.match(/^\/images\//)){page='images'};
+  else if(path==='/images'||path.match(/^\/images\//)){page='images'}
   else if(path==='/trash')page='trash';
   else if(path==='/settings')page='settings';
   else page='dashboard';
