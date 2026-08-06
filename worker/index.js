@@ -636,7 +636,7 @@ export default {
           const filePath = `static/images/${imgFolder}/${safeName}`;
           const result = await githubPushBinary(env, filePath, data, `image: ${safeName}`);
           if (!result.ok) return json({ error: '上传失败', detail: result }, 500);
-          return json({ ok: true, url: `/images/${imgFolder}/${safeName}`, path: filePath });
+          return json({ ok: true, url: `https://pluslogic.eu.org/images/${imgFolder}/${safeName}`, path: filePath });
         }
 
         // GET /api/admin/images/list — 列出图片
