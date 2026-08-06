@@ -85,6 +85,28 @@ async function githubPush(env, filePath, content, message) {
   return { ok: resp.ok, status: resp.status };
 }
 
+// ── GitHub Push Binary (base64 direct, no re-encode) ──
+async function githubPushBinary(env, filePath, base64Content, message) {
+  const token = env.GITHUB_TOKEN;
+  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  if (!token) return { ok: false, error: 'no token' };
+  let sha = null;
+  try {
+    const getReq = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+    });
+    if (getReq.ok) { const d = await getReq.json(); sha = d.sha; }
+  } catch (e) {}
+  const body = { message, content: base64Content, branch: 'main' };
+  if (sha) body.sha = sha;
+  const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'Haprial-Worker' },
+    body: JSON.stringify(body)
+  });
+  return { ok: resp.ok, status: resp.status };
+}
+
 async function githubDelete(env, filePath, message) {
   const token = env.GITHUB_TOKEN;
   const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
@@ -612,7 +634,7 @@ export default {
           if (!['jpg','jpeg','png','gif','webp','svg','ico'].includes(ext)) return json({ error: '不支持的格式' }, 400);
           const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
           const filePath = `static/images/${imgFolder}/${safeName}`;
-          const result = await githubPush(env, filePath, data, `image: ${safeName}`);
+          const result = await githubPushBinary(env, filePath, data, `image: ${safeName}`);
           if (!result.ok) return json({ error: '上传失败', detail: result }, 500);
           return json({ ok: true, url: `/images/${imgFolder}/${safeName}`, path: filePath });
         }

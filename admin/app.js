@@ -262,7 +262,8 @@ function renderEditor(){
     +'<button onclick="window._insMd(\'> \',\'\')">Quote</button>'
     +'<button onclick="window._insMd(\'- \',\'\')">List</button>'
     +'<button onclick="window._insMd(\'---\\n\',\'\')">HR</button>'
-    +'<label style="cursor:pointer;display:inline-flex;align-items:center"><input type="file" accept="image/*" multiple style="display:none" id="edImgUpload"><button type="button">Img+</button></label>'
+    +'<input type="file" accept="image/*" multiple style="display:none" id="edImgUpload">'
+    +'<button type="button" onclick="document.getElementById(\'edImgUpload\').click()">Img+</button>'
     +'<span style="flex:1"></span>'
     +'<button class="md3-btn md3-btn-text" onclick="window._previewToggle()" id="previewToggleBtn" style="display:none">预览</button>'
     +'</div>'
@@ -668,7 +669,8 @@ var imgCurrentFolder='';
 function renderImages(){
   var c=$('content');
   c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
-    +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>';
+    +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>'
+    +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
   $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传图片</label>';
   $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
   loadImages()
@@ -698,14 +700,14 @@ function loadImages(){
     // 图片
     (d.images||[]).forEach(function(img){
       var fullUrl='https://pluslogic.eu.org'+img.url;
+      var imgPath=imgCurrentFolder?imgCurrentFolder+'/'+img.name:img.name;
       html+='<div style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms" onmouseover="this.style.borderColor=\'var(--primary)\'" onmouseout="this.style.borderColor=\'var(--outline-variant)\'">'
-        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden">'
+        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="_imgPreview(\''+fullUrl+'\')">'
         +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" style="max-width:100%;max-height:100%;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">'
         +'</div>'
         +'<div style="padding:8px;font-size:11px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(img.name)+'</div>'
-        +'<div style="position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity 200ms" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0" onclick="this.parentElement.style.opacity=1">'
-        +'<button class="md3-btn md3-btn-text" style="height:28px;padding:0 8px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;border-radius:14px" onclick="event.stopPropagation();copyImageUrl(\''+fullUrl+'\')">复制</button>'
-        +'<button class="md3-btn md3-btn-text" style="height:28px;padding:0 8px;font-size:11px;background:rgba(186,26,26,.8);color:#fff;border-radius:14px" onclick="event.stopPropagation();deleteImage(\''+esc(img.name)+'\')">删除</button>'
+        +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
+        +'<button class="md3-btn md3-btn-text" style="width:28px;height:28px;padding:0;min-width:0;font-size:16px;background:rgba(0,0,0,.5);color:#fff;border-radius:14px;line-height:1" onclick="_imgMenu(event,\''+fullUrl+'\',\''+esc(imgPath)+'\')">⋯</button>'
         +'</div>'
         +'</div>';
     });
@@ -716,6 +718,26 @@ function loadImages(){
 window._imgEnterFolder=function(name){
   imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
   renderImages()
+};
+window._imgPreview=function(url){
+  var lb=$('imgLightbox');var img=$('imgLightboxImg');
+  if(!lb||!img)return;
+  img.src=url;lb.style.display='flex'
+};
+window._imgMenu=function(e,url,path){
+  e.stopPropagation();
+  // 关闭已有的菜单
+  var old=document.querySelector('.img-ctx-menu');if(old)old.remove();
+  var menu=document.createElement('div');
+  menu.className='img-ctx-menu';
+  menu.style.cssText='position:fixed;z-index:300;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:var(--e3);padding:4px 0;min-width:140px';
+  menu.style.left=Math.min(e.clientX,innerWidth-160)+'px';
+  menu.style.top=Math.min(e.clientY,innerHeight-120)+'px';
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(\''+url+'\',\'_blank\');this.parentElement.remove()">新窗口打开</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="deleteImage(\''+path+'\');this.parentElement.remove()">删除</button>';
+  document.body.appendChild(menu);
+  setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
 };
 window.copyImageUrl=function(url){
   if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
