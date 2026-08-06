@@ -79,6 +79,7 @@ var routes={
   '/editor':function(){renderEditor()},
   '/comments':function(){renderComments()},
   '/friends':function(){renderFriends()},
+  '/images':function(){renderImages()},
   '/trash':function(){renderTrash()},
   '/settings':function(){renderSettings()}
 };
@@ -92,6 +93,7 @@ function route(){
   else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(path.match(/^\/editor\/(\d+)$/)[1])}
   else if(path==='/comments')page='comments';
   else if(path==='/friends')page='friends';
+  else if(path==='/images')page='images';
   else if(path==='/trash')page='trash';
   else if(path==='/settings')page='settings';
   else page='dashboard';
@@ -630,6 +632,92 @@ window._restoreTrash=function(id){api('POST','/api/admin/trash/'+id+'/restore').
 window._delTrash=function(id){api('DELETE','/api/admin/trash/'+id).then(function(d){if(d.ok){toast('已彻底删除');renderTrash()}})};
 window._emptyTrash=function(){showDialog('<h3>清空回收站</h3><p>所有内容将被彻底删除，不可恢复</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmEmptyTrash()">清空</button></div>')};
 window._confirmEmptyTrash=function(){closeDialog();api('DELETE','/api/admin/trash').then(function(d){if(d.ok){toast('已清空');renderTrash()}})};
+
+// ════════════════════════════════════════
+//  图片管理
+// ════════════════════════════════════════
+var imgCurrentFolder='';
+function renderImages(){
+  var c=$('content');
+  c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
+    +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>';
+  $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传图片</label>';
+  $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
+  loadImages()
+}
+function loadImages(){
+  var url='/api/admin/images/list';
+  if(imgCurrentFolder)url+='?folder='+encodeURIComponent(imgCurrentFolder);
+  api('GET',url).then(function(d){
+    var grid=$('imgGrid');if(!grid)return;
+    var bc=$('imgBreadcrumb');
+    // 面包屑
+    var bcHtml='<a href="javascript:void(0)" onclick="imgCurrentFolder=\'\';renderImages()" style="color:var(--primary);cursor:pointer">图片</a>';
+    if(imgCurrentFolder){
+      var parts=imgCurrentFolder.split('/');
+      var path='';
+      parts.forEach(function(p,i){
+        path+=(i>0?'/':'')+p;
+        bcHtml+=' / <a href="javascript:void(0)" onclick="imgCurrentFolder=\''+path+'\';renderImages()" style="color:var(--primary);cursor:pointer">'+p+'</a>';
+      });
+    }
+    bc.innerHTML=bcHtml;
+    var html='';
+    // 文件夹
+    (d.folders||[]).forEach(function(f){
+      html+='<div style="padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" onclick="imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+\'/\'+\''+f+'\':\''+f+'\';renderImages()"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div></div>';
+    });
+    // 图片
+    (d.images||[]).forEach(function(img){
+      var fullUrl='https://pluslogic.eu.org'+img.url;
+      html+='<div style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms" onmouseover="this.style.borderColor=\'var(--primary)\'" onmouseout="this.style.borderColor=\'var(--outline-variant)\'">'
+        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden">'
+        +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" style="max-width:100%;max-height:100%;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">'
+        +'</div>'
+        +'<div style="padding:8px;font-size:11px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(img.name)+'</div>'
+        +'<div style="position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity 200ms" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0" onclick="this.parentElement.style.opacity=1">'
+        +'<button class="md3-btn md3-btn-text" style="height:28px;padding:0 8px;font-size:11px;background:rgba(0,0,0,.6);color:#fff;border-radius:14px" onclick="event.stopPropagation();copyImageUrl(\''+fullUrl+'\')">复制</button>'
+        +'<button class="md3-btn md3-btn-text" style="height:28px;padding:0 8px;font-size:11px;background:rgba(186,26,26,.8);color:#fff;border-radius:14px" onclick="event.stopPropagation();deleteImage(\''+esc(img.name)+'\')">删除</button>'
+        +'</div>'
+        +'</div>';
+    });
+    if(!html)html='<div class="empty">暂无图片</div>';
+    grid.innerHTML=html
+  })
+}
+window.copyImageUrl=function(url){
+  if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
+  else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('URL 已复制')}
+};
+window.deleteImage=function(name){
+  showDialog('<h3>确认删除</h3><p>图片 "'+esc(name)+'" 将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doDeleteImage(\''+esc(name)+'\')">删除</button></div>')
+};
+window._doDeleteImage=function(name){
+  closeDialog();
+  var path=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
+  api('DELETE','/api/admin/images/'+path).then(function(d){
+    if(d.ok){toast('已删除');loadImages()}
+    else toast('删除失败')
+  })
+};
+function uploadImages(files){
+  if(!files||!files.length)return;
+  var folder=imgCurrentFolder||new Date().toISOString().slice(0,7).replace('-','/');
+  var total=files.length,done=0;
+  toast('上传中… 0/'+total);
+  Array.from(files).forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(){
+      var base64=reader.result.split(',')[1];
+      api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
+        done++;
+        if(done===total){toast('上传完成 '+total+' 张');loadImages()}
+        else toast('上传中… '+done+'/'+total)
+      }).catch(function(){done++;toast('上传失败: '+file.name)})
+    };
+    reader.readAsDataURL(file)
+  })
+};
 
 // ════════════════════════════════════════
 //  设置

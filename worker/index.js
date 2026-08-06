@@ -600,6 +600,48 @@ export default {
           const data = { articles: articles.results, comments: comments.results, friends: friends.results, exportedAt: new Date().toISOString() };
           return new Response(JSON.stringify(data, null, 2), { headers: { ...cors, 'Content-Type': 'application/json', 'Content-Disposition': 'attachment; filename=haprial-export.json' } });
         }
+
+        // ── 图片管理 ──
+        // POST /api/admin/images/upload — 上传图片
+        if (method === 'POST' && path === '/api/admin/images/upload') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const { data, name, folder } = body;
+          if (!data || !name) return json({ error: '缺少图片数据或文件名' }, 400);
+          const imgFolder = folder || new Date().toISOString().slice(0,7).replace('-','/');
+          const ext = name.split('.').pop().toLowerCase();
+          if (!['jpg','jpeg','png','gif','webp','svg','ico'].includes(ext)) return json({ error: '不支持的格式' }, 400);
+          const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const filePath = `static/images/${imgFolder}/${safeName}`;
+          const result = await githubPush(env, filePath, data, `image: ${safeName}`);
+          if (!result.ok) return json({ error: '上传失败', detail: result }, 500);
+          return json({ ok: true, url: `/images/${imgFolder}/${safeName}`, path: filePath });
+        }
+
+        // GET /api/admin/images/list — 列出图片
+        if (method === 'GET' && path === '/api/admin/images/list') {
+          const folder = url.searchParams.get('folder') || '';
+          const token = env.GITHUB_TOKEN;
+          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const ghPath = folder ? `static/images/${folder}` : 'static/images';
+          const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${ghPath}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (!resp.ok) return json({ images: [], folders: [] });
+          const items = await resp.json();
+          const images = items.filter(i => i.type === 'file' && i.name !== '.gitkeep').map(i => ({
+            name: i.name, url: `/images/${folder ? folder + '/' : ''}${i.name}`, size: i.size, sha: i.sha
+          }));
+          const folders = items.filter(i => i.type === 'dir').map(i => i.name);
+          return json({ images, folders });
+        }
+
+        // DELETE /api/admin/images/:path — 删除图片
+        if (method === 'DELETE' && path.startsWith('/api/admin/images/')) {
+          const imgPath = path.replace('/api/admin/images/', '');
+          if (!imgPath || imgPath.includes('..')) return json({ error: '无效路径' }, 400);
+          const result = await githubDelete(env, `static/images/${imgPath}`, `image delete: ${imgPath}`);
+          return json({ ok: result.ok });
+        }
       }
 
       return json({ error: 'Not Found' }, 404);
