@@ -107,9 +107,10 @@ a{color:var(--primary);text-decoration:none}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .no-results{display:none;text-align:center;padding:40px 0;font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;color:var(--outline)}
 .no-results.show{display:block;animation:fadeIn .3s ease both}
-.pagination{display:flex;align-items:center;justify-content:center;gap:2px;padding:8px 0 0;visibility:hidden;opacity:0;transition:opacity 200ms,visibility 200ms}
+.pagination{display:flex;align-items:center;gap:2px;padding:8px 0 0;visibility:hidden;opacity:0;transition:opacity 200ms,visibility 200ms;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;justify-content:center;-webkit-overflow-scrolling:touch}
+.pagination::-webkit-scrollbar{display:none}
 .pagination.show{visibility:visible;opacity:1}
-.pg-btn{min-width:44px;height:44px;border-radius:var(--shape-full);border:none;background:none;color:var(--on-surface-variant);font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color 200ms;position:relative;overflow:hidden;padding:0 6px}
+.pg-btn{min-width:36px;height:36px;border-radius:var(--shape-full);border:none;background:none;color:var(--on-surface-variant);font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:color 200ms,background 200ms;position:relative;overflow:hidden;padding:0 4px;flex-shrink:0}
 .pg-btn:hover:not(:disabled){background:var(--surface-container-high);transform:scale(1.08)}
 .pg-btn:active:not(:disabled){transition-duration:60ms}
 .pg-btn.active{background:var(--primary-container);color:var(--on-primary-container);font-weight:600}
