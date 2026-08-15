@@ -293,7 +293,7 @@
 
   CS.prototype._show = function (total) {
     this.cnt.textContent = total > 0 ? '(' + total + ')' : '';
-    if (!this.comments.length) { this.lw.innerHTML = '<div class="cs-empty">畅所欲言，自由发挥吧～</div>'; return; }
+    if (!this.comments.length) { this.lw.innerHTML = '<div class="cs-empty">众爱卿为何一言不发</div>'; return; }
     this.lw.innerHTML = '<ul class="cs-list">' + tree(this.comments, 0) + '</ul>'
       + (this.more ? '<button class="cs-load-more">加载更多评论</button>' : '');
   };
