@@ -488,7 +488,7 @@ ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/
 ${themeInitScript()}
 ${postPageScript()}
 window.__initLightbox(document.querySelector('.article-body'));
-(function(){var tc=document.querySelector('.toc'),av=1785775352document.querySelector('.av-content'),ht=null;if(!tc||!av)return;function thr(){return av.getBoundingClientRect().right}function show(){clearTimeout(ht);tc.classList.add('visible')}function hide(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},1500)}document.addEventListener('mousemove',function(e){if(e.clientX>=thr())show();else hide()});tc.addEventListener('mouseenter',function(){clearTimeout(ht)});tc.addEventListener('mouseleave',function(){hide()})})();
+(function(){var tc=document.querySelector('.toc'),av=document.querySelector('.av-content')||document.querySelector('main'),ht=null;if(!tc||!av)return;function thr(){return av.getBoundingClientRect().right}function show(){clearTimeout(ht);tc.classList.add('visible')}function hide(){clearTimeout(ht);ht=setTimeout(function(){tc.classList.remove('visible')},1500)}document.addEventListener('mousemove',function(e){if(e.clientX>=thr())show();else hide()});tc.addEventListener('mouseenter',function(){clearTimeout(ht)});tc.addEventListener('mouseleave',function(){hide()})})();
 ${config.comments&&config.comments.enabled&&config.comments.api?'(function(){var el=document.getElementById("commentSectionInner");if(el&&typeof HaprialComments!=="undefined")new HaprialComments(el,{api:"'+escHtml(config.comments.api)+'",page:"/posts/'+id+'/"})})();':''}
 </script>
 </body>
