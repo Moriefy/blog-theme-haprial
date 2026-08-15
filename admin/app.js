@@ -28,6 +28,7 @@ function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');c
 function showDialog(html){$('dialog').innerHTML=html;$('dialogOverlay').classList.add('open')}
 function closeDialog(){$('dialogOverlay').classList.remove('open')}
 window.closeDialog=closeDialog;
+$('dialogOverlay').addEventListener('click',function(e){if(e.target===this)closeDialog()});
 
 // ── 时间 ──
 function timeAgo(ds){var s=Math.floor((Date.now()-new Date(ds+'Z').getTime())/1000);if(s<60)return'刚刚';if(s<3600)return(s/60|0)+'分钟前';if(s<86400)return(s/3600|0)+'小时前';if(s<2592000)return(s/86400|0)+'天前';return new Date(ds+'Z').toLocaleDateString('zh-CN')}
@@ -63,10 +64,12 @@ function logout(){token='';try{localStorage.removeItem('admin_token')}catch(e){}
 $('loginForm').addEventListener('submit',function(e){
   e.preventDefault();
   var pw=$('loginPassword').value;if(!pw)return;
+  var btn=$('loginBtn');if(btn.disabled)return;btn.disabled=true;btn.textContent='登录中…';
+  $('loginError').style.display='none';
   api('POST','/api/admin/auth',{password:pw}).then(function(d){
     if(d.ok){token=d.token;try{localStorage.setItem('admin_token',token)}catch(e){};showApp()}
-    else{$('loginError').textContent=d.error||'登录失败';$('loginError').style.display='block'}
-  }).catch(function(){$('loginError').textContent='网络错误';$('loginError').style.display='block'})
+    else{$('loginError').textContent=d.error||'登录失败';$('loginError').style.display='block';btn.disabled=false;btn.textContent='登录'}
+  }).catch(function(){$('loginError').textContent='网络错误';$('loginError').style.display='block';btn.disabled=false;btn.textContent='登录'})
 });
 $('logoutBtn').addEventListener('click',logout);
 
@@ -91,14 +94,14 @@ function route(){
   if(path==='/')page='dashboard';
   else if(path==='/articles')page='articles';
   else if(path==='/editor'){page='editor';editingId=null}
-  else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(path.match(/^\/editor\/(\d+)$/)[1])}
+  else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(RegExp.$1)}
   else if(path==='/comments')page='comments';
   else if(path==='/friends')page='friends';
   else if(path==='/images'||path.match(/^\/images\//)){page='images'}
   else if(path==='/trash')page='trash';
   else if(path==='/settings')page='settings';
   else page='dashboard';
-  if(path!=='editor'&&!path.match(/^\/editor\/\d+$/)){
+  if(page!=='editor'){
     clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
     window._autoSaveLocal=null;window._autoSaveD1=null
   }
@@ -367,7 +370,9 @@ function renderEditor(){
     }catch(e){}
   },5000);
   window._autoSaveD1=setInterval(function(){
-    if(editingId)saveArticle('draft');
+    if(!editingId)return;
+    var cur=$('edContent').value;
+    if(cur!==_lastSavedContent){saveArticle('draft');_lastSavedContent=cur}
   },60000)
 }
 function updatePreview(){
@@ -384,6 +389,7 @@ window._previewToggle=function(){
   var pp=$('edPreview');pp.classList.toggle('show')
 };
 var _saveDebounce=null;
+var _lastSavedContent='';
 window._saveDraft=function(){saveArticle('draft')};
 window._saveArticle=function(){
   if(_saveDebounce)return;
@@ -406,7 +412,8 @@ function saveArticle(status){
   var title=$('edTitle').value.trim();
   var content=$('edContent').value;
   if(!title){toast('请输入标题');return}
-  if(!content){toast('请输入内容');return}
+  if(!content&&status==='published'){toast('请输入内容');return}
+  _lastSavedContent=content;
   var tags=$('edTags').value.split(',').map(function(t){return t.trim()}).filter(Boolean);
   var body={title:title,date:$('edDate').value,slug:$('edSlug').value.trim(),tags:tags,category:$('edCat').value.trim(),excerpt:$('edExcerpt').value.trim(),content:content,status:status};
   var p=editingId?api('PUT','/api/admin/articles/'+editingId,body):api('POST','/api/admin/articles',body);
@@ -468,14 +475,12 @@ function findArtBySlug(slug){
   return null
 }
 function loadCommentArticles(){
-  Promise.all([
-    api('GET','/api/admin/articles?status=all'),
-    api('GET','/api/admin/comments?limit=1')
-  ]).then(function(results){
-    cmtAllArticles=results[0].articles||[];
-    var d=results[1];
+  var artsLoaded=false,cmtsLoaded=false,artsData=null,cmtsData=null;
+  function tryRender(){
+    if(!artsLoaded||!cmtsLoaded)return;
+    cmtAllArticles=(artsData&&artsData.articles)||[];
+    var d=cmtsData||{comments:[],total:0,pages:[]};
     cmtData=d;
-    // 建立 slug -> 文章映射
     cmtArticles={};
     cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
     var pages=d.pages||[];
@@ -504,7 +509,9 @@ function loadCommentArticles(){
       cmtSelectedPage=pages[0];
       loadPageComments(cmtSelectedPage)
     }
-  })
+  }
+  api('GET','/api/admin/articles?status=all').then(function(d){artsData=d}).catch(function(){}).finally(function(){artsLoaded=true;tryRender()});
+  api('GET','/api/admin/comments?limit=1').then(function(d){cmtsData=d}).catch(function(){}).finally(function(){cmtsLoaded=true;tryRender()});
 }
 function loadPageComments(pageSlug){
   var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
@@ -606,7 +613,7 @@ function loadFriends(){
     var el=$('friendList');if(!el)return;
     if(!friends.length){el.innerHTML='<div class="empty">暂无友链</div>';return}
     el.innerHTML=friends.map(function(f){
-      return '<div class="friend-card">'
+      return '<div class="list-card">'
         +'<img class="friend-avatar" src="'+esc(f.avatar||'')+'" alt="'+esc(f.name)+'" onerror="this.style.display=\'none\'">'
         +'<div class="friend-info"><div class="friend-name">'+esc(f.name)+'</div><div class="friend-url">'+esc(f.url)+'</div><div class="friend-desc">'+esc(f.desc||'')+'</div></div>'
         +'<div class="action-group"><button class="md3-btn md3-btn-text" onclick="window._editFriend('+f.id+')">编辑</button><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delFriend('+f.id+')">删除</button></div></div>'
@@ -650,7 +657,7 @@ function renderTrash(){
     var el=$('trashList');if(!el)return;
     if(!trashList.length){el.innerHTML='<div class="empty">回收站是空的</div>';return}
     el.innerHTML=trashList.map(function(t){
-      return '<div class="friend-card"><div class="friend-info"><div class="friend-name">'+esc(t.title)+'</div><div class="friend-desc">类型: '+esc(t.type)+' | 删除于 '+esc(t.deleted_at)+'</div></div>'
+      return '<div class="list-card"><div class="friend-info"><div class="friend-name">'+esc(t.title)+'</div><div class="friend-desc">类型: '+esc(t.type)+' | 删除于 '+esc(t.deleted_at)+'</div></div>'
         +'<div class="action-group"><button class="md3-btn md3-btn-text" onclick="window._restoreTrash('+t.id+')">恢复</button><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delTrash('+t.id+')">彻底删除</button></div></div>'
     }).join('')
   })
@@ -676,10 +683,10 @@ function renderImages(){
   if(m&&m[1])imgCurrentFolder=decodeURIComponent(m[1]);
   else if(h==='/images')imgCurrentFolder='';
   var c=$('content');
-  c.innerHTML='<div id="imgBreadcrumb" style="margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)"></div>'
-    +'<div id="imgGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"><div class="empty">加载中…</div></div>'
-    +'<div id="imgBatchBar" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--on-surface);color:var(--surface);padding:10px 20px;border-radius:20px;z-index:200;gap:12px;align-items:center;box-shadow:var(--e3);font-size:13px"></div>'
-    +'<div id="imgPasteBar" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--primary);color:var(--on-primary);padding:10px 20px;border-radius:20px;z-index:200;gap:12px;align-items:center;box-shadow:var(--e3);font-size:13px"></div>'
+  c.innerHTML='<div class="breadcrumb" id="imgBreadcrumb"></div>'
+    +'<div class="img-grid" id="imgGrid"><div class="empty">加载中…</div></div>'
+    +'<div class="batch-bar" id="imgBatchBar"></div>'
+    +'<div class="paste-bar" id="imgPasteBar"></div>'
     +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
   $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button>';
   $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
@@ -709,29 +716,27 @@ function loadImages(){
     }
     bc.innerHTML=bcHtml;
     var html='';
-    // 文件夹
     (d.folders||[]).forEach(function(f){
       var folderPath=imgCurrentFolder?imgCurrentFolder+'/'+f:f;
-      html+='<div style="position:relative;padding:16px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms" data-folder="'+esc(f)+'" onclick="if(!window.imgSelectMode)_imgEnterFolder(this.dataset.folder)">'
+      html+='<div class="folder-card" data-folder="'+esc(f)+'" onclick="if(!window.imgSelectMode)_imgEnterFolder(this.dataset.folder)">'
         +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
-        +'<button class="md3-btn md3-btn-text" style="width:24px;height:24px;padding:0;min-width:0;font-size:14px;background:rgba(0,0,0,.4);color:#fff;border-radius:12px;line-height:1" onclick="_imgFolderMenu(event,\''+esc(folderPath)+'\')">⋯</button>'
+        +'<button class="img-menu-btn" onclick="_imgFolderMenu(event,\''+esc(folderPath)+'\')">⋯</button>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
         +'<div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div>'
         +'</div>';
     });
-    // 图片
     (d.images||[]).forEach(function(img){
       var fullUrl=SITE_URL+img.url;
       var imgPath=imgCurrentFolder?imgCurrentFolder+'/'+img.name:img.name;
-      html+='<div class="img-card" data-path="'+esc(imgPath)+'" data-url="'+esc(fullUrl)+'" style="position:relative;border:1px solid var(--outline-variant);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 200ms">'
-        +'<div style="aspect-ratio:1;background:var(--surface-container-high);display:flex;align-items:center;justify-content:center;overflow:hidden" onclick="if(!window.imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
-        +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" style="max-width:100%;max-height:100%;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">'
+      html+='<div class="img-card" data-path="'+esc(imgPath)+'" data-url="'+esc(fullUrl)+'">'
+        +'<div class="img-thumb" onclick="if(!window.imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
+        +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" loading="lazy" onerror="this.style.display=\'none\'">'
         +'</div>'
-        +'<div style="padding:8px;font-size:11px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(img.name)+'</div>'
-        +'<div class="img-check" style="display:none;position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3);align-items:center;justify-content:center;font-size:12px;color:#fff"></div>'
+        +'<div class="img-name">'+esc(img.name)+'</div>'
+        +'<div class="img-check"></div>'
         +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
-        +'<button class="md3-btn md3-btn-text" style="width:24px;height:24px;padding:0;min-width:0;font-size:14px;background:rgba(0,0,0,.5);color:#fff;border-radius:12px;line-height:1" onclick="_imgMenu(event,\''+fullUrl+'\',\''+esc(imgPath)+'\')">⋯</button>'
+        +'<button class="img-menu-btn" onclick="_imgMenu(event,\''+fullUrl+'\',\''+esc(imgPath)+'\')">⋯</button>'
         +'</div>'
         +'</div>';
     });
@@ -770,10 +775,9 @@ window.addEventListener('popstate',function(){
 });
 window._imgFolderMenu=function(e,path){
   e.stopPropagation();
-  var old=document.querySelector('.img-ctx-menu');if(old)old.remove();
+  var old=document.querySelector('.ctx-menu');if(old)old.remove();
   var menu=document.createElement('div');
-  menu.className='img-ctx-menu';
-  menu.style.cssText='position:fixed;z-index:300;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:var(--e3);padding:4px 0;min-width:140px';
+  menu.className='ctx-menu';
   menu.style.left=Math.min(e.clientX,innerWidth-160)+'px';
   menu.style.top=Math.min(e.clientY,innerHeight-80)+'px';
   menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="_imgDeleteFolder(\''+path+'\');this.parentElement.remove()">删除文件夹</button>';
@@ -829,9 +833,9 @@ function _imgUpdateSelectUI(){
   if(window.imgSelectMode&&window.imgSelected.size>0){
     bar.style.display='flex';
     bar.innerHTML='<span>'+window.imgSelected.size+' 项</span>'
-      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCopy()">📋 复制</button>'
-      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border-radius:16px" onclick="_imgBatchCut()">✂️ 剪切</button>'
-      +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#FF8A80;border-radius:16px" onclick="_imgBatchDelete()">🗑️ 删除</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCopy()">📋 复制</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCut()">✂️ 剪切</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:#FF8A80" onclick="_imgBatchDelete()">🗑️ 删除</button>'
   }else{
     bar.style.display='none'
   }
@@ -869,10 +873,9 @@ window._imgPreview=function(url){
 };
 window._imgMenu=function(e,url,path){
   e.stopPropagation();
-  var old=document.querySelector('.img-ctx-menu');if(old)old.remove();
+  var old=document.querySelector('.ctx-menu');if(old)old.remove();
   var menu=document.createElement('div');
-  menu.className='img-ctx-menu';
-  menu.style.cssText='position:fixed;z-index:300;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:12px;box-shadow:var(--e3);padding:4px 0;min-width:160px';
+  menu.className='ctx-menu';
   menu.style.left=Math.min(e.clientX,innerWidth-180)+'px';
   menu.style.top=Math.min(e.clientY,innerHeight-200)+'px';
   menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">📋 复制</button>'
@@ -905,8 +908,8 @@ function _imgUpdatePasteBar(){
   var label=imgClipboard.type==='copy'?'复制':'剪切';
   bar.style.display='flex';
   bar.innerHTML='<span>'+label+' '+count+' 项</span>'
-    +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 12px;font-size:12px;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:16px" onclick="_imgShowPastePicker()">选择目标并粘贴</button>'
-    +'<button class="md3-btn md3-btn-text" style="height:32px;padding:0 8px;font-size:12px;color:rgba(255,255,255,.7);border-radius:16px" onclick="imgClipboard=null;_imgUpdatePasteBar()">✕</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="_imgShowPastePicker()">选择目标并粘贴</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="imgClipboard=null;_imgUpdatePasteBar()">✕</button>'
 }
 window._imgShowPastePicker=function(){
   if(!imgClipboard||!imgClipboard.paths.length){toast('剪贴板为空');return}
