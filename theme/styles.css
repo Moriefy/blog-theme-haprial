@@ -377,10 +377,8 @@ a{color:var(--primary);text-decoration:none}
 .fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Ripple ── */
-.ripple{position:absolute;border-radius:50%;background:var(--ripple);pointer-events:none;z-index:2;opacity:1;transform:scale(0);animation:ripExpand .5s cubic-bezier(.4,0,.2,1) forwards}
-.ripple.fade-out{animation:ripFade .35s cubic-bezier(.4,0,1,1) forwards}
-@keyframes ripExpand{to{transform:scale(6);opacity:1}}
-@keyframes ripFade{to{opacity:0}}
+.ripple{position:absolute;border-radius:50%;background:var(--ripple);pointer-events:none;z-index:2;animation:ripExpand .4s cubic-bezier(0,0,.2,1) forwards}
+@keyframes ripExpand{0%{transform:scale(0);opacity:1}100%{transform:scale(4);opacity:0}}
 
 /* ── Comment & Footer ── */
 .comment-section{margin-top:32px;padding-top:24px;border-top:1px solid var(--outline-variant)}
