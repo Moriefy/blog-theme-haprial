@@ -145,9 +145,9 @@ a{color:var(--primary);text-decoration:none}
 .archive-year-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(32px,6vw,48px);font-weight:300;color:var(--on-surface);letter-spacing:.02em;padding:24px 0 16px 12px;line-height:1.1;border-bottom:1px solid var(--outline-variant);margin-bottom:12px;display:flex;align-items:baseline;gap:12px}
 .archive-year-count{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--outline)}
 @keyframes archiveReveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.archive-card{display:flex;align-items:center;gap:16px;padding:14px 16px;cursor:pointer;border-radius:var(--shape-m);opacity:0;position:relative;overflow:hidden;transition:transform 200ms var(--motion-standard);border:1px solid transparent;margin-bottom:4px}
+.archive-card{display:flex;align-items:center;gap:16px;padding:14px 16px;cursor:pointer;border-radius:var(--shape-m);opacity:0;position:relative;overflow:hidden;transition:transform 200ms var(--motion-standard);border:1px solid var(--outline-variant);margin-bottom:4px}
 #pageArchive.active .archive-card{animation:fadeUp .25s cubic-bezier(.4,0,.2,1) var(--arch-d,0ms) both}
-.archive-card:hover{background:var(--surface-container-low);transform:translateX(4px)}
+.archive-card:hover{border-color:var(--primary);box-shadow:var(--e2);transform:translateY(-3px)}
 .archive-card:active{transition-duration:60ms}
 .archive-card-date{display:flex;flex-direction:column;align-items:center;min-width:48px;flex-shrink:0}
 .archive-card-month{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:10px;font-weight:600;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;line-height:1}
