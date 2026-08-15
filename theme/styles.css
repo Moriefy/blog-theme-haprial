@@ -24,7 +24,7 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{font-family:'Noto Sans SC','PingFang SC',Georgia,serif;background:var(--surface);color:var(--on-surface);line-height:1.75;font-size:16px;overflow-x:hidden;transition:background-color 250ms ease,color 250ms ease;display:flex;flex-direction:column;min-height:100vh}
+body{font-family:'Noto Sans SC','PingFang SC',Georgia,serif;background:var(--surface);color:var(--on-surface);line-height:1.75;font-size:16px;overflow-x:hidden;display:flex;flex-direction:column;min-height:100vh}
 body.locked{overflow:hidden}
 @media(max-width:768px){body.locked{padding-right:0!important}}
 a{color:var(--primary);text-decoration:none}
@@ -56,7 +56,7 @@ a{color:var(--primary);text-decoration:none}
 .tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;will-change:transform;transition:transform 300ms cubic-bezier(.4,0,.2,1)}
 
 /* ── Page Transitions ── */
-.page{display:none;padding-bottom:40px;contain:content;will-change:transform,opacity}.page.active{display:block;flex:1}
+.page{display:none;padding-bottom:40px;contain:content}.page.active{display:block;flex:1}
 @keyframes slideInRight{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideOutLeft{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-16px)}}
@@ -212,8 +212,9 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Skeleton Loader ── */
 .skel-wrap{padding:28px 0}
-@keyframes skelShimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%) 0}}
-.skel-line{height:14px;border-radius:6px;margin-bottom:12px;background:linear-gradient(90deg,var(--surface-container-high) 0,var(--surface-container) 40%,var(--surface-container-high) 80%);background-size:200px 100%;animation:skelShimmer 1.6s ease-in-out infinite}
+@keyframes skelShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.skel-line{height:14px;border-radius:6px;margin-bottom:12px;background:var(--surface-container-high);position:relative;overflow:hidden}
+.skel-line::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0,var(--surface-container) 40%,transparent 80%);animation:skelShimmer 1.6s ease-in-out infinite}
 .skel-w60{width:60%}.skel-w70{width:70%}.skel-w75{width:75%}.skel-w80{width:80%}.skel-w85{width:85%}.skel-w90{width:90%}.skel-w95{width:95%}.skel-w100{width:100%}
 .skel-gap{height:24px}
 
@@ -391,7 +392,7 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Reduced Motion ── */
 @media(prefers-reduced-motion:reduce){
-  .ripple,.card,.tag-card,.cat-card,.fl-card,.archive-card,.sv-item,.page.slide-in-right,.page.slide-in-left,.hero h1,.hero p,.filter-bar.on,.no-results.show{animation:none!important}
+  .ripple,.card,.tag-card,.cat-card,.fl-card,.archive-card,.sv-item,.page.slide-in-right,.page.slide-in-left,.hero h1,.hero p,.filter-bar.on,.no-results.show,.skel-line::after{animation:none!important}
   .si,.article-body>*,.toc,.toc-drawer,.toc-scrim,.search-view,.article-view,.fab,.fab-comment,.tab-bar,.rprog,.card,.tag-card,.cat-card,.fl-card,.archive-card,.icon-btn,.art-nav-btn,.pg-btn,.sv-item,.footer-link,.about-link{transition:none!important}
   .lightbox-img,.lightbox{transition:none!important}
 }
@@ -400,6 +401,7 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
   .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
+  .page.active{animation:fadeIn .12s ease both}
   .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text;touch-action:auto}
   .mermaid-block.zoomed svg{touch-action:none}
   .mermaid-block svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
