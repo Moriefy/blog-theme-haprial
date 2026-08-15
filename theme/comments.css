@@ -35,14 +35,18 @@
 /* ── 评论表单 ── */
 .cs-form {
   margin-bottom: 24px;
-  padding: 20px;
-  background: var(--surface-container-lowest);
+  padding: 24px;
+  background: var(--surface-container-low);
   border: 1px solid var(--outline-variant);
   border-radius: var(--shape-l);
-  transition: border-color 200ms;
+  transition: border-color 250ms cubic-bezier(.4,0,.2,1), box-shadow 250ms cubic-bezier(.4,0,.2,1);
 }
 .cs-form:focus-within {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(61,90,110,.1);
+}
+[data-theme="dark"] .cs-form:focus-within {
+  box-shadow: 0 0 0 3px rgba(154,176,191,.12);
 }
 
 /* 回复指示器 */
@@ -99,19 +103,23 @@
   flex: 1;
   min-width: 0;
   height: 44px;
-  padding: 0 12px;
-  border: none;
-  border-bottom: 1.5px solid var(--outline-variant);
-  border-radius: 0;
-  background: none;
+  padding: 0 14px;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--shape-m);
+  background: var(--surface-container-lowest);
   color: var(--on-surface);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
-  transition: border-color 200ms;
+  transition: border-color 250ms cubic-bezier(.4,0,.2,1), background 250ms cubic-bezier(.4,0,.2,1), box-shadow 250ms cubic-bezier(.4,0,.2,1);
 }
 .cs-form input:focus {
   outline: none;
-  border-bottom-color: var(--primary);
+  border-color: var(--primary);
+  background: var(--surface-container-lowest);
+  box-shadow: 0 0 0 3px rgba(61,90,110,.08);
+}
+[data-theme="dark"] .cs-form input:focus {
+  box-shadow: 0 0 0 3px rgba(154,176,191,.1);
 }
 .cs-form input::placeholder {
   color: var(--outline);
@@ -124,26 +132,42 @@
 }
 .cs-form textarea {
   width: 100%;
-  min-height: 100px;
-  padding: 14px 0;
-  border: none;
-  border-bottom: 2px solid var(--outline-variant);
-  border-radius: 0;
-  background: none;
+  min-height: 110px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--shape-m);
+  background: var(--surface-container-lowest);
   color: var(--on-surface);
   font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
   font-size: 14px;
   line-height: 1.75;
   resize: vertical;
-  transition: border-color 200ms;
+  transition: border-color 250ms cubic-bezier(.4,0,.2,1), background 250ms cubic-bezier(.4,0,.2,1), box-shadow 250ms cubic-bezier(.4,0,.2,1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-variant) transparent;
 }
 .cs-form textarea:focus {
   outline: none;
-  border-bottom-color: var(--primary);
+  border-color: var(--primary);
+  background: var(--surface-container-lowest);
+  box-shadow: 0 0 0 3px rgba(61,90,110,.08);
+}
+[data-theme="dark"] .cs-form textarea:focus {
+  box-shadow: 0 0 0 3px rgba(154,176,191,.1);
 }
 .cs-form textarea::placeholder {
   color: var(--outline);
   font-size: 13px;
+}
+.cs-form textarea::-webkit-scrollbar {
+  width: 6px;
+}
+.cs-form textarea::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  border-radius: 3px;
+}
+.cs-form textarea::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* 按钮组 — 下划线下方，右对齐 */
@@ -157,8 +181,8 @@
 
 /* 放弃按钮 — MD3 Text Button */
 .cs-discard {
-  height: 36px;
-  padding: 0 16px;
+  height: 38px;
+  padding: 0 18px;
   border: none;
   border-radius: var(--shape-full);
   background: none;
@@ -167,7 +191,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 150ms;
+  transition: background 200ms cubic-bezier(.4,0,.2,1);
 }
 .cs-discard:hover {
   background: var(--primary-container);
@@ -175,8 +199,8 @@
 
 /* 提交按钮 — MD3 Filled Button */
 .cs-submit {
-  height: 36px;
-  padding: 0 20px;
+  height: 38px;
+  padding: 0 24px;
   border: none;
   border-radius: var(--shape-full);
   background: var(--primary);
@@ -186,7 +210,7 @@
   font-weight: 500;
   cursor: pointer;
   box-shadow: var(--e1);
-  transition: box-shadow 200ms, transform 100ms, opacity 200ms;
+  transition: box-shadow 250ms cubic-bezier(.4,0,.2,1), transform 100ms cubic-bezier(.4,0,.2,1), opacity 200ms;
   position: relative;
   overflow: hidden;
 }
@@ -566,15 +590,18 @@
 /* ── 响应式 ── */
 @media (max-width: 768px) {
   .cs-form-row {
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
   }
   .cs-form input[type="text"],
   .cs-form input[type="email"],
   .cs-form input[type="url"] {
-    font-size: 14px;
+    font-size: 16px;
+    height: 46px;
   }
   .cs-form textarea {
     min-height: 100px;
+    font-size: 16px;
   }
   .cs-replies {
     margin-left: 24px;
@@ -584,7 +611,10 @@
     gap: 4px;
   }
   .cs-form {
-    padding: 16px;
+    padding: 18px;
+  }
+  .cs-btn-group {
+    padding-top: 14px;
   }
 }
 
