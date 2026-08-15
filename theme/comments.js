@@ -96,7 +96,7 @@
       + '<input type="email" name="em" placeholder="邮箱（可选）" maxlength="100" autocomplete="email" class="cs-input-mid">'
       + '<input type="url" name="web" placeholder="网站（可选）" maxlength="200" class="cs-input-last">'
       + '</div>'
-      + '<div class="cs-textarea-wrap"><textarea name="body" placeholder="写下你的评论" required maxlength="2000" rows="3"></textarea><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
+      + '<div class="cs-textarea-wrap"><textarea name="body" placeholder="畅所欲言，自由发挥吧～" required maxlength="2000" rows="3"></textarea><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
       + '</form>'
       + '<div class="cs-lw"></div>';
 
@@ -286,7 +286,7 @@
     this.f.pid.value = '0'; this.f.dep.value = '0';
     this.ri.classList.remove('visible');
     this.discardBtn.style.display = 'none';
-    this.f.body.placeholder = '写下你的评论…';
+    this.f.body.placeholder = '畅所欲言，自由发挥吧～';
     // 把表单移回原位（列表后面）
     this.lw.parentNode.insertBefore(this.f, this.lw);
   };
