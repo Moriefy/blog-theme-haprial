@@ -103,8 +103,10 @@ function route(){
   else page='dashboard';
   if(page!=='editor'){
     clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
-    window._autoSaveLocal=null;window._autoSaveD1=null
+    window._autoSaveLocal=null;window._autoSaveD1=null;
+    if(window._edBeforeUnload){window.removeEventListener('beforeunload',window._edBeforeUnload);window._edBeforeUnload=null}
   }
+  if(page!=='images'&&window._imgLbKeydown){document.removeEventListener('keydown',window._imgLbKeydown);window._imgLbKeydown=null}
   currentPage=page;
   // 更新导航高亮
   document.querySelectorAll('.nav-item[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page)});
@@ -260,13 +262,15 @@ function renderEditor(){
     +'<input type="file" accept="image/*" multiple style="display:none" id="edImgUpload">'
     +'<button type="button" onclick="document.getElementById(\'edImgUpload\').click()">Img+</button>'
     +'<span style="flex:1"></span>'
+    +'<span class="ed-save-status" id="edSaveStatus"></span>'
     +'<button class="md3-btn md3-btn-text" onclick="window._previewToggle()" id="previewToggleBtn" style="display:none">预览</button>'
     +'</div>'
     +'<div class="editor-wrap">'
     +'<div class="editor-pane"><textarea id="edContent" placeholder="Markdown 内容…"></textarea></div>'
     +'<div class="preview-pane" id="edPreview"></div>'
-    +'</div>';
-  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._saveDraft()">存草稿</button><button class="md3-btn md3-btn-filled" onclick="window._saveArticle()">发布</button>';
+    +'</div>'
+    +'<div class="ed-wordcount" id="edWordcount"></div>';
+  $('topbarActions').innerHTML='<span class="ed-save-status" id="edSaveStatusTop"></span><button class="md3-btn md3-btn-outlined" onclick="window._saveDraft()">存草稿</button><button class="md3-btn md3-btn-filled" onclick="window._saveArticle()">发布</button>';
   var ed=$('edContent');
   // 日期变化时自动填充备注前缀
   $('edDate').addEventListener('change',function(){
@@ -276,7 +280,7 @@ function renderEditor(){
     slug.value=this.value.replace(/-/g,'');
   });
   $('edSlug').addEventListener('input',function(){this.dataset.manual='1'});
-  ed.addEventListener('input',function(){updatePreview()});
+  ed.addEventListener('input',function(){updatePreview();_edUpdateWordcount()});
   // 滚动同步：编辑器 → 预览
   var scrollSyncTimer=null;
   ed.addEventListener('scroll',function(){
@@ -367,18 +371,39 @@ function renderEditor(){
         cat:$('edCat').value,tags:$('edTags').value,excerpt:$('edExcerpt').value,
         content:$('edContent').value
       }))
+      _edSetSaveStatus('已保存本地','ok');
     }catch(e){}
   },5000);
   window._autoSaveD1=setInterval(function(){
     if(!editingId)return;
     var cur=$('edContent').value;
-    if(cur!==_lastSavedContent){saveArticle('draft');_lastSavedContent=cur}
-  },60000)
+    if(cur!==_lastSavedContent){_edSetSaveStatus('保存中…','');saveArticle('draft');_lastSavedContent=cur}
+  },60000);
+  // beforeunload 防丢失
+  window._edBeforeUnload=function(e){e.preventDefault();e.returnValue=''};
+  window.addEventListener('beforeunload',window._edBeforeUnload);
+  _edUpdateWordcount()
 }
 function updatePreview(){
   var raw=$('edContent').value;
   $('edPreview').innerHTML=mdToHtml(raw)
 }
+function _edUpdateWordcount(){
+  var el=$('edWordcount');if(!el)return;
+  var text=($('edContent').value||'').replace(/<[^>]+>/g,'').replace(/[#*`~\[\]()!>\-|]/g,'');
+  var cn=(text.match(/[\u4e00-\u9fff]/g)||[]).length;
+  var en=(text.match(/[a-zA-Z]+/g)||[]).length;
+  var total=cn+en;
+  var min=Math.ceil(cn/400+en/200);if(min<1)min=1;
+  el.textContent=total+' 字 · 约 '+min+' 分钟阅读';
+}
+window._edSetSaveStatus=function(text,type){
+  ['edSaveStatus','edSaveStatusTop'].forEach(function(id){
+    var el=$(id);if(!el)return;
+    el.textContent=text;
+    el.className='ed-save-status'+(type?' ed-save-'+type:'');
+  });
+};
 window._insMd=function(before,after){
   var ta=$('edContent');var s=ta.selectionStart,e=ta.selectionEnd;var sel=ta.value.substring(s,e);
   ta.value=ta.value.substring(0,s)+before+sel+after+ta.value.substring(e);
@@ -424,6 +449,7 @@ function saveArticle(status){
         if(d.github.ok)ghMsg=' · GitHub 已同步';
         else if(d.github.error)ghMsg=' · GitHub 失败: '+d.github.error
       }
+      _edSetSaveStatus('已保存','ok');
       toast((editingId?'已更新':'已创建')+ghMsg);
       if(!editingId&&d.id){
         // 新建文章后：清除新建草稿缓存，设置 editingId
@@ -688,12 +714,50 @@ function renderImages(){
     +'<div class="batch-bar" id="imgBatchBar"></div>'
     +'<div class="paste-bar" id="imgPasteBar"></div>'
     +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
-  $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button>';
+  $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button><button class="md3-btn md3-btn-outlined" onclick="_imgNewFolder()">新建文件夹</button>';
   $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
+  // 拖拽上传
+  var grid=$('imgGrid');
+  if(grid){
+    grid.addEventListener('dragover',function(e){e.preventDefault();grid.classList.add('drag-over')});
+    grid.addEventListener('dragleave',function(){grid.classList.remove('drag-over')});
+    grid.addEventListener('drop',function(e){
+      e.preventDefault();grid.classList.remove('drag-over');
+      var files=[];
+      Array.from(e.dataTransfer.files).forEach(function(f){if(f.type.startsWith('image/'))files.push(f)});
+      if(files.length)uploadImages(files);
+      else toast('请拖入图片文件');
+    });
+  }
+  // Lightbox 键盘导航
+  window._imgLbKeydown=function(e){
+    var lb=$('imgLightbox');if(!lb||lb.style.display==='none')return;
+    if(e.key==='Escape'){lb.style.display='none';return}
+    var allImgs=[];document.querySelectorAll('.img-card').forEach(function(el){var u=el.dataset.url;if(u)allImgs.push(u)});
+    if(!allImgs.length)return;
+    var cur=$('imgLightboxImg').src;
+    var idx=allImgs.indexOf(cur);
+    if(e.key==='ArrowRight'&&idx<allImgs.length-1){$('imgLightboxImg').src=allImgs[idx+1]}
+    if(e.key==='ArrowLeft'&&idx>0){$('imgLightboxImg').src=allImgs[idx-1]}
+  };
+  document.addEventListener('keydown',window._imgLbKeydown);
   loadImages();
-  // 更新粘贴条
   _imgUpdatePasteBar()
 }
+window._imgNewFolder=function(){
+  showDialog('<h3>新建文件夹</h3><div style="margin:16px 0"><input class="md3-input" id="newFolderName" placeholder="文件夹名称"></div><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="_imgDoNewFolder()">创建</button></div>');
+  setTimeout(function(){var el=$('newFolderName');if(el)el.focus()},100)
+};
+window._imgDoNewFolder=function(){
+  var name=($('newFolderName')||{}).value||'';
+  name=name.trim().replace(/[/\\:*?"<>|]/g,'');
+  if(!name){toast('请输入文件夹名称');return}
+  var path=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
+  api('POST','/api/admin/images/folder',{path:path}).then(function(d){
+    if(d.ok){toast('文件夹已创建');closeDialog();loadImages()}
+    else toast(d.error||'创建失败')
+  })
+};
 function loadImages(){
   var url='/api/admin/images/list';
   if(imgCurrentFolder)url+='?folder='+encodeURIComponent(imgCurrentFolder);
@@ -882,6 +946,7 @@ window._imgMenu=function(e,url,path){
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">✂️ 剪切</button>'
     +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window._copyMdUrl(\''+url+'\');this.parentElement.remove()">复制 Markdown</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(\''+url+'\',\'_blank\');this.parentElement.remove()">新窗口打开</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgFindRefs(\''+url+'\');this.parentElement.remove()">查找引用</button>'
     +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
@@ -1037,6 +1102,11 @@ window._fpDoPaste=function(){
 window.copyImageUrl=function(url){
   if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
   else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('URL 已复制')}
+};
+window._copyMdUrl=function(url){
+  var md='![]('+url+')';
+  if(navigator.clipboard){navigator.clipboard.writeText(md);toast('Markdown 已复制')}
+  else{var ta=document.createElement('textarea');ta.value=md;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Markdown 已复制')}
 };
 window.deleteImage=function(name){
   showDialog('<h3>确认删除</h3><p>图片 "'+esc(name)+'" 将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doDeleteImage(\''+esc(name)+'\')">删除</button></div>')
