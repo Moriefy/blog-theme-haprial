@@ -16,11 +16,6 @@ const OUT_DIR = path.join(ROOT, 'dist');
 const CACHE_FILE = path.join(ROOT, '.build-cache.json');
 const SITE_CONFIG = JSON.parse(fs.readFileSync(path.join(ROOT, 'site.config.json'), 'utf8'));
 
-// ── Build Cache ─────────────────────────────────────────────────────────────
-function fileHash(filePath) {
-  const buf = fs.readFileSync(filePath);
-  return crypto.createHash('md5').update(buf).digest('hex');
-}
 
 function loadCache() {
   try { return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); } catch (e) { return {}; }
@@ -241,7 +236,7 @@ function postPageScript() {
 
 // ── Generate Pages ──────────────────────────────────────────────────────────
 function buildIndexHtml(articleCardsHtml, config, opts) {
-  const { cssContent, themeTransition, jsContent, dataObj, articles, allTags } = opts;
+  const { cssContent, dataObj, articles, allTags } = opts;
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -277,7 +272,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 ${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id + '/article.json" as="fetch" crossorigin>').join('\n')}
-<style>${cssContent}${themeTransition}</style>
+<style>${cssContent}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
 ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352" media="print" onload="this.media=\'all\'">':''}
@@ -509,17 +504,8 @@ const allTags = computeTags(articles);
 const cats = computeCats(articles, SITE_CONFIG);
 const catMap = computeCatMap(articles);
 
-// Check if we can skip HTML generation (cache hit + no global change)
-const cachedOutput = prevCache.outputHashes || {};
-const newOutputHashes = {};
-
 // Read CSS for inlining (full CSS inline eliminates async flicker)
 const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8');
-
-// Add theme transition CSS — target only key elements (not *) to avoid mobile jank
-const themeTransition = ''; // theme snap — no transition to avoid jank
-
-const jsContent = fs.readFileSync(path.join(THEME_DIR, 'app.js'), 'utf8');
 
 // Build article cards
 const articleCardsHtml = articleOrder.map(id => articleCardHtml(id, articles[id])).join('\n    ');
@@ -554,7 +540,7 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 
 // Write index.html
 const indexHtml = buildIndexHtml(articleCardsHtml, SITE_CONFIG, {
-  cssContent, themeTransition, jsContent, dataObj, articles, allTags
+  cssContent, dataObj, articles, allTags
 });
 fs.writeFileSync(path.join(OUT_DIR, 'index.html'), indexHtml);
 console.log('  ✓ index.html');
@@ -862,7 +848,6 @@ syncToD1().then(() => {
   saveCache({
     globalFp,
     articles: loadArticles._newArticleCache || {},
-    outputHashes: newOutputHashes,
     lastBuild: new Date().toISOString()
   });
   console.log('   Cache saved for next build');

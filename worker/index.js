@@ -176,7 +176,7 @@ export default {
     const method = request.method;
     const path = url.pathname.replace(/\/+$/, '') || '/';
     const cors = {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': env.CORS_ORIGIN || '*',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
