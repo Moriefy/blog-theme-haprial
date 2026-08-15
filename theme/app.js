@@ -440,7 +440,7 @@ function toggleTheme(){var cur=document.documentElement.getAttribute('data-theme
 window.addEventListener('popstate',function(){if(searchView.classList.contains('open')){closeSearch(true);return}var st=history.state;if(!st)st=parseHash();applyRoute(st)});
 
 /* Ripple: cards excluded — they only ripple on click, not pointerdown */
-document.addEventListener('pointerdown',function(e){var el=e.target.closest('.fl-card,.art-nav-btn');if(!el||el.disabled||el.offsetParent===null)return;createRipple(e,el)},{passive:true});
+document.addEventListener('pointerdown',function(e){var el=e.target.closest('.fl-card,.art-nav-btn,.archive-card');if(!el||el.disabled||el.offsetParent===null)return;createRipple(e,el)},{passive:true});
 /* Hover prefetch: start loading article content on card hover */
 var _hoverTimer=null,_hoverId=null;
 document.addEventListener('mouseover',function(e){var card=e.target.closest('.card[data-id]');if(!card){if(_hoverTimer){clearTimeout(_hoverTimer);_hoverTimer=null;_hoverId=null}return}var hid=card.dataset.id;if(hid===_hoverId)return;if(_hoverTimer)clearTimeout(_hoverTimer);_hoverId=hid;_hoverTimer=setTimeout(function(){prefetchArticle(hid)},150)},{passive:true});
