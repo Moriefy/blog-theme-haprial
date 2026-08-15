@@ -590,8 +590,7 @@
 /* ── 响应式 ── */
 @media (max-width: 768px) {
   .cs-form-row {
-    flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .cs-form input[type="text"],
   .cs-form input[type="email"],
