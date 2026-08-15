@@ -1,3 +1,4 @@
+.theme-transitioning *{transition:background-color 200ms ease,color 200ms ease,border-color 200ms ease,fill 200ms ease,stroke 200ms ease!important}
 [data-theme="light"]{
   --primary:#3D5A6E;--on-primary:#fff;--primary-container:#D4DDE3;--on-primary-container:#1B2A33;
   --surface:#FFFFFF;--surface-container-lowest:#FFFFFF;--surface-container-low:#F8F9FA;
