@@ -271,7 +271,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-${articleOrder.slice(0, 3).map(id => '<link rel="prefetch" href="/posts/' + id + '/article.json" as="fetch" crossorigin>').join('\n')}
+
 <style>${cssContent}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
@@ -511,10 +511,10 @@ const cssContent = fs.readFileSync(path.join(THEME_DIR, 'styles.css'), 'utf8');
 const articleCardsHtml = articleOrder.map(id => articleCardHtml(id, articles[id])).join('\n    ');
 
 // Data object for client-side JS
-// Create lightweight articles (without content) for embedded data
+// Embed full article content into data for zero-fetch reads
 const articlesMeta = {};
 Object.entries(articles).forEach(([id, a]) => {
-  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category, pinned: a.pinned };
+  articlesMeta[id] = { date: a.date, dateISO: a.dateISO, rt: a.rt, wc: a.wc, title: a.title, excerpt: a.excerpt, tags: a.tags, category: a.category, pinned: a.pinned, content: a.content };
 });
 
 const commentsEnabled = !!(SITE_CONFIG.comments && SITE_CONFIG.comments.enabled);
@@ -554,8 +554,6 @@ articleOrder.forEach(id => {
   fs.writeFileSync(path.join(postDir, 'index.html'), buildPostHtml(id, articles[id], SITE_CONFIG, {
     articles, articleOrder
   }));
-  // Write article JSON for lazy loading
-  fs.writeFileSync(path.join(postDir, 'article.json'), JSON.stringify({ content: articles[id].content }));
   console.log('  ✓ posts/' + id + '/index.html');
 });
 
