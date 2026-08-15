@@ -786,7 +786,7 @@ function loadImages(){
         +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
         +'<button class="img-menu-btn" onclick="_imgFolderMenu(event,\''+esc(folderPath)+'\')">⋯</button>'
         +'</div>'
-        +'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+        +'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
         +'<div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div>'
         +'</div>';
     });

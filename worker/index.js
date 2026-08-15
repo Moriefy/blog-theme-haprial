@@ -692,6 +692,16 @@ export default {
           return json({ ok: true, url: `https://pluslogic.eu.org/images/${imgFolder}/${safeName}`, path: filePath });
         }
 
+        // POST /api/admin/images/folder — 新建文件夹
+        if (method === 'POST' && path === '/api/admin/images/folder') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const folderPath = (body.path || '').replace(/^\/+/, '').replace(/\/+$/, '');
+          if (!folderPath || folderPath.includes('..')) return json({ error: '无效路径' }, 400);
+          const result = await githubPush(env, `static/images/${folderPath}/.gitkeep`, '', `create folder: ${folderPath}`);
+          if (!result.ok) return json({ error: result.error || '创建失败' }, 500);
+          return json({ ok: true });
+        }
+
         // GET /api/admin/images/list — 列出图片
         if (method === 'GET' && path === '/api/admin/images/list') {
           const folder = url.searchParams.get('folder') || '';
@@ -764,6 +774,27 @@ export default {
           return json({ ok: true, url, name: fileName });
         }
 
+        // DELETE /api/admin/images/folder/:path — 删除文件夹（必须在通用 DELETE 之前）
+        if (method === 'DELETE' && path.startsWith('/api/admin/images/folder/')) {
+          const folderPath = decodeURIComponent(path.replace('/api/admin/images/folder/', ''));
+          if (!folderPath || folderPath.includes('..')) return json({ error: '无效路径' }, 400);
+          const token = env.GITHUB_TOKEN;
+          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const listResp = await fetch(`https://api.github.com/repos/${repo}/contents/static/images/${folderPath}`, {
+            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
+          });
+          if (!listResp.ok) return json({ error: '文件夹不存在' }, 404);
+          const items = await listResp.json();
+          let deleted = 0;
+          for (const item of items) {
+            if (item.type === 'file') {
+              const r = await githubDelete(env, item.path, `delete: ${item.path}`);
+              if (r.ok) deleted++;
+            }
+          }
+          return json({ ok: true, deleted });
+        }
+
         // DELETE /api/admin/images/:path — 删除图片
         if (method === 'DELETE' && path.startsWith('/api/admin/images/') && !path.includes('/references/')) {
           const imgPath = decodeURIComponent(path.replace('/api/admin/images/', ''));
@@ -773,9 +804,6 @@ export default {
           if (!result.ok) return json({ error: result.error || '删除失败' }, 500);
           return json({ ok: true });
         }
-
-        // DELETE /api/admin/images/folder/:path — 删除文件夹
-        if (method === 'DELETE' && path.startsWith('/api/admin/images/folder/')) {
           const folderPath = decodeURIComponent(path.replace('/api/admin/images/folder/', ''));
           if (!folderPath || folderPath.includes('..')) return json({ error: '无效路径' }, 400);
           const token = env.GITHUB_TOKEN;
