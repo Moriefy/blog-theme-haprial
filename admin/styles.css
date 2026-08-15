@@ -130,7 +130,8 @@ tr:hover td{background:var(--surface-container-high)}
 .status-published{background:#D4E8DF;color:#1B5E3B}
 .status-draft{background:#FFF3E0;color:#E65100}
 .tag-chip{display:inline-block;padding:2px 10px;border-radius:6px;background:var(--primary-container);color:var(--on-primary-container);font-size:11px;margin-right:4px;line-height:1.4}
-.action-group{display:flex;gap:4px;align-items:center}
+.action-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.art-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
 
 /* ── 筛选栏 ── */
 .filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -280,6 +281,7 @@ tr:hover td{background:var(--surface-container-high)}
    ══════════════════════════════════════ */
 .settings-section{margin-bottom:32px}
 .settings-section h3{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--outline-variant)}
+.settings-section .md3-input{max-width:400px;margin-bottom:12px}
 
 /* ══════════════════════════════════════
    弹窗
@@ -335,6 +337,9 @@ tr:hover td{background:var(--surface-container-high)}
   .topbar-title{font-size:15px}
   .topbar-actions{gap:4px}
   .content{padding:16px;padding-bottom:80px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* 批量操作栏适配 */
+  .batch-bar,.paste-bar{bottom:80px;font-size:12px;padding:8px 16px;border-radius:16px}
+  .batch-bar .md3-btn,.paste-bar .md3-btn{height:28px;padding:0 10px;font-size:11px}
   
   /* 统计 */
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:12px}
@@ -387,5 +392,7 @@ tr:hover td{background:var(--surface-container-high)}
   
   /* 底部导航 */
   .mobile-tabs{display:flex!important}
+  /* 设置页 */
+  .settings-section .md3-input{max-width:100%}
 }
 @media(min-width:769px){.mobile-tabs{display:none!important}}

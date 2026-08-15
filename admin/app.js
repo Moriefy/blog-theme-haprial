@@ -145,13 +145,14 @@ function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div
 // ════════════════════════════════════════
 //  文章管理
 // ════════════════════════════════════════
-var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='',artSearch='';
+var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='',artSearch='',artSelected=new Set();
 window._artNav=function(p){artPage=p;renderArtList()};
 window._artPrev=function(){artPage--;renderArtList()};
 window._artNext=function(){artPage++;renderArtList()};
 var artSearchTimer=null;
 function renderArticles(){
   var c=$('content');
+  artSelected.clear();
   c.innerHTML='<div class="filter-bar">'
     +'<input class="md3-input" id="artSearch" placeholder="搜索…" style="max-width:120px;min-width:80px">'
     +'<select class="md3-input" id="artStatus"><option value="all">状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
@@ -159,7 +160,8 @@ function renderArticles(){
     +'<select class="md3-input" id="artCatFilter"><option value="">分类</option></select>'
     +'<select class="md3-input" id="artTagFilter"><option value="">标签</option></select>'
     +'</div>'
-    +'<div class="table-wrap"><table><thead><tr><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="6" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
+    +'<div id="artBatchBar" class="batch-bar" style="display:none"></div>'
+    +'<div class="table-wrap"><table><thead><tr><th style="width:32px"></th><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="7" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
     +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
   $('artSearch').addEventListener('input',function(){clearTimeout(artSearchTimer);artSearchTimer=setTimeout(function(){artSearch=$('artSearch').value.trim().toLowerCase();artPage=0;renderArtList()},300)});
   $('artStatus').addEventListener('change',function(){artFilter=this.value;artPage=0;renderArtList()});
@@ -167,7 +169,7 @@ function renderArticles(){
   $('artCatFilter').addEventListener('change',function(){artCat=this.value;artPage=0;renderArtList()});
   $('artTagFilter').addEventListener('change',function(){artTag=this.value;artPage=0;renderArtList()});
   loadAllArticles();
-  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-text" onclick="window._exportAllArticles()">导出全部</button><button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
 }
 function loadAllArticles(){
   api('GET','/api/admin/articles?status=all').then(function(d){
@@ -202,11 +204,13 @@ function renderArtList(){
   var start=artPage*artPerPage;
   var pageItems=filtered.slice(start,start+artPerPage);
   var tb=$('artBody');if(!tb)return;
-  if(!pageItems.length){tb.innerHTML='<tr><td colspan="6" class="empty">暂无文章</td></tr>'}
+  if(!pageItems.length){tb.innerHTML='<tr><td colspan="7" class="empty">暂无文章</td></tr>'}
   else{tb.innerHTML=pageItems.map(function(a){
     var tags=[];try{tags=parseTags(a.tags)}catch(e){}
-    return '<tr><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
+    var checked=artSelected.has(a.id)?' checked':'';
+    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
     +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+a.id+')">导出</button>'
     +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
     +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
     +'</td></tr>'
@@ -231,6 +235,72 @@ window._delArt=function(id){
 window._confirmDelArt=function(id){
   closeDialog();
   api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadAllArticles()}})
+};
+// 文章多选
+function _artUpdateBatchBar(){
+  var bar=$('artBatchBar');if(!bar)return;
+  if(artSelected.size>0){
+    bar.style.display='flex';
+    bar.innerHTML='<span>'+artSelected.size+' 篇选中</span><button class="md3-btn md3-btn-text" onclick="window._exportSelectedArts()">导出选中</button>';
+  }else{bar.style.display='none'}
+}
+document.addEventListener('change',function(e){
+  if(e.target.classList.contains('art-cb')){
+    var id=parseInt(e.target.dataset.id);
+    if(e.target.checked)artSelected.add(id);else artSelected.delete(id);
+    _artUpdateBatchBar()
+  }
+});
+// 单篇导出
+window._exportSingleArt=function(id){
+  var a=articles.find(function(x){return x.id===id});
+  if(!a){toast('文章不存在');return}
+  api('GET','/api/admin/articles/'+id).then(function(d){
+    if(!d.article)return;
+    var art=d.article;
+    var md='---\ntitle: "'+art.title+'"\ndate: '+art.date+'\ncategory: '+art.category+'\ntags: ['+parseTags(art.tags).join(', ')+']\nexcerpt: "'+(art.excerpt||'')+'"\n---\n\n'+art.content;
+    var blob=new Blob([md],{type:'text/markdown'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(art.date||'article')+'.md';a.click();URL.revokeObjectURL(a.href);
+    toast('已导出')
+  })
+};
+// 批量导出
+function _exportArtsAsZip(artsToExport){
+  if(!artsToExport.length){toast('没有要导出的文章');return}
+  if(typeof JSZip==='undefined'){toast('JSZip 未加载');return}
+  toast('打包中…');
+  var zip=new JSZip();
+  var done=0,total=artsToExport.length;
+  artsToExport.forEach(function(a){
+    api('GET','/api/admin/articles/'+a.id).then(function(d){
+      if(d.article){
+        var art=d.article;
+        var md='---\ntitle: "'+art.title+'"\ndate: '+art.date+'\ncategory: '+art.category+'\ntags: ['+parseTags(art.tags).join(', ')+']\nexcerpt: "'+(art.excerpt||'')+'"\n---\n\n'+art.content;
+        zip.file((art.date||'unknown')+'-'+(art.slug||a.id)+'.md',md);
+      }
+      done++;
+      if(done===total){
+        zip.generateAsync({type:'blob'}).then(function(blob){
+          var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blog-export-'+new Date().toISOString().slice(0,10)+'.zip';a.click();URL.revokeObjectURL(a.href);
+          toast('已导出 '+total+' 篇文章')
+        })
+      }
+    })
+  })
+}
+window._exportSelectedArts=function(){
+  var selected=articles.filter(function(a){return artSelected.has(a.id)});
+  _exportArtsAsZip(selected)
+};
+window._exportAllArticles=function(){
+  _exportArtsAsZip(articles)
+};
+window._exportAllArticlesZip=function(){
+  api('GET','/api/admin/articles?status=all').then(function(d){
+    var all=d.articles||[];
+    if(!all.length){toast('没有文章');return}
+    _exportArtsAsZip(all)
+  })
 };
 
 // ════════════════════════════════════════
@@ -1172,6 +1242,7 @@ function renderSettings(){
     +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">从 GitHub 导入数据</button>'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._exportData()">导出全站数据</button>'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论数据</button>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._exportAllArticlesZip()">导出全部文章 (ZIP)</button>'
     +'</div></div>'
 }
 window._saveWebsite=function(){
