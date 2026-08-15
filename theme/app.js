@@ -440,7 +440,7 @@ function toggleTheme(){var cur=document.documentElement.getAttribute('data-theme
 window.addEventListener('popstate',function(){if(searchView.classList.contains('open')){closeSearch(true);return}var st=history.state;if(!st)st=parseHash();applyRoute(st)});
 
 /* Ripple: cards excluded — they only ripple on click, not pointerdown */
-document.addEventListener('pointerdown',function(e){var el=e.target.closest('.icon-btn,.fab,.tab,.tag-card,.cat-card,.fl-card,.filter-clear,.pg-btn,.art-nav-btn,.archive-card,.about-link,.about-skill');if(!el||el.disabled||el.offsetParent===null)return;createRipple(e,el)},{passive:true});
+document.addEventListener('pointerdown',function(e){var el=e.target.closest('.fl-card,.art-nav-btn');if(!el||el.disabled||el.offsetParent===null)return;createRipple(e,el)},{passive:true});
 /* Hover prefetch: start loading article content on card hover */
 var _hoverTimer=null,_hoverId=null;
 document.addEventListener('mouseover',function(e){var card=e.target.closest('.card[data-id]');if(!card){if(_hoverTimer){clearTimeout(_hoverTimer);_hoverTimer=null;_hoverId=null}return}var hid=card.dataset.id;if(hid===_hoverId)return;if(_hoverTimer)clearTimeout(_hoverTimer);_hoverId=hid;_hoverTimer=setTimeout(function(){prefetchArticle(hid)},150)},{passive:true});
@@ -452,8 +452,8 @@ document.addEventListener('click',function(e){
   if((t=e.target.closest('#artTags .tag'))&&t.dataset.tagname){var tn=t.dataset.tagname;activeFilterLabel=tn;activeFilterFn=function(c){var tags=(c.dataset.tags||'').split('\u001f');return tags.indexOf(tn)!==-1};closeArticleVisual();if(currentPage!=='articles'){switchPageVisual('articles','left')}replaceRoute({type:'page',page:'articles'});applyFilterDirect(tn,activeFilterFn);window.scrollTo({top:0,behavior:'smooth'});return}
   if((t=e.target.closest('.pg-btn'))&&!t.disabled){var p=t.dataset.pg;if(p==='prev')paginationPage--;else if(p==='next')paginationPage++;else paginationPage=parseInt(p);renderPaginationPage();var list=$('articleList');if(list)list.scrollIntoView({behavior:'smooth',block:'start'});pushRoute({type:'page',page:'articles',paginationPage:paginationPage});return}
   if((t=e.target.closest('.sv-item'))&&t.dataset.id){closeSearch();var sid=t.dataset.id;setTimeout(function(){pushRoute({type:'article',articleId:sid});openArticleVisual(sid)},150);return}
-  if((t=e.target.closest('.archive-card'))&&t.dataset.id){createRipple(e,t);pushRoute({type:'article',articleId:t.dataset.id});openArticleVisual(t.dataset.id);return}
-  if((t=e.target.closest('.card'))&&t.dataset.id){createRipple(e,t);prefetchArticle(t.dataset.id);pushRoute({type:'article',articleId:t.dataset.id});openArticleVisual(t.dataset.id);return}
+  if((t=e.target.closest('.archive-card'))&&t.dataset.id){pushRoute({type:'article',articleId:t.dataset.id});openArticleVisual(t.dataset.id);return}
+  if((t=e.target.closest('.card'))&&t.dataset.id){prefetchArticle(t.dataset.id);pushRoute({type:'article',articleId:t.dataset.id});openArticleVisual(t.dataset.id);return}
   if(e.target.closest('#avBack')){if(history.length>1)history.back();else{closeArticleVisual();pushRoute({type:'page',page:'articles'})}return}
   if(e.target.closest('#tocToggleBtn')){tocSheet.classList.contains('open')?closeTocSheet():openTocSheet();return}
   if(e.target.closest('#tocScrim')){closeTocSheet();return}
