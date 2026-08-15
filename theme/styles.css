@@ -401,7 +401,7 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
   .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
-  .card.show,#pageTags.active .tag-card,#pageCategories.active .cat-card,#pageArchive.active .archive-card,#pageFriends.active .fl-card,.sv-item{animation:none!important;opacity:1;transform:none}
+  .card.show{animation:none!important;opacity:1;transform:none}
   .article-view{transition:none!important}
   .article-body.revealed{transition:none!important}
   .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text;touch-action:auto}
