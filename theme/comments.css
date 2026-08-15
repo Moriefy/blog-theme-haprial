@@ -115,6 +115,12 @@
   font-size: 13px;
   letter-spacing: 0;
 }
+/* 竖分隔符 — 电脑端 */
+.cs-input-mid,
+.cs-input-last {
+  border-left: 1px solid var(--outline-variant);
+  padding-left: 12px;
+}
 
 /* 文本域 */
 .cs-textarea-wrap {
@@ -578,12 +584,19 @@
 /* ── 响应式 ── */
 @media (max-width: 768px) {
   .cs-form-row {
+    flex-direction: column;
     gap: 0;
   }
   .cs-form input[type="text"],
   .cs-form input[type="email"],
   .cs-form input[type="url"] {
     font-size: 16px;
+    height: 44px;
+  }
+  .cs-input-mid,
+  .cs-input-last {
+    border-left: none;
+    padding-left: 0;
   }
   .cs-form textarea {
     font-size: 16px;

@@ -92,11 +92,11 @@
       + '<input type="hidden" name="pid" value="0"><input type="hidden" name="dep" value="0">'
       + '<div class="cs-reply-indicator"><span>回复 <strong class="cs-rn"></strong></span><button type="button" class="cs-cr" aria-label="取消"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
       + '<div class="cs-form-row">'
-      + '<input type="text" name="nick" placeholder="昵称 *" required maxlength="30" autocomplete="name">'
-      + '<input type="email" name="em" placeholder="邮箱（可选）" maxlength="100" autocomplete="email">'
-      + '<input type="url" name="web" placeholder="网站（可选）" maxlength="200">'
+      + '<input type="text" name="nick" placeholder="昵称 *" required maxlength="30" autocomplete="name" class="cs-input-first">'
+      + '<input type="email" name="em" placeholder="邮箱（可选）" maxlength="100" autocomplete="email" class="cs-input-mid">'
+      + '<input type="url" name="web" placeholder="网站（可选）" maxlength="200" class="cs-input-last">'
       + '</div>'
-      + '<div class="cs-textarea-wrap"><textarea name="body" placeholder="写下你的评论…" required maxlength="2000" rows="3"></textarea><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
+      + '<div class="cs-textarea-wrap"><textarea name="body" placeholder="写下你的评论" required maxlength="2000" rows="3"></textarea><div class="cs-btn-group"><button type="button" class="cs-discard" style="display:none">放弃</button><button type="submit" class="cs-submit">发送</button></div></div>'
       + '</form>'
       + '<div class="cs-lw"></div>';
 
@@ -271,7 +271,7 @@
     this.rn.textContent = b.dataset.name;
     this.ri.classList.add('visible');
     this.discardBtn.style.display = '';
-    this.f.body.placeholder = '回复 ' + b.dataset.name + '…';
+    this.f.body.placeholder = '回复 ' + b.dataset.name;
     // 把表单移到被回复评论的下方
     if (it && it.nextSibling) {
       it.parentNode.insertBefore(this.f, it.nextSibling);
@@ -293,7 +293,7 @@
 
   CS.prototype._show = function (total) {
     this.cnt.textContent = total > 0 ? '(' + total + ')' : '';
-    if (!this.comments.length) { this.lw.innerHTML = '<div class="cs-empty">还没有评论，来抢沙发吧 ✨</div>'; return; }
+    if (!this.comments.length) { this.lw.innerHTML = '<div class="cs-empty">畅所欲言，自由发挥吧～</div>'; return; }
     this.lw.innerHTML = '<ul class="cs-list">' + tree(this.comments, 0) + '</ul>'
       + (this.more ? '<button class="cs-load-more">加载更多评论</button>' : '');
   };
