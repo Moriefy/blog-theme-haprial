@@ -720,7 +720,7 @@ export default {
           return json({ images, folders });
         }
 
-        // POST /api/admin/images/copy — 复制/移动文件（Worker 内部完成，不经前端中转 base64）
+        // POST /api/admin/images/copy — 复制/移动文件
         if (method === 'POST' && path === '/api/admin/images/copy') {
           let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
           const { srcPath, destFolder, mode } = body; // mode: 'copy' | 'cut'
@@ -803,25 +803,6 @@ export default {
           const result = await githubDelete(env, fullPath, `image delete: ${imgPath}`);
           if (!result.ok) return json({ error: result.error || '删除失败' }, 500);
           return json({ ok: true });
-        }
-          const folderPath = decodeURIComponent(path.replace('/api/admin/images/folder/', ''));
-          if (!folderPath || folderPath.includes('..')) return json({ error: '无效路径' }, 400);
-          const token = env.GITHUB_TOKEN;
-          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
-          // 列出文件夹内所有文件
-          const listResp = await fetch(`https://api.github.com/repos/${repo}/contents/static/images/${folderPath}`, {
-            headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
-          });
-          if (!listResp.ok) return json({ error: '文件夹不存在' }, 404);
-          const items = await listResp.json();
-          let deleted = 0;
-          for (const item of items) {
-            if (item.type === 'file') {
-              const r = await githubDelete(env, item.path, `delete: ${item.path}`);
-              if (r.ok) deleted++;
-            }
-          }
-          return json({ ok: true, deleted });
         }
 
         // GET /api/admin/images/references/:url — 查找引用
