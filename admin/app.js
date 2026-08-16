@@ -6,6 +6,13 @@ var token='';
 var currentPage='';
 var articles=[],friends=[],trashList=[];
 var cmtData={comments:[],total:0,pages:[]};
+
+// Theme
+var _th=null;try{_th=localStorage.getItem('admin_theme')}catch(e){}
+if(!_th)_th=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',_th);
+function _toggleTheme(){_th=_th==='light'?'dark':'light';document.documentElement.classList.add('theme-transitioning');document.documentElement.setAttribute('data-theme',_th);try{localStorage.setItem('admin_theme',_th)}catch(e){};var btn=document.getElementById('adminThemeBtn');if(btn)btn.textContent=_th==='dark'?'☀️':'🌙';setTimeout(function(){document.documentElement.classList.remove('theme-transitioning')},250)}
+setTimeout(function(){var btn=document.getElementById('adminThemeBtn');if(btn){btn.textContent=_th==='dark'?'☀️':'🌙';btn.addEventListener('click',_toggleTheme)}},0);
 var editingId=null;
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML};
@@ -58,7 +65,17 @@ function showLogin(){
   }).catch(function(){});
   $('loginPassword').focus()
 }
-function showApp(){$('loginPage').style.display='none';$('app').style.display='flex';route()}
+function showApp(){$('loginPage').style.display='none';$('app').style.display='flex';route();_initGlobalSearch()}
+function _initGlobalSearch(){
+  var btn=document.getElementById('adminSearchBtn');if(!btn)return;
+  btn.addEventListener('click',function(){
+    var q=prompt('搜索文章…');
+    if(!q)return;
+    q=q.toLowerCase();
+    location.hash='#/articles';
+    setTimeout(function(){var el=document.getElementById('artSearch');if(el){el.value=q;el.dispatchEvent(new Event('input'))}},100)
+  })
+}
 function logout(){token='';try{localStorage.removeItem('admin_token')}catch(e){};showLogin()}
 
 $('loginForm').addEventListener('submit',function(e){
@@ -374,7 +391,30 @@ function renderEditor(){
       if(e.key==='s'){e.preventDefault();window._saveArticle()}
       if(e.key==='b'){e.preventDefault();window._insMd('**','**')}
       if(e.key==='i'){e.preventDefault();window._insMd('*','*')}
+      if(e.key==='k'){e.preventDefault();var sel=this.value.substring(this.selectionStart,this.selectionEnd);window._insMd('['+(sel||'text')+'](',')')}
     }
+  });
+  // Drag & drop upload
+  ed.addEventListener('dragover',function(e){e.preventDefault();ed.style.borderColor='var(--primary)'});
+  ed.addEventListener('dragleave',function(){ed.style.borderColor=''});
+  ed.addEventListener('drop',function(e){
+    e.preventDefault();ed.style.borderColor='';
+    var files=[];Array.from(e.dataTransfer.files).forEach(function(f){if(f.type.startsWith('image/'))files.push(f)});
+    if(!files.length)return;
+    var dateVal=$('edDate').value||new Date().toISOString().slice(0,10);
+    var folder=dateVal.slice(0,4)+'/'+dateVal.slice(5,7);
+    var done=0;toast('上传中… 0/'+files.length);
+    files.forEach(function(file){
+      var reader=new FileReader();
+      reader.onload=function(){
+        var base64=reader.result.split(',')[1];
+        api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
+          done++;if(d.ok)window._insMd('![]('+d.url+')');
+          if(done===files.length)toast('上传完成');else toast('上传中… '+done+'/'+files.length);
+        }).catch(function(){done++;toast('上传失败')})
+      };
+      reader.readAsDataURL(file)
+    })
   });
   if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
   window.addEventListener('resize',function(){var btn=$('previewToggleBtn');if(btn)btn.style.display=window.innerWidth<=768?'':'none'});
@@ -427,13 +467,17 @@ function renderEditor(){
       var saved=localStorage.getItem('haprial_draft_new');
       if(saved){
         var d=JSON.parse(saved);
-        if(d.title)$('edTitle').value=d.title;
-        if(d.date)$('edDate').value=d.date;
-        if(d.slug)$('edSlug').value=d.slug;
-        if(d.cat)$('edCat').value=d.cat;
-        if(d.tags)$('edTags').value=d.tags;
-        if(d.excerpt)$('edExcerpt').value=d.excerpt;
-        if(d.content)ed.value=d.content;
+        if(d.title||d.content){
+          if(confirm('检测到未保存的草稿「'+(d.title||'无标题')+'」，是否恢复？')){
+            if(d.title)$('edTitle').value=d.title;
+            if(d.date)$('edDate').value=d.date;
+            if(d.slug)$('edSlug').value=d.slug;
+            if(d.cat)$('edCat').value=d.cat;
+            if(d.tags)$('edTags').value=d.tags;
+            if(d.excerpt)$('edExcerpt').value=d.excerpt;
+            if(d.content)ed.value=d.content;
+          }else{localStorage.removeItem('haprial_draft_new')}
+        }
       }
     }catch(e){}
     updatePreview()
@@ -488,7 +532,12 @@ window._insMd=function(before,after){
   ta.focus();updatePreview()
 };
 window._previewToggle=function(){
-  var pp=$('edPreview');pp.classList.toggle('show')
+  var pp=$('edPreview');
+  if(window.innerWidth<=768){
+    pp.classList.toggle('show');
+    if(pp.classList.contains('show')){pp.style.position='fixed';pp.style.inset='56px 0 0';pp.style.zIndex='50';pp.style.background='var(--surface)';pp.style.border='none';pp.style.borderRadius='0';pp.style.padding='20px';pp.style.overflow='auto'}
+    else{pp.style.position='';pp.style.inset='';pp.style.zIndex='';pp.style.background='';pp.style.border='';pp.style.borderRadius='';pp.style.padding='';pp.style.overflow=''}
+  }else{pp.classList.toggle('show')}
 };
 var _saveDebounce=null;
 var _lastSavedContent='';
