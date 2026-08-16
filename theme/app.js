@@ -488,32 +488,35 @@ if(initRoute.type==='article'){if(isReload){replaceRoute(initRoute);openArticleV
 
 
 
-// TOC hover — bind/unbind mousemove for zero overhead when article closed
+// TOC visibility — hover zone + auto-hide
 (function(){
   if(!toc||!articleView)return;
-  var hideTimer=null, artOpen=false, threshold=9999, thresholdDirty=true;
+  var hideTimer=null, artOpen=false, threshold=9999, thresholdDirty=true, inToc=false;
   function updateThreshold(){var av=document.querySelector('.av-content');if(av)threshold=av.getBoundingClientRect().right;thresholdDirty=false}
   function show(){clearTimeout(hideTimer);toc.classList.add('visible')}
   function scheduleHide(){clearTimeout(hideTimer);hideTimer=setTimeout(function(){toc.classList.remove('visible')},1500)}
+  function inRightZone(e){return e.clientX>=threshold}
   var moveRaf=null;
   function onMove(e){
     if(moveRaf)return;
     moveRaf=requestAnimationFrame(function(){
       moveRaf=null;
       if(thresholdDirty)updateThreshold();
-      if(e.clientX>=threshold)show();
-      else scheduleHide();
+      if(inRightZone({clientX:lastMouseX})){show()}
+      else if(!inToc){scheduleHide()}
     });
+    lastMouseX=e.clientX;
   }
-var _moveBound=false;
+  var lastMouseX=0;
+  var _moveBound=false;
   function bindMove(){if(!_moveBound){_moveBound=true;document.addEventListener('mousemove',onMove)}}
   function unbindMove(){if(_moveBound){_moveBound=false;document.removeEventListener('mousemove',onMove)}}
-  toc.addEventListener('mouseenter',function(){if(artOpen)clearTimeout(hideTimer)});
-  toc.addEventListener('mouseleave',function(){if(artOpen)scheduleHide()});
+  toc.addEventListener('mouseenter',function(){inToc=true;clearTimeout(hideTimer)});
+  toc.addEventListener('mouseleave',function(){inToc=false;scheduleHide()});
   var _origOpen=openArticleVisual;
   openArticleVisual=function(id){artOpen=true;thresholdDirty=true;bindMove();_origOpen(id)};
   var _origClose=closeArticleVisual;
-  closeArticleVisual=function(){artOpen=false;unbindMove();clearTimeout(hideTimer);toc.classList.remove('visible');_origClose()};
+  closeArticleVisual=function(){artOpen=false;inToc=false;unbindMove();clearTimeout(hideTimer);toc.classList.remove('visible');_origClose()};
   var _origImm=openArticleVisualImmediate;
   openArticleVisualImmediate=function(id){artOpen=true;thresholdDirty=true;bindMove();_origImm(id)};
   window.addEventListener('resize',function(){thresholdDirty=true});
