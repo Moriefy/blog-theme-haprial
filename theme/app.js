@@ -102,7 +102,7 @@ function _renderMermaidBlock(b){
           var _zfRaf=null,_bw=0,_bh=0,_sw0=0,_sh0=0;
           function _refreshDims(){
             _bw=b.clientWidth;_bh=b.clientHeight;
-            _sw0=innerSvg.offsetWidth;_sh0=innerSvg.offsetHeight;
+            var _sgr=innerSvg.getBoundingClientRect();_sw0=_sgr.width;_sh0=_sgr.height;
           }
           function clamp(){
             var bw=_bw,bh=_bh,sw,sh;
@@ -110,8 +110,8 @@ function _renderMermaidBlock(b){
             else{
               bw=b.clientWidth;bh=b.clientHeight;
               _bw=bw;_bh=bh;
-              sw=innerSvg.offsetWidth*scale;sh=innerSvg.offsetHeight*scale;
-              _sw0=innerSvg.offsetWidth;_sh0=innerSvg.offsetHeight;
+              var _sgr2=innerSvg.getBoundingClientRect();sw=_sgr2.width*scale;sh=_sgr2.height*scale;
+              _sw0=_sgr2.width;_sh0=_sgr2.height;
             }
             var maxX=Math.max((sw-bw)/2,0);
             var maxY=Math.max((sh-bh)/2,0);
@@ -143,7 +143,7 @@ function _renderMermaidBlock(b){
             // transform is scale(s) translate(tx/s,ty/s) with origin center center:
             //   screen = O + s*(p - C) + t   (O = svg layout origin, C = box center)
             var px=sx/s0,py=sy/s0;
-            var Cx=innerSvg.offsetWidth/2,Cy=innerSvg.offsetHeight/2;
+            var _sgr3=innerSvg.getBoundingClientRect();var Cx=_sgr3.width/2,Cy=_sgr3.height/2;
             // Keep the content point under the cursor fixed on screen:
             //   t1 = t0 + (s0-s1)*(p - C)
             scale=s1;
