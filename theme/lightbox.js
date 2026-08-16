@@ -21,6 +21,15 @@ window.__initLightbox = function(articleBody) {
   caption.setAttribute('aria-live', 'polite');
   lb.appendChild(caption);
 
+  // ── MD3 glass panel: wraps the image stage to give the whole viewer a
+  // frosted-card surface (solves the washed-out gap between scrim and image).
+  var lbPanel = document.createElement('div');
+  lbPanel.className = 'lb-panel';
+  if (lbStage) {
+    lbStage.insertBefore(lbPanel, lbWrap);
+    lbPanel.appendChild(lbWrap);
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
   var images = [];      // [{el, src, alt}, ...]
   var curIdx = 0;
@@ -247,11 +256,18 @@ window.__initLightbox = function(articleBody) {
     open(idx >= 0 ? idx : 0);
   });
 
-  // ── Click: close on scrim/stage ───────────────────────────────────────────
+  // ── Click: close on scrim/stage backdrop (outside the glass panel) ────────
+  // Stage fills the whole viewport behind the centered panel; clicking anywhere
+  // besides the panel, toolbar, bottombar or image closes the lightbox.
   if (lbStage) lbStage.addEventListener('click', function(e) {
     if (e.target === lbStage || e.target === lbScrim) close();
   });
   if (lbScrim) lbScrim.addEventListener('click', close);
+  // Clicking the glass panel surface (its padding / empty area) should keep the
+  // viewer open — only clicking the scrim outside the card closes it.
+  if (lbPanel) lbPanel.addEventListener('click', function(e) {
+    if (e.target === lbPanel) e.stopPropagation();
+  });
 
   // ── Click: zoom on image ──────────────────────────────────────────────────
   if (lbWrap) lbWrap.addEventListener('click', function(e) {
