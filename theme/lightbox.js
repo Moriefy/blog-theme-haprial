@@ -302,6 +302,8 @@ window.__initLightbox = function(articleBody) {
       dragStartX = curDragX; dragStartY = curDragY;
       lbImg.style.transformOrigin = panX + '% ' + panY + '%';
     }
+    var _dragMoved = false;
+    var DRAG_THRESHOLD = 5; // px of real movement needed to classify as a drag (not a click)
     lbWrap.addEventListener('mousedown', function(e) {
       if (scale <= 1) return;
       e.preventDefault();
@@ -309,17 +311,27 @@ window.__initLightbox = function(articleBody) {
       curDragX = e.clientX; curDragY = e.clientY;
       _dragOX = lbImg.offsetWidth; _dragOY = lbImg.offsetHeight;
       lbImg.style.transition = 'none';
-      justDragged = true;
+      _dragMoved = false; // do NOT set justDragged here anymore → a plain click can zoom-toggle
       lbWrap.classList.add('panning');
     });
     document.addEventListener('mousemove', function(e) {
       if (!dragging) return;
       curDragX = e.clientX; curDragY = e.clientY;
+      if (!_dragMoved &&
+          (Math.abs(curDragX - dragStartX) > DRAG_THRESHOLD ||
+           Math.abs(curDragY - dragStartY) > DRAG_THRESHOLD)) {
+        _dragMoved = true;
+      }
       if (!_dragRaf) _dragRaf = requestAnimationFrame(_applyMouseDrag);
     });
     document.addEventListener('mouseup', function() {
       if (!dragging) return;
-      dragging = false; justDragged = true;
+      dragging = false;
+      // Only suppress the upcoming click if the user actually dragged the image.
+      // A plain click (no move beyond threshold) leaves justDragged false so the
+      // click handler reaches resetZoom() and shrinks the image in one tap.
+      if (_dragMoved) justDragged = true;
+      _dragMoved = false;
       if (_dragRaf) { cancelAnimationFrame(_dragRaf); _dragRaf = null; }
       lbImg.style.transition = '';
       if (lbWrap) lbWrap.classList.remove('panning');
