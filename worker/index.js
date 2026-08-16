@@ -657,9 +657,12 @@ export default {
             const body = fmMatch ? raw.slice(fmMatch[0].length).trim() : raw.trim();
             const slug = file.name.replace(/\.md$/, '');
             const tags = Array.isArray(meta.tags) ? JSON.stringify(meta.tags) : (meta.tags || '[]');
+            const datePrefix = (meta.date || '').replace(/-/g, '');
+            const baseSlug = slug.replace(/^\d{8}-/, '');
+            const expectedSlug = datePrefix ? datePrefix + '-' + baseSlug : slug;
             await env.DB.prepare(`INSERT INTO articles (slug,title,date,tags,category,excerpt,content,status) VALUES (?,?,?,?,?,?,?,?)
               ON CONFLICT(slug) DO UPDATE SET title=excluded.title,date=excluded.date,tags=excluded.tags,category=excluded.category,excerpt=excluded.excerpt,content=excluded.content,updated_at=datetime('now')`)
-              .bind(slug, meta.title || slug, meta.date || '', tags, meta.category || '', meta.excerpt || '', body, 'published').run();
+              .bind(expectedSlug, meta.title || slug, meta.date || '', tags, meta.category || '', meta.excerpt || '', body, 'published').run();
             imported++;
           }
           return json({ ok: true, imported });

@@ -118,6 +118,7 @@
 
     this.discardBtn = d.querySelector('.cs-discard');
     this.f.addEventListener('submit', function (e) { self._submit(e); });
+    this.f.body.addEventListener('keydown', function (e) { if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') { e.preventDefault(); self.f.requestSubmit(); } });
     d.querySelector('.cs-cr').addEventListener('click', function () { self._cancel(); });
     this.discardBtn.addEventListener('click', function () { self._cancel(); });
 

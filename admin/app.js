@@ -555,7 +555,7 @@ function renderComments(){
   cmtSelectedPage='';
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
-    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
+    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div style="padding:8px 12px"><select class="md3-input" id="cmtFilter" style="height:32px;font-size:12px"><option value="all">全部文章</option><option value="with">有评论</option><option value="without">无评论</option></select></div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
@@ -579,30 +579,39 @@ function loadCommentArticles(){
     cmtData=d;
     cmtArticles={};
     cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
-    var pages=d.pages||[];
+    var pagesWithComments=d.pages||[];
+    var commentPageSet={};
+    pagesWithComments.forEach(function(p){commentPageSet[p]=true});
     var el=$('cmtArticleList');if(!el)return;
-    if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
-    el.innerHTML=pages.map(function(p){
-      var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
-      var art=findArtBySlug(slug);
-      var title=art?art.title:'';
-      var displayName=title?esc(title):esc(slug);
-      return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
-        +'<div class="cmt-art-title">'+displayName+'</div>'
-        +'<div class="cmt-art-slug">'+esc(p)+'</div>'
-        +'</div>'
-    }).join('');
-    el.onclick=function(e){
-      var item=e.target.closest('.cmt-art-item');
-      if(!item)return;
-      [].forEach.call(el.children,function(i){i.classList.remove('active')});
-      item.classList.add('active');
-      cmtSelectedPage=item.dataset.page;
-      loadPageComments(cmtSelectedPage)
-    };
-    if(pages.length&&!cmtSelectedPage){
-      el.children[0].classList.add('active');
-      cmtSelectedPage=pages[0];
+    function renderList(filter){
+      var items=cmtAllArticles;
+      if(filter==='with')items=items.filter(function(a){return commentPageSet['/posts/'+a.slug+'/']});
+      else if(filter==='without')items=items.filter(function(a){return!commentPageSet['/posts/'+a.slug+'/']});
+      if(!items.length){el.innerHTML='<div class="empty">暂无文章</div>';return}
+      el.innerHTML=items.map(function(a){
+        var page='/posts/'+a.slug+'/';
+        var hasCmt=!!commentPageSet[page];
+        return '<div class="cmt-art-item" data-page="'+esc(page)+'">'
+          +'<div class="cmt-art-title">'+esc(a.title)+(hasCmt?' <span style="color:var(--primary);font-size:11px">💬</span>':'')+'</div>'
+          +'<div class="cmt-art-slug">'+esc(a.date)+'</div>'
+          +'</div>'
+      }).join('');
+      el.onclick=function(e){
+        var item=e.target.closest('.cmt-art-item');
+        if(!item)return;
+        [].forEach.call(el.children,function(i){i.classList.remove('active')});
+        item.classList.add('active');
+        cmtSelectedPage=item.dataset.page;
+        loadPageComments(cmtSelectedPage)
+      };
+    }
+    renderList('all');
+    var filterEl=document.getElementById('cmtFilter');
+    if(filterEl)filterEl.addEventListener('change',function(){renderList(this.value)});
+    if(cmtAllArticles.length&&!cmtSelectedPage){
+      cmtSelectedPage='/posts/'+cmtAllArticles[0].slug+'/';
+      var first=el.querySelector('.cmt-art-item');
+      if(first)first.classList.add('active');
       loadPageComments(cmtSelectedPage)
     }
   }
