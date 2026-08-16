@@ -46,16 +46,32 @@ function lockBody(){if(_scrollBarW===null)_scrollBarW=innerWidth-document.docume
 function unlockBody(){document.body.classList.remove('locked');document.body.style.paddingRight=''}
 function copyText(t){if(navigator.clipboard&&isSecureContext){navigator.clipboard.writeText(t);return}var ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+/* requestIdleCallback shim (ES5-safe). Picks a per-slice budget so long idle
+   callbacks never monopolise the main thread for non-interactive work. */
+var _ric=window.requestIdleCallback||function(cb){var st=Date.now();return setTimeout(function(){cb({didTimeout:false,timeRemaining:function(){return Math.max(0,50-(Date.now()-st))}})},1)};
+var _ricCancel=window.cancelIdleCallback||function(h){clearTimeout(h)};
+/* Run fn once inside a single idle callback (with a current-article guard). */
+function _idleTask(id,fn){if(currentArticleId!==id)return;_ric(fn)}
 var _cachedCards=null;
 function getAllCards(){if(!_cachedCards)_cachedCards=[].slice.call(document.querySelectorAll('.card'));return _cachedCards}
 var prismLoaded=false;
 var imgObserver=null;
 function observeImages(){if(imgObserver)imgObserver.disconnect();if(reducedMotion){articleBody.querySelectorAll('img').forEach(function(img){img.classList.add('revealed')});return}imgObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var img=entry.target;imgObserver.unobserve(img);if(img.complete&&img.naturalWidth>0){setTimeout(function(){img.classList.add('revealed')},60)}}})},{root:articleView,rootMargin:'100px',threshold:0.05});articleBody.querySelectorAll('img:not(.revealed)').forEach(function(img){imgObserver.observe(img)})}
 
+var _mermaidIO=null;
 function processMermaid(){
   var blocks=articleBody.querySelectorAll('.mermaid-block');
   if(!blocks.length)return;
-  blocks.forEach(function(b){
+  if(!_mermaidIO){
+    try{_mermaidIO=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){_mermaidIO.unobserve(entry.target);_renderMermaidBlock(entry.target)}})},{root:articleView,rootMargin:'300px 0px',threshold:0})}catch(e){_mermaidIO=null}
+  }
+  var unrendered=articleBody.querySelectorAll('.mermaid-block:not([data-mr])');
+  var i;
+  if(_mermaidIO){for(i=0;i<unrendered.length;i++)_mermaidIO.observe(unrendered[i])}
+  else{for(i=0;i<unrendered.length;i++)_renderMermaidBlock(unrendered[i])}
+}
+function _renderMermaidBlock(b){
+  b.setAttribute('data-mr','1');
     var code=b.getAttribute("data-code")||"";
     code=code.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,"\"")
     if(!code)return;
@@ -80,15 +96,36 @@ function processMermaid(){
           b.appendChild(panel);
           var scale=1,tx=0,ty=0,dragging=false,startX=0,startY=0,startTx=0,startTy=0;
           var STEP=0.4,MIN_SCALE=1,MAX_SCALE=3;
+          // Raf throttle + layout dim cache: during drag the image layout size is
+          // stable (transform does not change offsetWidth/Height), so we cache it
+          // once and skip forced reflow reads on every pointer event.
+          var _zfRaf=null,_bw=0,_bh=0,_sw0=0,_sh0=0;
+          function _refreshDims(){
+            _bw=b.clientWidth;_bh=b.clientHeight;
+            _sw0=innerSvg.offsetWidth;_sh0=innerSvg.offsetHeight;
+          }
           function clamp(){
-            var bw=b.clientWidth,bh=b.clientHeight;
-            var sw=innerSvg.offsetWidth*scale,sh=innerSvg.offsetHeight*scale;
+            var bw=_bw,bh=_bh,sw,sh;
+            if(dragging){sw=_sw0*scale;sh=_sh0*scale}
+            else{
+              bw=b.clientWidth;bh=b.clientHeight;
+              _bw=bw;_bh=bh;
+              sw=innerSvg.offsetWidth*scale;sh=innerSvg.offsetHeight*scale;
+              _sw0=innerSvg.offsetWidth;_sh0=innerSvg.offsetHeight;
+            }
             var maxX=Math.max((sw-bw)/2,0);
             var maxY=Math.max((sh-bh)/2,0);
             if(tx>maxX)tx=maxX;if(tx<-maxX)tx=-maxX;
             if(ty>maxY)ty=maxY;if(ty<-maxY)ty=-maxY;
           }
-          function apply(){clamp();innerSvg.style.transform='scale('+scale+') translate('+tx/scale+'px,'+ty/scale+'px)';innerSvg.style.transition=dragging?'none':'transform .25s ease';b.classList.toggle('zoomed',scale>1)}
+          function _applyNow(){
+            clamp();
+            innerSvg.style.transform='scale('+scale+') translate('+tx/scale+'px,'+ty/scale+'px)';
+            innerSvg.style.transition=dragging?'none':'transform .25s ease';
+            b.classList.toggle('zoomed',scale>1);
+          }
+          function _scheduleApply(){if(!_zfRaf)_zfRaf=requestAnimationFrame(function(){_zfRaf=null;_applyNow()})}
+          function apply(){if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null}_applyNow()}
           btnIn.addEventListener('click',function(){
             scale=Math.min(scale+STEP,MAX_SCALE);
             apply();
@@ -99,8 +136,8 @@ function processMermaid(){
             apply();
           });
           innerSvg.addEventListener('mousedown',function(e){
-            if(scale<=1||e.altKey)return;e.preventDefault();dragging=true;startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;innerSvg.classList.add('panning');
-          });
+  if(scale<=1||e.altKey)return;e.preventDefault();dragging=true;innerSvg.style.willChange='transform';startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;innerSvg.classList.add('panning');_refreshDims();
+});
           // ── Touch drag support (mobile) ──
           var touchId=null,touchPending=false,touchStartX=0,touchStartY=0,TOUCH_THRESHOLD=8;
           function onTouchStart(e){
@@ -119,23 +156,26 @@ function processMermaid(){
               if(touchPending){
                 var dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
                 if(Math.sqrt(dx*dx+dy*dy)<TOUCH_THRESHOLD)return;
-                touchPending=false;dragging=true;
+                touchPending=false;dragging=true;innerSvg.style.willChange='transform';
                 e.preventDefault();
                 innerSvg.classList.add('panning');
+                _refreshDims();
               }
               if(dragging){
                 e.preventDefault();
-                tx=startTx+(t.clientX-startX);ty=startTy+(t.clientY-startY);apply();
+                tx=startTx+(t.clientX-startX);ty=startTy+(t.clientY-startY);_scheduleApply();
               }
               break;
             }}
           }
           function onTouchEnd(e){
-            if(touchId===null)return;
-            for(var i=0;i<e.changedTouches.length;i++){if(e.changedTouches[i].identifier===touchId){
-              dragging=false;touchPending=false;touchId=null;innerSvg.classList.remove('panning');break;
-            }}
-          }
+  if(touchId===null)return;
+  for(var i=0;i<e.changedTouches.length;i++){if(e.changedTouches[i].identifier===touchId){
+    dragging=false;touchPending=false;touchId=null;innerSvg.style.willChange='';innerSvg.classList.remove('panning');
+    if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null;_applyNow()}
+    break;
+  }}
+}
           innerSvg.addEventListener('touchstart',onTouchStart,{passive:false});
           innerSvg.addEventListener('touchmove',onTouchMove,{passive:false});
           innerSvg.addEventListener('touchend',onTouchEnd);
@@ -143,16 +183,16 @@ function processMermaid(){
           innerSvg.style.transformOrigin='center center';
           b.style.overflow='hidden';
           b._zoomCleanup=function(){document.removeEventListener('mousemove',onDocMove);document.removeEventListener('mouseup',onDocUp);innerSvg.removeEventListener('touchstart',onTouchStart);innerSvg.removeEventListener('touchmove',onTouchMove);innerSvg.removeEventListener('touchend',onTouchEnd);innerSvg.removeEventListener('touchcancel',onTouchEnd)};
-          function onDocMove(e){if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);apply()}
-          function onDocUp(){if(dragging){dragging=false;innerSvg.classList.remove('panning')}}
+          function onDocMove(e){if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);_scheduleApply()}
+          function onDocUp(){if(dragging){dragging=false;innerSvg.style.willChange='';innerSvg.classList.remove('panning');document.removeEventListener('mousemove',onDocMove);if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null;_applyNow()}}}
           document.addEventListener('mousemove',onDocMove);
           document.addEventListener('mouseup',onDocUp);
         }
       }
       else{b.innerHTML='<p style="color:var(--outline)">不支持的图表类型</p>'}
     }catch(e){b.innerHTML='<p style="color:var(--outline)">图表渲染失败</p>'}
-  });
-}
+  }
+
 function renderMermaidFlowchart(code){
   var lines=code.split('\n').map(function(l){return l.trim()}).filter(Boolean);
   if(!lines.length)return null;
@@ -350,7 +390,7 @@ function buildTOC(){tocList.innerHTML='';tocDrawerList.innerHTML='';headingCache
 function cacheHeadings(){headingCache=[];var vTop=articleView.getBoundingClientRect().top;articleBody.querySelectorAll('h2,h3').forEach(function(h){headingCache.push({id:h.id,top:h.getBoundingClientRect().top-vTop+articleView.scrollTop})});_headingCacheDirty=false}
 var _headingCacheDirty=false;
 function invalidateHeadingCache(){_headingCacheDirty=true}
-function updateTOCHighlight(){if(tocManualLock||!headingCache||!headingCache.length)return;if(_headingCacheDirty)cacheHeadings();var st=articleView.scrollTop;if(st<100)return;var curId=null;for(var i=headingCache.length-1;i>=0;i--){if(headingCache[i].top<=st+120){curId=headingCache[i].id;break}}if(!curId)curId=headingCache[0].id;if(curId!==lastActiveId)setTocHighlight(curId)}
+function updateTOCHighlight(){if(tocManualLock||!headingCache||!headingCache.length)return;if(_headingCacheDirty)cacheHeadings();var st=articleView.scrollTop;if(st<100)return;var target=st+120;var lo=0,hi=headingCache.length-1,mid,best=-1;while(lo<=hi){mid=(lo+hi)>>1;if(headingCache[mid].top<=target){best=mid;lo=mid+1}else{hi=mid-1}}var curId=best<0?headingCache[0].id:headingCache[best].id;if(curId!==lastActiveId)setTocHighlight(curId)}
 function openTocSheet(){tocSheet.classList.add('open');setTimeout(function(){document.addEventListener('click',tocOutClick)},10);var active=tocDrawerList.querySelector('.toc-drawer-item.active');if(active){tocDrawerList.scrollTop=active.offsetTop-tocDrawerList.clientHeight/3}}
 function closeTocSheet(){tocSheet.classList.remove('open');document.removeEventListener('click',tocOutClick)}
 function tocOutClick(e){if(!e.target.closest('.toc-drawer')&&e.target!==tocToggleBtn&&!tocToggleBtn.contains(e.target))closeTocSheet()}
@@ -372,7 +412,7 @@ function __initComments(path){
 }
 
 function loadArticleMeta(id){var art=articles[id];if(!art)return;currentArticleId=id;$('artMeta').innerHTML='<span>'+art.date+'</span><span style="color:var(--outline-variant)"> · </span><span>'+art.wc+' 字</span><span style="color:var(--outline-variant)"> · </span><span>'+art.rt+'</span>';$('artTitle').textContent=art.title;$('artTags').innerHTML=art.tags.map(function(t){return'<span class="tag" data-tagname="'+escHtml(t)+'">'+escHtml(t)+'</span>'}).join('');renderArticleNav(id);}
-function loadArticle(id){var art=articles[id];if(!art)return;loadArticleMeta(id);rprog.style.transform='scaleX(0)';fab.classList.remove('visible');articleView.scrollTop=0;headingCache=null;lastActiveId=null;tocManualLock=false;clearTimeout(tocManualTimer);_lastArtScrolled=null;_lastArtFab=null;articleBody.classList.remove('revealed');articleBody.innerHTML='';var html=art.content||'';if(currentArticleId!==id)return;requestAnimationFrame(function(){if(currentArticleId!==id)return;articleBody.innerHTML=html;_artScrollMax=articleView.scrollHeight-articleView.clientHeight;articleBody.classList.add('revealed');var _cm=window.__HAPRIAL_DATA__.comments;if(_cm&&_cm.enabled&&_cm.api){__initComments('/posts/'+id+'/')}var _sv=articleView.scrollTop;fab.classList.toggle('visible',_sv>400);fabComment.classList.toggle('shifted',_sv>400);_lastArtFab=(_sv>400);setTimeout(function(){if(currentArticleId!==id)return;codeProcessed=false;processCodeBlocks();if(currentArticleId===id)revealImages();if(currentArticleId===id)observeImages();if(currentArticleId===id)processMermaid()},0);articleView.dispatchEvent(new CustomEvent('article:content-ready',{detail:{id:id}}))})}
+function loadArticle(id){var art=articles[id];if(!art)return;loadArticleMeta(id);rprog.style.transform='scaleX(0)';fab.classList.remove('visible');articleView.scrollTop=0;headingCache=null;lastActiveId=null;tocManualLock=false;clearTimeout(tocManualTimer);_lastArtScrolled=null;_lastArtFab=null;articleBody.classList.remove('revealed');articleBody.innerHTML='';var html=art.content||'';if(currentArticleId!==id)return;requestAnimationFrame(function(){if(currentArticleId!==id)return;articleBody.innerHTML=html;_artScrollMax=articleView.scrollHeight-articleView.clientHeight;articleBody.classList.add('revealed');var _cm=window.__HAPRIAL_DATA__.comments;if(_cm&&_cm.enabled&&_cm.api){__initComments('/posts/'+id+'/')}var _sv=articleView.scrollTop;fab.classList.toggle('visible',_sv>400);fabComment.classList.toggle('shifted',_sv>400);_lastArtFab=(_sv>400);_ric(function(){if(currentArticleId!==id)return;codeProcessed=false;processCodeBlocks();if(currentArticleId!==id)return;_ric(function(){if(currentArticleId!==id)return;revealImages();observeImages();_ric(function(){if(currentArticleId!==id)return;processMermaid()})})});articleView.dispatchEvent(new CustomEvent('article:content-ready',{detail:{id:id}}))})}
 var _closeAnimDone=false;function openArticleVisual(id){_closeAnimDone=true;scrollPos=window.scrollY;lockBody();articleView.classList.add('open');articleBody.innerHTML='';articleBody.classList.remove('revealed');avBar.classList.remove('scrolled');fabComment.classList.add('visible');fabComment.classList.remove('shifted');var af=document.getElementById('anti-fouc');if(af)af.remove();articleView.addEventListener('article:content-ready',function h(e){if(e.detail.id!==id)return;articleView.removeEventListener('article:content-ready',h);buildTOC()},{once:true});requestAnimationFrame(function(){loadArticle(id)})}
 function openArticleVisualImmediate(id){articleView.addEventListener('article:content-ready',function h(e){if(e.detail.id!==id)return;articleView.removeEventListener('article:content-ready',h);buildTOC()},{once:true});loadArticle(id);lockBody();articleView.style.transition='none';articleView.classList.add('open');articleView.offsetHeight;requestAnimationFrame(function(){articleView.style.transition=''});avBar.classList.remove('scrolled');fabComment.classList.add('visible');fabComment.classList.remove('shifted');_lastFab=null;_lastArtFab=null;_lastArtScrolled=null;restoreArticleScroll(id);var af=document.getElementById('anti-fouc');if(af)af.remove()}
 function saveArticleScroll(id){try{sessionStorage.setItem('art_scroll_'+id,String(articleView.scrollTop))}catch(e){}}
@@ -484,7 +524,7 @@ document.documentElement.setAttribute('data-theme',th);syncAllIcons(th);
 var initRoute=parseHash();
 if(initRoute.type==='page'&&initRoute.paginationPage){paginationPage=initRoute.paginationPage}
 else{try{var sp=sessionStorage.getItem('pg');if(sp!==null)paginationPage=parseInt(sp)||0}catch(e){}}
-renderTags();renderCats();renderArchive();renderFriends();renderPaginationPage();handleMainScroll();requestAnimationFrame(updateTabIndicator);
+var _initIdx=0,_initSteps=[function(){renderTags();renderCats()},function(){renderArchive()},function(){renderFriends();renderPaginationPage()},function(){handleMainScroll();requestAnimationFrame(updateTabIndicator)}];(function runInit(){if(_initIdx<_initSteps.length){var _f=_initSteps[_initIdx++];_ric(function(){_f();runInit()})}})();
 if(initRoute.type==='article'){if(isReload){replaceRoute(initRoute);openArticleVisualImmediate(initRoute.articleId)}else{replaceRoute({type:'page',page:'articles'});pushRoute(initRoute);requestAnimationFrame(function(){openArticleVisual(initRoute.articleId)})}}else{var af=document.getElementById('anti-fouc');if(af)af.remove();replaceRoute(initRoute);if(initRoute.page&&initRoute.page!=='articles'){switchPageVisual(initRoute.page,null)}}
 
 

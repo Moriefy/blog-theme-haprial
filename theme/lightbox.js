@@ -31,6 +31,8 @@ window.__initLightbox = function(articleBody) {
   var dragging    = false;
   var dragStartX  = 0;
   var dragStartY  = 0;
+  var curDragX    = 0;
+  var curDragY    = 0;
   var justDragged = false;
   var origImgEl   = null;
   var origRect    = null;
@@ -81,9 +83,9 @@ window.__initLightbox = function(articleBody) {
   // ── Find index of a clicked img element ───────────────────────────────────
   // Uses DOM position (querySelectorAll order) instead of object reference
   function indexOf(imgEl) {
-    var all = articleBody.querySelectorAll('img');
-    for (var i = 0; i < all.length; i++) {
-      if (all[i] === imgEl) return i;
+    // Reuse collect()'s images array, avoiding a second querySelectorAll.
+    for (var i = 0; i < images.length; i++) {
+      if (images[i].el === imgEl) return i;
     }
     return -1;
   }
@@ -151,18 +153,8 @@ window.__initLightbox = function(articleBody) {
     });
   }
 
-  // ── Close lightbox ────────────────────────────────────────────────────────
-  function close() {
-    if (switching) return;
-    if (scale > 1) resetZoom(true);
-
-    // Pop history state if we pushed one
-    if (_lbPushed) {
-      _lbPushed = false;
-      history.back();
-      return;
-    }
-
+  // Close-out animation shared by close() and popstate (single sync layout read).
+  function _startCloseAnimation() {
     if (origRect && lbImg.naturalWidth) {
       var r = lbImg.getBoundingClientRect();
       var sx = origRect.width / r.width;
@@ -180,25 +172,27 @@ window.__initLightbox = function(articleBody) {
     }
   }
 
+  // ── Close lightbox ────────────────────────────────────────────────────────
+  function close() {
+    if (switching) return;
+    _cancelGestures();
+    if (scale > 1) resetZoom(true);
+
+    // Pop history state if we pushed one
+    if (_lbPushed) {
+      _lbPushed = false;
+      history.back();
+      return;
+    }
+
+    _startCloseAnimation();
+  }
+
   // ── Back button (popstate) closes lightbox instead of navigating ───────────
   window.addEventListener('popstate', function(e) {
     if (lb.classList.contains('open')) {
       _lbPushed = false;
-      if (origRect && lbImg.naturalWidth) {
-        var r = lbImg.getBoundingClientRect();
-        var sx = origRect.width / r.width;
-        var sy = origRect.height / r.height;
-        var s = Math.min(sx, sy);
-        var dx = origRect.left + origRect.width / 2 - (r.left + r.width / 2);
-        var dy = origRect.top + origRect.height / 2 - (r.top + r.height / 2);
-        lbImg.classList.add('lb-closing');
-        lbImg.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')';
-        lbImg.style.opacity = '0';
-        lbImg.style.transformOrigin = '50% 50%';
-        setTimeout(finishClose, 340);
-      } else {
-        finishClose();
-      }
+      _startCloseAnimation();
     }
   });
 
@@ -248,6 +242,7 @@ window.__initLightbox = function(articleBody) {
     if (!img || !articleBody.contains(img)) return;
     e.preventDefault();
     origImgEl = img;
+    collect();   // build images cache once, indexOf reuses it
     var idx = indexOf(img);
     open(idx >= 0 ? idx : 0);
   });
@@ -275,25 +270,43 @@ window.__initLightbox = function(articleBody) {
   });
 
   // ── Mouse drag (when zoomed) ──────────────────────────────────────────────
+  // Raf-throttled: event handler only records pointer coords, actual
+  // transform write happens once per animation frame (avoids forced reflow).
   if (lbWrap) {
+    var _dragRaf = null;
+    // Cache image layout size: transform changes don't alter offsetWidth/Height,
+    // so we only read it once when drag starts and reuse it during the drag.
+    var _dragOX = 0, _dragOY = 0;
+    function _applyMouseDrag() {
+      _dragRaf = null;
+      var dx = (curDragX - dragStartX) / _dragOX * 100;
+      var dy = (curDragY - dragStartY) / _dragOY * 100;
+      panX = Math.max(0, Math.min(100, panX - dx));
+      panY = Math.max(0, Math.min(100, panY - dy));
+      dragStartX = curDragX; dragStartY = curDragY;
+      lbImg.style.transformOrigin = panX + '% ' + panY + '%';
+    }
     lbWrap.addEventListener('mousedown', function(e) {
       if (scale <= 1) return;
       e.preventDefault();
       dragging = true; dragStartX = e.clientX; dragStartY = e.clientY;
+      curDragX = e.clientX; curDragY = e.clientY;
+      _dragOX = lbImg.offsetWidth; _dragOY = lbImg.offsetHeight;
+      lbImg.style.transition = 'none';
+      justDragged = true;
       lbWrap.classList.add('panning');
     });
     document.addEventListener('mousemove', function(e) {
       if (!dragging) return;
-      var dx = (e.clientX - dragStartX) / lbImg.offsetWidth * 100;
-      var dy = (e.clientY - dragStartY) / lbImg.offsetHeight * 100;
-      panX = Math.max(0, Math.min(100, panX - dx));
-      panY = Math.max(0, Math.min(100, panY - dy));
-      lbImg.style.transformOrigin = panX + '% ' + panY + '%';
-      dragStartX = e.clientX; dragStartY = e.clientY;
-      justDragged = true;
+      curDragX = e.clientX; curDragY = e.clientY;
+      if (!_dragRaf) _dragRaf = requestAnimationFrame(_applyMouseDrag);
     });
     document.addEventListener('mouseup', function() {
-      if (dragging) { dragging = false; if (lbWrap) lbWrap.classList.remove('panning'); }
+      if (!dragging) return;
+      dragging = false; justDragged = true;
+      if (_dragRaf) { cancelAnimationFrame(_dragRaf); _dragRaf = null; }
+      lbImg.style.transition = '';
+      if (lbWrap) lbWrap.classList.remove('panning');
     });
   }
 
@@ -357,6 +370,28 @@ window.__initLightbox = function(articleBody) {
   // ── Touch: swipe to navigate, pinch to zoom ───────────────────────────────
   var touchX0 = 0, touchY0 = 0, touchT0 = 0;
   var pinchDist0 = 0, pinchScale0 = 1, isPinching = false;
+  // Raf-throttled touch gesture write-back (avoids per-event reflow)
+  var _touchRaf = null, _tScale = 1, _tOX = 0, _tOY = 0;
+  function _applyTouchGesture() {
+    _touchRaf = null;
+    scale = _tScale;
+    lbImg.style.transformOrigin = panX + '% ' + panY + '%';
+    lbImg.style.transform = 'scale(' + scale + ')';
+    if (scale > 1.001) lbWrap.classList.add('zoomed');
+  }
+  function _scheduleTouchWrite() {
+    if (_touchRaf) return;
+    _touchRaf = requestAnimationFrame(function() {
+      _touchRaf = null;
+      _applyTouchGesture();
+    });
+  }
+  // Cancel any pending touch/mouse gesture write-back (used on gesture end).
+  function _cancelGestures() {
+    if (_touchRaf) { cancelAnimationFrame(_touchRaf); _touchRaf = null; }
+    if (_dragRaf)  { cancelAnimationFrame(_dragRaf);  _dragRaf  = null; }
+    lbImg.style.transition = '';
+  }
 
   if (lbWrap) {
     lbWrap.addEventListener('touchstart', function(e) {
@@ -367,8 +402,10 @@ window.__initLightbox = function(articleBody) {
         var dy = e.touches[0].clientY - e.touches[1].clientY;
         pinchDist0 = Math.sqrt(dx * dx + dy * dy);
         pinchScale0 = scale;
-        panX = (e.touches[0].clientX + e.touches[1].clientX) / 2 / lbImg.offsetWidth * 100;
-        panY = (e.touches[0].clientY + e.touches[1].clientY) / 2 / lbImg.offsetHeight * 100;
+        _tOX = lbImg.offsetWidth; _tOY = lbImg.offsetHeight;
+        panX = (e.touches[0].clientX + e.touches[1].clientX) / 2 / _tOX * 100;
+        panY = (e.touches[0].clientY + e.touches[1].clientY) / 2 / _tOY * 100;
+        lbImg.style.transition = 'none';
       } else if (e.touches.length === 1 && scale <= 1) {
         touchX0 = e.touches[0].clientX;
         touchY0 = e.touches[0].clientY;
@@ -382,27 +419,35 @@ window.__initLightbox = function(articleBody) {
         var dx = e.touches[0].clientX - e.touches[1].clientX;
         var dy = e.touches[0].clientY - e.touches[1].clientY;
         var dist = Math.sqrt(dx * dx + dy * dy);
-        scale = Math.max(1, Math.min(5, pinchScale0 * (dist / pinchDist0)));
-        lbImg.style.transformOrigin = panX + '% ' + panY + '%';
-        lbImg.style.transform = 'scale(' + scale + ')';
-        if (scale > 1) lbWrap.classList.add('zoomed');
+        _tScale = Math.max(1, Math.min(5, pinchScale0 * (dist / pinchDist0)));
+        _scheduleTouchWrite();
       } else if (e.touches.length === 1 && scale > 1) {
-        var dx = (e.touches[0].clientX - dragStartX) / lbImg.offsetWidth * 100;
-        var dy = (e.touches[0].clientY - dragStartY) / lbImg.offsetHeight * 100;
+        e.preventDefault();
+        var dx = (e.touches[0].clientX - dragStartX) / _tOX * 100;
+        var dy = (e.touches[0].clientY - dragStartY) / _tOY * 100;
         panX = Math.max(0, Math.min(100, panX - dx));
         panY = Math.max(0, Math.min(100, panY - dy));
-        lbImg.style.transformOrigin = panX + '% ' + panY + '%';
         dragStartX = e.touches[0].clientX;
         dragStartY = e.touches[0].clientY;
+        _tScale = scale;
+        _scheduleTouchWrite();
       }
     }, { passive: false });
 
     lbWrap.addEventListener('touchend', function(e) {
       if (isPinching) {
         isPinching = false;
-        if (scale <= 1) resetZoom();
+        // Cancel pending raf, but use the latest _tScale so the final pinch
+        // increment (possibly still queued in the raf) is not lost on release.
+        if (_touchRaf) { cancelAnimationFrame(_touchRaf); _touchRaf = null; }
+        scale = _tScale;
+        lbImg.style.transition = '';
+        lbImg.style.transformOrigin = panX + '% ' + panY + '%';
+        lbImg.style.transform = 'scale(' + _tScale + ')';
+        if (_tScale <= 1.001) resetZoom();
         return;
       }
+      if (e.touches.length === 0) _cancelGestures();
       if (e.changedTouches.length === 1 && scale <= 1) {
         var dx = e.changedTouches[0].clientX - touchX0;
         var dy = e.changedTouches[0].clientY - touchY0;
@@ -418,6 +463,10 @@ window.__initLightbox = function(articleBody) {
       if (e.touches.length === 1 && scale > 1) {
         dragStartX = e.touches[0].clientX;
         dragStartY = e.touches[0].clientY;
+        curDragX = e.touches[0].clientX;
+        curDragY = e.touches[0].clientY;
+        _tOX = lbImg.offsetWidth; _tOY = lbImg.offsetHeight;
+        lbImg.style.transition = 'none';
       }
     }, { passive: true });
   }
