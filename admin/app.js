@@ -7,12 +7,28 @@ var currentPage='';
 var articles=[],friends=[],trashList=[];
 var cmtData={comments:[],total:0,pages:[]};
 
+// MD Icons
+var _ico={
+  sun:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  search:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  key:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5l-4 4L7 7l-1.5 1.5 4 4-4 4h6l4-4 1.5-1.5-4-4 4-4z"/><line x1="9" y1="15" x2="4.5" y2="19.5"/><line x1="14.5" y1="4" x2="20" y2="9.5"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  scissors:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  close:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  inbox:'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>'
+};
+
 // Theme
 var _th=null;try{_th=localStorage.getItem('admin_theme')}catch(e){}
 if(!_th)_th=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
 document.documentElement.setAttribute('data-theme',_th);
-function _toggleTheme(){_th=_th==='light'?'dark':'light';document.documentElement.classList.add('theme-transitioning');document.documentElement.setAttribute('data-theme',_th);try{localStorage.setItem('admin_theme',_th)}catch(e){};var btn=document.getElementById('adminThemeBtn');if(btn)btn.textContent=_th==='dark'?'☀️':'🌙';setTimeout(function(){document.documentElement.classList.remove('theme-transitioning')},250)}
-setTimeout(function(){var btn=document.getElementById('adminThemeBtn');if(btn){btn.textContent=_th==='dark'?'☀️':'🌙';btn.addEventListener('click',_toggleTheme)}},0);
+function _toggleTheme(){_th=_th==='light'?'dark':'light';document.documentElement.classList.add('theme-transitioning');document.documentElement.setAttribute('data-theme',_th);try{localStorage.setItem('admin_theme',_th)}catch(e){};var btn=document.getElementById('adminThemeBtn');if(btn)btn.innerHTML=_th==='dark'?_ico.sun:_ico.moon;setTimeout(function(){document.documentElement.classList.remove('theme-transitioning')},250)}
+setTimeout(function(){var btn=document.getElementById('adminThemeBtn');if(btn){btn.innerHTML=_th==='dark'?_ico.sun:_ico.moon;btn.addEventListener('click',_toggleTheme)}},0);
 var editingId=null;
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML};
@@ -54,11 +70,11 @@ function showLogin(){
   // 检查是否已设置密码
   api('GET','/api/admin/setup/status').then(function(d){
     if(!d.passwordSet){
-      $('loginTitle').textContent='🔑 首次设置';
+      $('loginTitle').innerHTML=_ico.key+' 首次设置';
       $('loginDesc').textContent='这是你第一次使用，请设置管理密码';
       $('loginBtn').textContent='设置密码';
     }else{
-      $('loginTitle').textContent='🔐 管理后台';
+      $('loginTitle').innerHTML=_ico.lock+' 管理后台';
       $('loginDesc').textContent='输入密码登录 Haprial 博客管理系统';
       $('loginBtn').textContent='登录';
     }
@@ -227,7 +243,7 @@ function renderArtList(){
   else{tb.innerHTML=pageItems.map(function(a){
     var tags=[];try{tags=parseTags(a.tags)}catch(e){}
     var checked=artSelected.has(a.id)?' checked':'';
-    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' 📌':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
+    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' <span style="color:var(--primary)">'+_ico.pin+'</span>':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
     +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
     +'<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+a.id+')">导出</button>'
     +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
@@ -1072,9 +1088,9 @@ function _imgUpdateSelectUI(){
   if(window.imgSelectMode&&window.imgSelected.size>0){
     bar.style.display='flex';
     bar.innerHTML='<span>'+window.imgSelected.size+' 项</span>'
-      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCopy()">📋 复制</button>'
-      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCut()">✂️ 剪切</button>'
-      +'<button class="md3-btn md3-btn-text" style="color:#FF8A80" onclick="_imgBatchDelete()">🗑️ 删除</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCopy()">"+_ico.copy+" 复制</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCut()">"+_ico.scissors+" 剪切</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_imgBatchDelete()">"+_ico.trash+" 删除</button>'
   }else{
     bar.style.display='none'
   }
@@ -1117,8 +1133,8 @@ window._imgMenu=function(e,url,path){
   menu.className='ctx-menu';
   menu.style.left=Math.min(e.clientX,innerWidth-180)+'px';
   menu.style.top=Math.min(e.clientY,innerHeight-200)+'px';
-  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">📋 复制</button>'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">✂️ 剪切</button>'
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">"+_ico.copy+" 复制</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">"+_ico.scissors+" 剪切</button>'
     +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window._copyMdUrl(\''+url+'\');this.parentElement.remove()">复制 Markdown</button>'
@@ -1149,7 +1165,7 @@ function _imgUpdatePasteBar(){
   bar.style.display='flex';
   bar.innerHTML='<span>'+label+' '+count+' 项</span>'
     +'<button class="md3-btn md3-btn-text" onclick="_imgShowPastePicker()">选择目标并粘贴</button>'
-    +'<button class="md3-btn md3-btn-text" onclick="imgClipboard=null;_imgUpdatePasteBar()">✕</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="imgClipboard=null;_imgUpdatePasteBar()">"+_ico.close+"</button>'
 }
 window._imgShowPastePicker=function(){
   if(!imgClipboard||!imgClipboard.paths.length){toast('剪贴板为空');return}
