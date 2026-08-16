@@ -491,26 +491,25 @@ if(initRoute.type==='article'){if(isReload){replaceRoute(initRoute);openArticleV
 // TOC visibility — hover zone + auto-hide
 (function(){
   if(!toc||!articleView)return;
-  var hideTimer=null, artOpen=false, threshold=9999, thresholdDirty=true, inToc=false;
+  var hideTimer=null, artOpen=false, threshold=9999, thresholdDirty=true, inToc=false, needInit=true;
   function updateThreshold(){var av=document.querySelector('.av-content');if(av)threshold=av.getBoundingClientRect().right;thresholdDirty=false}
   function show(){clearTimeout(hideTimer);toc.classList.add('visible')}
   function scheduleHide(){clearTimeout(hideTimer);hideTimer=setTimeout(function(){toc.classList.remove('visible')},1500)}
-  function inRightZone(e){return e.clientX>=threshold}
   var moveRaf=null;
   function onMove(e){
+    lastMouseX=e.clientX;
     if(moveRaf)return;
     moveRaf=requestAnimationFrame(function(){
       moveRaf=null;
-      if(thresholdDirty)updateThreshold();
-      if(inRightZone({clientX:lastMouseX})){show()}
+      if(needInit){needInit=false;updateThreshold();if(lastMouseX<threshold){scheduleHide();return}}
+      if(lastMouseX>=threshold){show()}
       else if(!inToc){scheduleHide()}
     });
-    lastMouseX=e.clientX;
   }
   var lastMouseX=0;
   var _moveBound=false;
-  function bindMove(){if(!_moveBound){_moveBound=true;document.addEventListener('mousemove',onMove)}}
-  function unbindMove(){if(_moveBound){_moveBound=false;document.removeEventListener('mousemove',onMove)}}
+  function bindMove(){if(!_moveBound){_moveBound=true;needInit=true;document.addEventListener('mousemove',onMove)}}
+  function unbindMove(){if(_moveBound){_moveBound=false;needInit=true;document.removeEventListener('mousemove',onMove)}}
   toc.addEventListener('mouseenter',function(){inToc=true;clearTimeout(hideTimer)});
   toc.addEventListener('mouseleave',function(){inToc=false;scheduleHide()});
   var _origOpen=openArticleVisual;
