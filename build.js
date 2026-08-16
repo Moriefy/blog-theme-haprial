@@ -275,7 +275,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 <style>${cssContent}</style>
 <style id="anti-fouc">.top-app-bar,.page-tabs,.page.active,.site-footer,.fab,.fab-comment{display:none!important}</style>
 <script>(function(){var h=location.hash;if(h.indexOf('#/posts/')!==0||h.length!==16){var af=document.getElementById('anti-fouc');if(af)af.remove()}})()</script>
-${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352" media="print" onload="this.media=\'all\'">':''}
+${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp+'" media="print" onload="this.media=\'all\'">':''}
 </head>
 <body>
 
@@ -342,7 +342,7 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
 <script src="/theme/lightbox.js"></script>
-<script src="/theme/comments.js?v=1754400000"></script>
+<script src="/theme/comments.js?v='+globalFp+'"></script>
 <script defer src="/theme/app.js"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
@@ -440,8 +440,8 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-<link rel="stylesheet" href="/theme/styles.css?v=1785775352">
-${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css?v=1785775352">':''}
+<link rel="stylesheet" href="/theme/styles.css?v='+globalFp+'">
+${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp+'">':''}
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
 
@@ -478,7 +478,7 @@ ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/
 </footer>
 
 <script src="/theme/lightbox.js"></script>
-<script src="/theme/comments.js?v=1754400000"></script>
+<script src="/theme/comments.js?v='+globalFp+'"></script>
 <script>
 ${themeInitScript()}
 ${postPageScript()}
@@ -569,7 +569,7 @@ function seoPageHead(title, description) {
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/theme/styles.css?v=1785775352">
+<link rel="stylesheet" href="/theme/styles.css?v='+globalFp+'">
 </head>
 <body>
 <header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
@@ -662,9 +662,9 @@ function seoPageFoot() {
   });
   body += '</div>';
   if (commentsEnabled && commentsApi) {
-    body += '<link rel="stylesheet" href="/theme/comments.css?v=1785775352">';
+    body += '<link rel="stylesheet" href="/theme/comments.css?v='+globalFp+'">';
     body += '<section class="comment-section"><div id="friendsCommentInner"></div></section>';
-    body += '<script src="/theme/comments.js?v=1754400000"></script>';
+    body += '<script src="/theme/comments.js?v='+globalFp+'"></script>';
     body += `<script>new window.HaprialComments(document.getElementById("friendsCommentInner"),{api:"${escHtml(commentsApi)}",page:"/friends/"})</script>`;
   }
   fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('友链', '这些站点值得关注。') + body + seoPageFoot());
