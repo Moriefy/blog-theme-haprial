@@ -553,8 +553,19 @@ window._previewToggle=function(){
   var pp=$('edPreview');
   if(window.innerWidth<=768){
     pp.classList.toggle('show');
-    if(pp.classList.contains('show')){pp.style.position='fixed';pp.style.inset='56px 0 0';pp.style.zIndex='50';pp.style.background='var(--surface)';pp.style.border='none';pp.style.borderRadius='0';pp.style.padding='20px';pp.style.overflow='auto'}
-    else{pp.style.position='';pp.style.inset='';pp.style.zIndex='';pp.style.background='';pp.style.border='';pp.style.borderRadius='';pp.style.padding='';pp.style.overflow=''}
+    if(pp.classList.contains('show')){
+      pp.style.position='fixed';pp.style.inset='0';pp.style.zIndex='50';pp.style.background='var(--surface)';pp.style.border='none';pp.style.borderRadius='0';pp.style.padding='0';pp.style.overflow='auto';
+      if(!$('previewCloseBar')){
+        var bar=document.createElement('div');
+        bar.id='previewCloseBar';
+        bar.style.cssText='position:sticky;top:0;z-index:51;display:flex;align-items:center;padding:0 8px;height:48px;background:var(--surface-container);border-bottom:1px solid var(--outline-variant)';
+        bar.innerHTML='<span style="flex:1;font-size:14px;font-weight:600;padding-left:8px">预览</span><button class="md3-btn md3-btn-text" onclick="window._previewToggle()" style="padding:0 12px">关闭</button>';
+        pp.insertBefore(bar,pp.firstChild)
+      }
+    }else{
+      var bar=$('previewCloseBar');if(bar)bar.remove();
+      pp.style.position='';pp.style.inset='';pp.style.zIndex='';pp.style.background='';pp.style.border='';pp.style.borderRadius='';pp.style.padding='';pp.style.overflow=''
+    }
   }else{pp.classList.toggle('show')}
 };
 var _saveDebounce=null;
