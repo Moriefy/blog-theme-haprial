@@ -420,20 +420,3 @@ tr:hover td{background:var(--surface-container-high)}
 [data-theme="dark"] .batch-bar .md3-btn{color:#1B2A33}
 [data-theme="dark"] .paste-bar .md3-btn{color:#1B2A33;border-color:rgba(0,0,0,.2)}
 [data-theme="dark"] .ctx-menu{background:var(--surface-container);border-color:var(--outline-variant)}
-
-/* ══════════════════════════════════════
-   Article Cards (mobile)
-   ══════════════════════════════════════ */
-@media(max-width:768px){
-  .table-wrap table{min-width:0}
-  .table-wrap thead{display:none}
-  .table-wrap tbody tr{display:flex;flex-wrap:wrap;gap:8px;padding:14px 12px;border:1px solid var(--outline-variant);border-radius:12px;margin-bottom:8px;background:var(--surface-container)}
-  .table-wrap tbody td{border:none;padding:0;white-space:normal;flex:0 0 auto;font-size:13px}
-  .table-wrap tbody td:nth-child(1){order:0;width:20px}
-  .table-wrap tbody td:nth-child(2){order:1;flex:1 1 100%;font-size:15px;font-weight:600;color:var(--on-surface)}
-  .table-wrap tbody td:nth-child(3){order:2;font-size:12px;color:var(--outline)}
-  .table-wrap tbody td:nth-child(4){order:3}
-  .table-wrap tbody td:nth-child(5){order:4;flex:1 1 100%}
-  .table-wrap tbody td:nth-child(6){order:5}
-  .table-wrap tbody td:nth-child(7){order:6;flex:1 1 100%;justify-content:flex-end}
-}
