@@ -126,33 +126,92 @@ function _renderMermaidBlock(b){
           }
           function _scheduleApply(){if(!_zfRaf)_zfRaf=requestAnimationFrame(function(){_zfRaf=null;_applyNow()})}
           function apply(){if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null}_applyNow()}
-          btnIn.addEventListener('click',function(){
-            scale=Math.min(scale+STEP,MAX_SCALE);
+          // ── Zoom around a given point (block-relative cx,cy) ──
+          // Keeps the content point currently under the cursor fixed on screen
+          // while scaling factor is applied, so zoom centers on where the
+          // user clicked/scrolled instead of always the block center.
+          function zoomAround(cx,cy,factor){
+            var s0=scale;
+            var s1=Math.min(MAX_SCALE,Math.max(MIN_SCALE,s0*factor));
+            if(s1===s0){apply();return}
+            var brect=b.getBoundingClientRect();
+            var rect=innerSvg.getBoundingClientRect();
+            // Offset of cursor from the svg's current on-screen top-left corner
+            var sx=cx-(rect.left-brect.left);
+            var sy=cy-(rect.top-brect.top);
+            // Content coords under cursor (relative to svg's top-left origin).
+            // transform is scale(s) translate(tx/s,ty/s) with origin center center:
+            //   screen = O + s*(p - C) + t   (O = svg layout origin, C = box center)
+            var px=sx/s0,py=sy/s0;
+            var Cx=innerSvg.offsetWidth/2,Cy=innerSvg.offsetHeight/2;
+            // Keep the content point under the cursor fixed on screen:
+            //   t1 = t0 + (s0-s1)*(p - C)
+            scale=s1;
+            tx += (s0-s1)*(px-Cx);
+            ty += (s0-s1)*(py-Cy);
+            if(scale<=MIN_SCALE){tx=0;ty=0}
             apply();
+          }
+          b._zoomAround=function(e,dir){
+            var br=b.getBoundingClientRect();
+            var f=(dir==='out')?(1-STEP):(1+STEP);
+            zoomAround(e.clientX-br.left,e.clientY-br.top,f);
+          };
+          btnIn.addEventListener('click',function(){
+            zoomAround(b.clientWidth/2,b.clientHeight/2,1+STEP);
           });
           btnOut.addEventListener('click',function(){
-            scale=Math.max(scale-STEP,MIN_SCALE);
-            if(scale<=1){tx=0;ty=0}
-            apply();
+            zoomAround(b.clientWidth/2,b.clientHeight/2,1-STEP);
           });
           innerSvg.addEventListener('mousedown',function(e){
   if(scale<=1||e.altKey)return;e.preventDefault();dragging=true;innerSvg.style.willChange='transform';startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;innerSvg.classList.add('panning');_refreshDims();
 });
-          // ── Touch drag support (mobile) ──
+          // ── Touch drag + pinch zoom support (mobile) ──
           var touchId=null,touchPending=false,touchStartX=0,touchStartY=0,TOUCH_THRESHOLD=8;
+          var pinchDist=0,pinchScale0=0,pinchStartT={tx:0,ty:0};
+          // Convert a screen point to block-relative coords
+          function blockRel(e){var br=b.getBoundingClientRect();return {x:e.clientX-br.left,y:e.clientY-br.top}}
           function onTouchStart(e){
+            var pts=e.touches;
+            if(pts.length===2){
+              // begin pinch zoom (use midpoint as pivot)
+              e.preventDefault();
+              var x1=pts[0].clientX,y1=pts[0].clientY,x2=pts[1].clientX,y2=pts[1].clientY;
+              pinchDist=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+              pinchScale0=scale;
+              touchId=null;touchPending=false;dragging=false;
+              var mx=(x1+x2)/2,my=(y1+y2)/2;
+              var br=b.getBoundingClientRect();
+              pinchStartT={x:mx-br.left,y:my-br.top};
+              return;
+            }
+            if(pts.length!==1)return;
             if(scale<=1)return;
-            if(e.touches.length!==1)return;
             e.preventDefault();
-            var t=e.touches[0];touchId=t.identifier;
+            var t=pts[0];touchId=t.identifier;
             touchStartX=t.clientX;touchStartY=t.clientY;
             touchPending=true;
             startX=t.clientX;startY=t.clientY;startTx=tx;startTy=ty;
           }
           function onTouchMove(e){
+            var pts=e.touches;
+            if(pts.length===2){
+              // pinch zoom around the midpoint
+              var x1=pts[0].clientX,y1=pts[0].clientY,x2=pts[1].clientX,y2=pts[1].clientY;
+              var d=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+              if(pinchDist>0&&d>0){
+                var factor=d/pinchDist;
+                var mx=(x1+x2)/2,my=(y1+y2)/2;
+                var br=b.getBoundingClientRect();
+                zoomAround(mx-br.left,my-br.top,factor);
+                pinchDist=d;
+              }
+              e.preventDefault();
+              return;
+            }
             if(touchId===null)return;
-            for(var i=0;i<e.touches.length;i++){if(e.touches[i].identifier===touchId){
-              var t=e.touches[i];
+            for(var i=0;i<pts.length;i++){if(pts[i].identifier===touchId){
+              var t=pts[i];
               if(touchPending){
                 var dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;
                 if(Math.sqrt(dx*dx+dy*dy)<TOUCH_THRESHOLD)return;
@@ -169,6 +228,8 @@ function _renderMermaidBlock(b){
             }}
           }
           function onTouchEnd(e){
+  // end pinch if a finger lifted
+  if(e.touches.length<2&&pinchDist>0){pinchDist=0;dragging=false;innerSvg.style.willChange='';innerSvg.classList.remove('panning');_applyNow()}
   if(touchId===null)return;
   for(var i=0;i<e.changedTouches.length;i++){if(e.changedTouches[i].identifier===touchId){
     dragging=false;touchPending=false;touchId=null;innerSvg.style.willChange='';innerSvg.classList.remove('panning');
@@ -180,9 +241,18 @@ function _renderMermaidBlock(b){
           innerSvg.addEventListener('touchmove',onTouchMove,{passive:false});
           innerSvg.addEventListener('touchend',onTouchEnd);
           innerSvg.addEventListener('touchcancel',onTouchEnd);
+          // ── Wheel zoom (Ctrl = zoom in, Shift = zoom out), centered on cursor ──
+          function onWheel(e){
+            if(!e.ctrlKey&&!e.shiftKey)return; // let page scroll normally otherwise
+            e.preventDefault();
+            var br=b.getBoundingClientRect();
+            var factor=e.deltaY<0?(1+STEP):(1-STEP);
+            zoomAround(e.clientX-br.left,e.clientY-br.top,factor);
+          }
+          innerSvg.addEventListener('wheel',onWheel,{passive:false});
           innerSvg.style.transformOrigin='center center';
           b.style.overflow='hidden';
-          b._zoomCleanup=function(){document.removeEventListener('mousemove',onDocMove);document.removeEventListener('mouseup',onDocUp);innerSvg.removeEventListener('touchstart',onTouchStart);innerSvg.removeEventListener('touchmove',onTouchMove);innerSvg.removeEventListener('touchend',onTouchEnd);innerSvg.removeEventListener('touchcancel',onTouchEnd)};
+          b._zoomCleanup=function(){document.removeEventListener('mousemove',onDocMove);document.removeEventListener('mouseup',onDocUp);innerSvg.removeEventListener('touchstart',onTouchStart);innerSvg.removeEventListener('touchmove',onTouchMove);innerSvg.removeEventListener('touchend',onTouchEnd);innerSvg.removeEventListener('touchcancel',onTouchEnd);innerSvg.removeEventListener('wheel',onWheel)};
           function onDocMove(e){if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);_scheduleApply()}
           function onDocUp(){if(dragging){dragging=false;innerSvg.style.willChange='';innerSvg.classList.remove('panning');document.removeEventListener('mousemove',onDocMove);if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null;_applyNow()}}}
           document.addEventListener('mousemove',onDocMove);
@@ -582,8 +652,8 @@ if(initRoute.type==='article'){if(isReload){replaceRoute(initRoute);openArticleV
     var svg=b.querySelector('svg');
     if(!svg)return;
     if(e.altKey)return;
-    if(e.ctrlKey){e.preventDefault();var btn=b.querySelector('.mermaid-zoom-btn');if(btn)btn.click();return}
-    if(e.shiftKey){e.preventDefault();var btns=b.querySelectorAll('.mermaid-zoom-btn');if(btns.length>1)btns[1].click();return}
+    if(e.ctrlKey){e.preventDefault();if(b._zoomAround)b._zoomAround(e,'in');return}
+    if(e.shiftKey){e.preventDefault();if(b._zoomAround)b._zoomAround(e,'out');return}
   });
   // Delegated click handlers for build-time static navigation
   // (inline [TOC] .toc-auto-link and footnote refs/backrefs). Using data
