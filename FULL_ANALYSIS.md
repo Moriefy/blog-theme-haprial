@@ -265,7 +265,7 @@ let inHtmlBlock = false;    // 原始 HTML 块
 
 ---
 
-### 2.4 前端 SPA 层 — `theme/app.js`（~1200行）
+### 2.4 前端 SPA 层 — `theme/app.js`（~552行）
 
 这是前端的核心，实现了**完整的单页应用**。
 
@@ -388,7 +388,7 @@ function processCodeBlocks() {
 
 ---
 
-### 2.5 样式层 — `theme/styles.css`（~1200行）
+### 2.5 样式层 — `theme/styles.css`（~544行）
 
 **Material Design 3 设计系统**的完整实现。
 
