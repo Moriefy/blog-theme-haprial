@@ -6,7 +6,55 @@
 function md5(str){function h(a,b){var c=(a&65535)+(b&65535);return((a>>16)+(b>>16)+(c>>16))<<16|c&65535}function k(a,b,c,d,e,f){b=h(h(b,a),h(d,f));return h(b<<e|b>>>32-e,c)}function l(a,b,c,d,e,f,g){return k(b&c|~b&d,a,b,e,f,g)}function m(a,b,c,d,e,f,g){return k(b&d|c&~d,a,b,e,f,g)}function n(a,b,c,d,e,f,g){return k(b^c^d,a,b,e,f,g)}function p(a,b,c,d,e,f,g){return k(c^(b|~d),a,b,e,f,g)}var r,s,t,u,v,w=1732584193,x=-271733879,y=-1732584194,z=271733878;str=unescape(encodeURIComponent(str));var a=str.length;var b=[];for(r=0;r<a;r++)b[r>>2]|=(str.charCodeAt(r)&255)<<(r%4)*8;b[a>>2]|=128<<((a%4)*8);b[14+(a+8>>>6<<4)]=a*8;for(r=0;r<b.length;r+=16){s=w;t=x;u=y;v=z;w=l(w,x,y,z,b[r],7,-680876936);z=l(z,w,x,y,b[r+1],12,-389564586);y=l(y,z,w,x,b[r+2],17,606105819);x=l(x,y,z,w,b[r+3],22,-1044525330);w=l(w,x,y,z,b[r+4],7,-176418897);z=l(z,w,x,y,b[r+5],12,1200080426);y=l(y,z,w,x,b[r+6],17,-1473231341);x=l(x,y,z,w,b[r+7],22,-45705983);w=l(w,x,y,z,b[r+8],7,1770035416);z=l(z,w,x,y,b[r+9],12,-1958414417);y=l(y,z,w,x,b[r+10],17,-42063);x=l(x,y,z,w,b[r+11],22,-1990404162);w=l(w,x,y,z,b[r+12],7,1804603682);z=l(z,w,x,y,b[r+13],12,-40341101);y=l(y,z,w,x,b[r+14],17,-1502002290);x=l(x,y,z,w,b[r+15],22,1236535329);w=m(w,x,y,z,b[r+1],5,-165796510);z=m(z,w,x,y,b[r+6],9,-1069501632);y=m(y,z,w,x,b[r+11],14,643717713);x=m(x,y,z,w,b[r],20,-373897302);w=m(w,x,y,z,b[r+5],5,-701558691);z=m(z,w,x,y,b[r+10],9,38016083);y=m(y,z,w,x,b[r+15],14,-660478335);x=m(x,y,z,w,b[r+4],20,-405537848);w=m(w,x,y,z,b[r+9],5,568446438);z=m(z,w,x,y,b[r+14],9,-1019803690);y=m(y,z,w,x,b[r+3],14,-187363961);x=m(x,y,z,w,b[r+8],20,1163531501);w=m(w,x,y,z,b[r+13],5,-1444681467);z=m(z,w,x,y,b[r+2],9,-51403784);y=m(y,z,w,x,b[r+7],14,1735328473);x=m(x,y,z,w,b[r+12],20,-1926607734);w=n(w,x,y,z,b[r+5],4,-378558);z=n(z,w,x,y,b[r+8],11,-2022574463);y=n(y,z,w,x,b[r+11],16,1839030562);x=n(x,y,z,w,b[r+14],23,-35309556);w=n(w,x,y,z,b[r+1],4,-1530992060);z=n(z,w,x,y,b[r+4],11,1272893353);y=n(y,z,w,x,b[r+7],16,-155497632);x=n(x,y,z,w,b[r+10],23,-1094730640);w=n(w,x,y,z,b[r+13],4,681279174);z=n(z,w,x,y,b[r],11,-358537222);y=n(y,z,w,x,b[r+3],16,-722521979);x=n(x,y,z,w,b[r+6],23,76029189);w=n(w,x,y,z,b[r+9],4,-640364487);z=n(z,w,x,y,b[r+12],11,-421815835);y=n(y,z,w,x,b[r+15],16,530742520);x=n(x,y,z,w,b[r+2],23,-995338651);w=p(w,x,y,z,b[r],6,-198630844);z=p(z,w,x,y,b[r+7],10,1126891415);y=p(y,z,w,x,b[r+14],15,-1416354905);x=p(x,y,z,w,b[r+5],21,-57434055);w=p(w,x,y,z,b[r+12],6,1700485571);z=p(z,w,x,y,b[r+3],10,-1894986606);y=p(y,z,w,x,b[r+10],15,-1051523);x=p(x,y,z,w,b[r+1],21,-2054922799);w=p(w,x,y,z,b[r+8],6,1873313359);z=p(z,w,x,y,b[r+15],10,-30611744);y=p(y,z,w,x,b[r+6],15,-1560198380);x=p(x,y,z,w,b[r+13],21,1309151649);w=p(w,x,y,z,b[r+4],6,-145523070);z=p(z,w,x,y,b[r+11],10,-1120210379);y=p(y,z,w,x,b[r+2],15,718787259);x=p(x,y,z,w,b[r+9],21,-343485551);w=h(w,s);x=h(x,t);y=h(y,u);z=h(z,v)}function hex(v){var o='',i;for(i=0;i<4;i++)o+=('0'+(v>>>(i*8+4)&15).toString(16)).slice(-1)+('0'+(v>>>(i*8)&15).toString(16)).slice(-1);return o}return hex(w)+hex(x)+hex(y)+hex(z)}
 
 // ── Markdown (评论用) ──
-function renderMd(src){let h=src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');h=h.replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>'<pre><code'+(l?' class="lang-'+l+'"':'')+'>'+c.replace(/\n$/,'')+'</code></pre>');h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');h=h.replace(/^> (.+)$/gm,'<blockquote><p>$1</p></blockquote>');h=h.replace(/^---+$/gm,'<hr>');h=h.replace(/^(\s*)[-*] (.+)$/gm,(_,i,t)=>'<li>'+t+'</li>');h=h.replace(/^(\s*)\d+\. (.+)$/gm,(_,i,t)=>'<li>'+t+'</li>');h=h.replace(/((?:<li>.*<\/li>\n?)+)/g,'<ul>$1</ul>');h=h.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');h=h.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g,'<em>$1</em>');h=h.replace(/~~(.+?)~~/g,'<del>$1</del>');h=h.replace(/`([^`]+?)`/g,'<code>$1</code>');h=h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1" loading="lazy">');h=h.replace(/\[([^\]]+?)\]\((https?:\/\/[^)]+?)\)/g,'<a href="$2" rel="noopener noreferrer nofollow" target="_blank">$1</a>');h=h.replace(/\n{2,}/g,'</p><p>');h=h.replace(/\n/g,'<br>');h='<p>'+h+'</p>';h=h.replace(/<p>\s*<\/p>/g,'');return h}
+// 渲染评论内容。注意：所有注入到 HTML 的用户输入都必须经过最终 sanitizeHtml 消毒，
+// 防止 `"`/事件属性/protocol 绕过导致的 XSS。
+function sanitizeHtml(h) {
+  // 1. 剔除不允许的标签（含自带内容）
+  h = h.replace(/<\s*(\/?)(script|style|iframe|object|embed|form|input|button|select|textarea|link|meta|base|svg|math|video|audio|source)\b[^>]*>/gi, '');
+  // 2. 剔除所有 on* 事件属性
+  h = h.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, ' ');
+  // 3. 剔除 style 属性
+  h = h.replace(/\s+style\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, ' ');
+  // 4. 消除危险协议的链接/来源
+  h = h.replace(/\b(href|src|xlink:href|background|action)\s*=\s*("|')\s*(javascript|vbscript|data|file):/gi, '$1=$2#blocked:');
+  return h;
+}
+function renderMd(src){
+  src = String(src || '').slice(0, 4000);
+  // 先保护代码块，避免内部被行内规则再次处理
+  const blocks = [];
+  src = src.replace(/```(\w*)\r?\n([\s\S]*?)```/g, (m, l, c) => {
+    blocks.push({ l: l || '', c: c.replace(/\n$/, '') });
+    return '\u0000BLOCK' + (blocks.length - 1) + '\u0000';
+  });
+  let h = src.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '"');
+  h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+  h = h.replace(/^---+$/gm, '<hr>');
+  h = h.replace(/^(\s*)[-*] (.+)$/gm, '<li>$1$2</li>');
+  h = h.replace(/^(\s*)\d+\. (.+)$/gm, '<li>$1$2</li>');
+  h = h.replace(/((?:<li>.*<\/li>\r?\n?)+)/g, '<ul>$1</ul>');
+  h = h.replace(/<li>(\s*)<\/li>/g, '');
+  h = h.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+  h = h.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  h = h.replace(/`([^`]+?)`/g, '<code>$1</code>');
+  h = h.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1" loading="lazy">');
+  h = h.replace(/\[([^\]]+?)\]\((https?:\/\/[^\s)'"]+)\)/g, '<a href="$2" rel="noopener noreferrer nofollow" target="_blank">$1</a>');
+  h = h.replace(/\n{2,}/g, '\n\u0000P\u0000');
+  h = h.replace(/\n/g, '<br>');
+  h = h.replace(/\u0000P\u0000/g, '</p><p>');
+  h = h.replace(/\u0000BLOCK(\d+)\u0000/g, (_, i) => {
+    const b = blocks[+i];
+    return '<pre><code' + (b.l ? ' class="lang-' + b.l + '"' : '') + '>' + b.c + '</code></pre>';
+  });
+  h = '<p>' + h + '</p>';
+  h = h.replace(/<p>\s*(<\/p>|<br>|<hr>|<h\d>|<blockquote>|<ul>|<pre>)/g, '$1');
+  h = h.replace(/<p>\s*<\/p>/g, '');
+  return sanitizeHtml(h);
+}
 
 // ── Admin Auth ──
 async function sha256Hex(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
@@ -193,8 +241,10 @@ export default {
       // ════════════════════════════════════════
       if (path === '/api/health') return json({ ok: true, hasGithubToken: !!env.GITHUB_TOKEN, repo: env.GITHUB_REPO || 'Moriefy/Blog_Astro' });
 
-      // GET /api/admin/github-test — 测试 GitHub token 是否有效
+      // GET /api/admin/github-test — 测试 GitHub token 是否有效（需管理员认证）
       if (method === 'GET' && path === '/api/admin/github-test') {
+        // 该接口会探测 GitHub token/仓库信息，必须受认证保护而非对外暴露
+        if (!await verifyAdmin(request, env)) return json({ error: '未授权' }, 401);
         const token = env.GITHUB_TOKEN;
         if (!token) return json({ ok: false, error: 'GITHUB_TOKEN 未设置' });
         const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
@@ -248,7 +298,8 @@ export default {
         if (nickname.length > 30 || content.length > 2000) return json({ error: '内容过长' }, 400);
         let avatarHash = email ? md5(email.trim().toLowerCase()) : null;
         const contentHtml = renderMd(content);
-        const admin = nickname === 'Moriefy' && email === '3518972914@qq.com';
+        // 仅当请求携带有效管理员凭证时才标记博主评论，杜绝凭昵称/邮箱冒名
+        const admin = await isAdminComment(request, env);
         const result = await env.DB.prepare("INSERT INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(page, parentId, depth, nickname, email, website, avatarHash, content, contentHtml, ip, request.headers.get('user-agent') || '', 'approved', admin ? 1 : 0).run();
         return json({ ok: true, id: result.meta.last_row_id, status: 'approved', is_admin: admin ? 1 : 0, message: '评论已发布' }, 201);
       }
@@ -303,10 +354,10 @@ export default {
       // ════════════════════════════════════════
       if (method === 'POST' && path === '/api/webhook/github') {
         const secret = env.WEBHOOK_SECRET;
-        if (secret) {
-          const valid = await verifyWebhookSignature(request, secret);
-          if (!valid) return json({ error: 'Invalid signature' }, 401);
-        }
+        // 未配置 secret 时禁止跳过校验 —— webhook 可被任意伪造触发，安全上强制要求
+        if (!secret) return json({ error: 'WEBHOOK_SECRET 未配置' }, 500);
+        const valid = await verifyWebhookSignature(request, secret);
+        if (!valid) return json({ error: 'Invalid signature' }, 401);
         let payload;
         try { payload = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
         if (!payload.commits || !Array.isArray(payload.commits)) return json({ ok: true, msg: 'no commits' });
@@ -518,7 +569,9 @@ export default {
           let imported = 0;
           for (const c of body) {
             try {
-              await env.DB.prepare("INSERT OR IGNORE INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(c.page_slug||c.page, c.parent_id||0, c.depth||0, c.nickname, c.email, c.website, c.avatar_hash, c.content, c.content_html||renderMd(c.content||''), c.ip||'import', c.user_agent||'import', c.status||'approved', c.is_admin||0).run();
+              // 导入内容一律强制重新渲染消毒，忽略调用方提供的 content_html，杜绝存储型 XSS
+              const contentHtml = renderMd(c.content || '');
+              await env.DB.prepare("INSERT OR IGNORE INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(c.page_slug||c.page, c.parent_id||0, c.depth||0, c.nickname, c.email, c.website, c.avatar_hash, c.content, contentHtml, c.ip||'import', c.user_agent||'import', c.status||'approved', c.is_admin||0).run();
               imported++;
             } catch(e) {}
           }
@@ -686,7 +739,8 @@ export default {
           data = data.replace(/\s/g, '');
           const imgFolder = folder || new Date().toISOString().slice(0,7).replace('-','/');
           const ext = name.split('.').pop().toLowerCase();
-          if (!['jpg','jpeg','png','gif','webp','svg','ico'].includes(ext)) return json({ error: '不支持的格式' }, 400);
+          // 注意：刻意排除 svg——SVG 可内嵌脚本，虽上传者为管理员，仍收紧为纯位图格式
+          if (!['jpg','jpeg','png','gif','webp','ico'].includes(ext)) return json({ error: '不支持的格式' }, 400);
           const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
           const filePath = `static/images/${imgFolder}/${safeName}`;
           const result = await githubPushBinary(env, filePath, data, `image: ${safeName}`);

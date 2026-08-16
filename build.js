@@ -137,7 +137,7 @@ function loadArticles(prevCache, globalFp) {
         const hid = m[2];
         const text = m[3].replace(/<[^>]+>/g, '');
         const indent = level === '3' ? ' class="sub"' : '';
-        tocHtml += '<li' + indent + '><a style="cursor:pointer" onclick="var el=document.getElementById(\'' + hid + '\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'start\'})}">' + escHtml(text) + '</a></li>';
+        tocHtml += '<li' + indent + '><a class="toc-auto-link" data-target="' + hid + '">' + escHtml(text) + '</a></li>';
       }
       tocHtml += '</ol>';
       a.content = a.content.replace(/<nav class="md-toc" id="md-toc-auto"><\/nav>/, '<nav class="md-toc" id="md-toc-auto">' + tocHtml + '</nav>');

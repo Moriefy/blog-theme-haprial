@@ -646,7 +646,17 @@ function renderComments(){
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
   loadCommentArticles()
 }
-window._exportComments=function(){window.open(API+'/api/admin/comments/export?token='+token,'_blank')};
+// 导出下载辅助：用 Authorization 头携带 token，避免凭据进入 URL query（浏览器历史/代理日志泄露）
+function _downloadAuth(path,filename){
+  return fetch(API+path,{headers:{'Authorization':'Bearer '+token}}).then(function(r){
+    if(r.status===401){logout();throw new Error('登录已过期')}
+    if(!r.ok)throw new Error('下载失败');
+    return r.blob();
+  }).then(function(blob){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+  }).catch(function(e){toast(e&&e.message||'下载失败')});
+}
+window._exportComments=function(){_downloadAuth('/api/admin/comments/export','comments.json')};
 function findArtBySlug(slug){
   // 精确匹配
   for(var i=0;i<cmtAllArticles.length;i++){if(cmtAllArticles[i].slug===slug)return cmtAllArticles[i]}
@@ -1371,7 +1381,7 @@ window._changePw=function(){
     else toast(d.error||'修改失败')
   }).catch(function(){toast('网络错误')})
 };
-window._exportData=function(){window.open(API+'/api/admin/export?token='+token,'_blank')};
+window._exportData=function(){_downloadAuth('/api/admin/export','blog-export.json')};
 window._importData=function(){
   showDialog('<h3>从 GitHub 导入</h3><p>将从 GitHub 仓库的 content/blog/ 目录导入所有文章到 D1 数据库。</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._doImport()">开始导入</button></div>')
 };

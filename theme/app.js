@@ -45,7 +45,7 @@ var _scrollBarW=null;
 function lockBody(){if(_scrollBarW===null)_scrollBarW=innerWidth-document.documentElement.clientWidth;document.body.classList.add('locked');document.body.style.paddingRight=_scrollBarW>0?_scrollBarW+'px':''}
 function unlockBody(){document.body.classList.remove('locked');document.body.style.paddingRight=''}
 function copyText(t){if(navigator.clipboard&&isSecureContext){navigator.clipboard.writeText(t);return}var ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'"')}
 /* requestIdleCallback shim (ES5-safe). Picks a per-slice budget so long idle
    callbacks never monopolise the main thread for non-interactive work. */
 var _ric=window.requestIdleCallback||function(cb){var st=Date.now();return setTimeout(function(){cb({didTimeout:false,timeRemaining:function(){return Math.max(0,50-(Date.now()-st))}})},1)};
@@ -584,6 +584,28 @@ if(initRoute.type==='article'){if(isReload){replaceRoute(initRoute);openArticleV
     if(e.altKey)return;
     if(e.ctrlKey){e.preventDefault();var btn=b.querySelector('.mermaid-zoom-btn');if(btn)btn.click();return}
     if(e.shiftKey){e.preventDefault();var btns=b.querySelectorAll('.mermaid-zoom-btn');if(btns.length>1)btns[1].click();return}
+  });
+  // Delegated click handlers for build-time static navigation
+  // (inline [TOC] .toc-auto-link and footnote refs/backrefs). Using data
+  // attributes here avoids inline onclick / JS-in-attribute injection vectors.
+  document.addEventListener('click',function(e){
+    // Inline [TOC] links
+    var tl=e.target.closest('.toc-auto-link');
+    if(tl&&tl.dataset.target){
+      var tgt=document.getElementById(tl.dataset.target);
+      if(tgt)tgt.scrollIntoView({behavior:'smooth',block:'start'});
+      return;
+    }
+    // Footnote reference / back-reference (scroll target + flash highlight)
+    var fn=e.target.closest('[data-fn-name]');
+    if(fn){
+      var tid='fn-'+fn.dataset.fnName, be=false;
+      if(fn.classList.contains('footnote-backref')){tid='fnref-'+fn.dataset.fnName;be=true}
+      var el=document.getElementById(tid);
+      if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='var(--primary-container)';setTimeout(function(){el.style.background=''},2000)}
+      e.preventDefault();
+      return;
+    }
   });
 })();
 // Initialize lightbox (shared module)
