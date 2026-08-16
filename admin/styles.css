@@ -264,7 +264,7 @@ tr:hover td{background:var(--surface-container-high)}
 .img-menu-btn:hover{background:rgba(0,0,0,.6)}
 .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;min-height:200px;border:2px dashed transparent;border-radius:12px;transition:border-color 200ms,background 200ms}
 .img-grid.drag-over{border-color:var(--primary);background:var(--primary-container)}
-.folder-card{position:relative;padding:12px 8px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms}
+.folder-card{position:relative;padding:12px 8px;border:1px solid var(--outline-variant);border-radius:12px;cursor:pointer;text-align:center;transition:border-color 200ms;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .folder-card svg{width:28px;height:28px}
 .folder-card:hover{border-color:var(--outline)}
 .breadcrumb{margin-bottom:12px;font-size:13px;color:var(--on-surface-variant)}

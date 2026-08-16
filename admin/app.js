@@ -169,7 +169,7 @@ function renderArticles(){
   $('artCatFilter').addEventListener('change',function(){artCat=this.value;artPage=0;renderArtList()});
   $('artTagFilter').addEventListener('change',function(){artTag=this.value;artPage=0;renderArtList()});
   loadAllArticles();
-  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-text" onclick="window._exportAllArticles()">导出全部</button><button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-text" onclick="window._selectAllArts()">全选</button><button class="md3-btn md3-btn-text" onclick="window._deselectAllArts()">取消</button><button class="md3-btn md3-btn-text" onclick="window._exportAllArticles()">导出全部</button><button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
 }
 function loadAllArticles(){
   api('GET','/api/admin/articles?status=all').then(function(d){
@@ -237,11 +237,18 @@ window._confirmDelArt=function(id){
   api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadAllArticles()}})
 };
 // 文章多选
+window._selectAllArts=function(){var filtered=getFilteredArticles();filtered.forEach(function(a){artSelected.add(a.id)});renderArtList();_artUpdateBatchBar()};
+window._deselectAllArts=function(){artSelected.clear();renderArtList();_artUpdateBatchBar()};
 function _artUpdateBatchBar(){
   var bar=$('artBatchBar');if(!bar)return;
   if(artSelected.size>0){
     bar.style.display='flex';
-    bar.innerHTML='<span>'+artSelected.size+' 篇选中</span><button class="md3-btn md3-btn-text" onclick="window._exportSelectedArts()">导出选中</button>';
+    if(artSelected.size===1){
+      var id=Array.from(artSelected)[0];
+      bar.innerHTML='<span>'+artSelected.size+' 篇选中</span><button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+id+')">导出 MD</button>';
+    }else{
+      bar.innerHTML='<span>'+artSelected.size+' 篇选中</span><button class="md3-btn md3-btn-text" onclick="window._exportSelectedArts()">导出 ZIP</button>';
+    }
   }else{bar.style.display='none'}
 }
 document.addEventListener('change',function(e){
@@ -555,7 +562,7 @@ function renderComments(){
   cmtSelectedPage='';
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
-    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div style="padding:8px 12px"><select class="md3-input" id="cmtFilter" style="height:32px;font-size:12px"><option value="all">全部文章</option><option value="with">有评论</option><option value="without">无评论</option></select></div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
+    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div style="padding:8px 12px;display:flex;gap:6px"><input class="md3-input" id="cmtSearch" placeholder="搜索…" style="height:32px;font-size:12px;flex:1"><select class="md3-input" id="cmtFilter" style="height:32px;font-size:12px;width:80px"><option value="all">全部</option><option value="with">有评论</option><option value="without">无评论</option></select></div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
@@ -583,8 +590,12 @@ function loadCommentArticles(){
     var commentPageSet={};
     pagesWithComments.forEach(function(p){commentPageSet[p]=true});
     var el=$('cmtArticleList');if(!el)return;
-    function renderList(filter){
+    function renderList(filter,search){
       var items=cmtAllArticles;
+      if(search){
+        var q=search.toLowerCase();
+        items=items.filter(function(a){return(a.title||'').toLowerCase().indexOf(q)!==-1||(a.slug||'').toLowerCase().indexOf(q)!==-1})
+      }
       if(filter==='with')items=items.filter(function(a){return commentPageSet['/posts/'+a.slug+'/']});
       else if(filter==='without')items=items.filter(function(a){return!commentPageSet['/posts/'+a.slug+'/']});
       if(!items.length){el.innerHTML='<div class="empty">暂无文章</div>';return}
@@ -605,9 +616,11 @@ function loadCommentArticles(){
         loadPageComments(cmtSelectedPage)
       };
     }
-    renderList('all');
+    renderList('all','');
     var filterEl=document.getElementById('cmtFilter');
-    if(filterEl)filterEl.addEventListener('change',function(){renderList(this.value)});
+    var searchEl=document.getElementById('cmtSearch');
+    if(filterEl)filterEl.addEventListener('change',function(){renderList(this.value,searchEl?searchEl.value:'')});
+    if(searchEl)searchEl.addEventListener('input',function(){renderList(filterEl?filterEl.value:'all',this.value)});
     if(cmtAllArticles.length&&!cmtSelectedPage){
       cmtSelectedPage='/posts/'+cmtAllArticles[0].slug+'/';
       var first=el.querySelector('.cmt-art-item');
@@ -616,7 +629,7 @@ function loadCommentArticles(){
     }
   }
   api('GET','/api/admin/articles?status=all').then(function(d){artsData=d}).catch(function(){}).finally(function(){artsLoaded=true;tryRender()});
-  api('GET','/api/admin/comments?limit=1').then(function(d){cmtsData=d}).catch(function(){}).finally(function(){cmtsLoaded=true;tryRender()});
+  api('GET','/api/admin/comments?limit=1000').then(function(d){cmtsData=d}).catch(function(){}).finally(function(){cmtsLoaded=true;tryRender()});
 }
 function loadPageComments(pageSlug){
   var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
