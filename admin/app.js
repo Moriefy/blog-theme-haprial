@@ -588,7 +588,12 @@ function loadCommentArticles(){
     cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
     var pagesWithComments=d.pages||[];
     var commentPageSet={};
-    pagesWithComments.forEach(function(p){commentPageSet[p]=true});
+    var commentSlugs={};
+    pagesWithComments.forEach(function(p){
+      commentPageSet[p]=true;
+      var s=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+      if(s)commentSlugs[s]=true
+    });
     var el=$('cmtArticleList');if(!el)return;
     function renderList(filter,search){
       var items=cmtAllArticles;
@@ -596,12 +601,12 @@ function loadCommentArticles(){
         var q=search.toLowerCase();
         items=items.filter(function(a){return(a.title||'').toLowerCase().indexOf(q)!==-1||(a.slug||'').toLowerCase().indexOf(q)!==-1})
       }
-      if(filter==='with')items=items.filter(function(a){return commentPageSet['/posts/'+a.slug+'/']});
-      else if(filter==='without')items=items.filter(function(a){return!commentPageSet['/posts/'+a.slug+'/']});
+      if(filter==='with')items=items.filter(function(a){return commentSlugs[a.slug]||commentPageSet['/posts/'+a.slug+'/']});
+      else if(filter==='without')items=items.filter(function(a){return!commentSlugs[a.slug]&&!commentPageSet['/posts/'+a.slug+'/']});
       if(!items.length){el.innerHTML='<div class="empty">暂无文章</div>';return}
       el.innerHTML=items.map(function(a){
         var page='/posts/'+a.slug+'/';
-        var hasCmt=!!commentPageSet[page];
+        var hasCmt=!!commentSlugs[a.slug]||!!commentPageSet[page];
         return '<div class="cmt-art-item" data-page="'+esc(page)+'">'
           +'<div class="cmt-art-title">'+esc(a.title)+(hasCmt?' <span style="color:var(--primary);font-size:11px">💬</span>':'')+'</div>'
           +'<div class="cmt-art-slug">'+esc(a.date)+'</div>'
