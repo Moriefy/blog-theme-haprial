@@ -586,30 +586,34 @@ function loadCommentArticles(){
     cmtData=d;
     cmtArticles={};
     cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
-    var pagesWithComments=d.pages||[];
-    var commentPageSet={};
-    var commentSlugs={};
-    pagesWithComments.forEach(function(p){
-      commentPageSet[p]=true;
-      var s=p.replace(/^\/posts\//,'').replace(/\/$/,'');
-      if(s)commentSlugs[s]=true
-    });
+    var pages=d.pages||[];
     var el=$('cmtArticleList');if(!el)return;
+    var commentPageSet={};
+    pages.forEach(function(p){commentPageSet[p]=true});
     function renderList(filter,search){
-      var items=cmtAllArticles;
+      var items=pages;
+      if(filter==='with')items=pages;
+      else if(filter==='without'){
+        items=cmtAllArticles.filter(function(a){return!commentPageSet['/posts/'+a.slug+'/']}).map(function(a){return'/posts/'+a.slug+'/'})
+      }
       if(search){
         var q=search.toLowerCase();
-        items=items.filter(function(a){return(a.title||'').toLowerCase().indexOf(q)!==-1||(a.slug||'').toLowerCase().indexOf(q)!==-1})
+        items=items.filter(function(p){
+          var s=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+          var art=findArtBySlug(s);
+          var t=art?art.title:s;
+          return t.toLowerCase().indexOf(q)!==-1||s.toLowerCase().indexOf(q)!==-1
+        })
       }
-      if(filter==='with')items=items.filter(function(a){return commentSlugs[a.slug]||commentPageSet['/posts/'+a.slug+'/']});
-      else if(filter==='without')items=items.filter(function(a){return!commentSlugs[a.slug]&&!commentPageSet['/posts/'+a.slug+'/']});
-      if(!items.length){el.innerHTML='<div class="empty">暂无文章</div>';return}
-      el.innerHTML=items.map(function(a){
-        var page='/posts/'+a.slug+'/';
-        var hasCmt=!!commentSlugs[a.slug]||!!commentPageSet[page];
-        return '<div class="cmt-art-item" data-page="'+esc(page)+'">'
-          +'<div class="cmt-art-title">'+esc(a.title)+(hasCmt?' <span style="color:var(--primary);font-size:11px">💬</span>':'')+'</div>'
-          +'<div class="cmt-art-slug">'+esc(a.date)+'</div>'
+      if(!items.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
+      el.innerHTML=items.map(function(p){
+        var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+        var art=findArtBySlug(slug);
+        var title=art?art.title:'';
+        var displayName=title?esc(title):esc(slug);
+        return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
+          +'<div class="cmt-art-title">'+displayName+'</div>'
+          +'<div class="cmt-art-slug">'+esc(p)+'</div>'
           +'</div>'
       }).join('');
       el.onclick=function(e){
@@ -621,20 +625,19 @@ function loadCommentArticles(){
         loadPageComments(cmtSelectedPage)
       };
     }
-    renderList('all','');
+    renderList('with','');
     var filterEl=document.getElementById('cmtFilter');
     var searchEl=document.getElementById('cmtSearch');
     if(filterEl)filterEl.addEventListener('change',function(){renderList(this.value,searchEl?searchEl.value:'')});
-    if(searchEl)searchEl.addEventListener('input',function(){renderList(filterEl?filterEl.value:'all',this.value)});
-    if(cmtAllArticles.length&&!cmtSelectedPage){
-      cmtSelectedPage='/posts/'+cmtAllArticles[0].slug+'/';
-      var first=el.querySelector('.cmt-art-item');
-      if(first)first.classList.add('active');
+    if(searchEl)searchEl.addEventListener('input',function(){renderList(filterEl?filterEl.value:'with',this.value)});
+    if(pages.length&&!cmtSelectedPage){
+      el.children[0].classList.add('active');
+      cmtSelectedPage=pages[0];
       loadPageComments(cmtSelectedPage)
     }
   }
   api('GET','/api/admin/articles?status=all').then(function(d){artsData=d}).catch(function(){}).finally(function(){artsLoaded=true;tryRender()});
-  api('GET','/api/admin/comments?limit=1000').then(function(d){cmtsData=d}).catch(function(){}).finally(function(){cmtsLoaded=true;tryRender()});
+  api('GET','/api/admin/comments?limit=1').then(function(d){cmtsData=d}).catch(function(){}).finally(function(){cmtsLoaded=true;tryRender()});
 }
 function loadPageComments(pageSlug){
   var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
