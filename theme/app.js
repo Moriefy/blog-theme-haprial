@@ -504,8 +504,8 @@ document.addEventListener('click',function(e){
 });
 
 document.addEventListener('keydown',function(e){
-  // ESC always works (even in inputs)
-  if(e.key==='Escape'){if(tocSheet.classList.contains('open')){closeTocSheet();return}if(searchView.classList.contains('open')){closeSearch();return}var lb=document.getElementById('lightbox');if(lb&&lb.classList.contains('open')){if(window.__lbClose)window.__lbClose();else{lb.classList.remove('open');document.body.style.overflow=''}return}if(articleView.classList.contains('open')){if(history.length>1)history.back();else{closeArticleVisual();pushRoute({type:'page',page:'articles'})}return}}
+  // ESC closes overlays, but is suppressed while typing in the comment box
+  if(e.key==='Escape'){if(window.__cmtInputFocused)return;if(tocSheet.classList.contains('open')){closeTocSheet();return}if(searchView.classList.contains('open')){closeSearch();return}var lb=document.getElementById('lightbox');if(lb&&lb.classList.contains('open')){if(window.__lbClose)window.__lbClose();else{lb.classList.remove('open');document.body.style.overflow=''}return}if(articleView.classList.contains('open')){if(history.length>1)history.back();else{closeArticleVisual();pushRoute({type:'page',page:'articles'})}return}}
   // Guard: skip shortcuts when typing in comment/input fields
   if(window.__cmtInputFocused)return;
   var ae=document.activeElement;

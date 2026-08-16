@@ -341,9 +341,9 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp
 </footer>
 <noscript><style>.page{display:block!important}.article-view{display:none!important}</style></noscript>
 
-<script src="/theme/lightbox.js"></script>
-<script src="/theme/comments.js?v='+globalFp+'"></script>
-<script defer src="/theme/app.js"></script>
+<script src="/theme/lightbox.js?v=${globalFp}"></script>
+<script src="/theme/comments.js?v=${globalFp}"></script>
+<script defer src="/theme/app.js?v=${globalFp}"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
 </script>
@@ -440,7 +440,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-<link rel="stylesheet" href="/theme/styles.css?v='+globalFp+'">
+<link rel="stylesheet" href="/theme/styles.css?v=${globalFp}">
 ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp+'">':''}
 <script type="application/ld+json">${jsonLd}</script>
 <script type="application/ld+json">${breadcrumbLd}</script>
@@ -477,8 +477,8 @@ ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/
   <p class="footer-copy">&copy; ${new Date().getFullYear()} ${escHtml(config.title)}</p>
 </footer>
 
-<script src="/theme/lightbox.js"></script>
-<script src="/theme/comments.js?v='+globalFp+'"></script>
+<script src="/theme/lightbox.js?v=${globalFp}"></script>
+<script src="/theme/comments.js?v=${globalFp}"></script>
 <script>
 ${themeInitScript()}
 ${postPageScript()}
@@ -569,7 +569,7 @@ function seoPageHead(title, description) {
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${escHtml(SITE_CONFIG.url)}/${escHtml(title.toLowerCase())}/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/theme/styles.css?v='+globalFp+'">
+<link rel="stylesheet" href="/theme/styles.css?v=${globalFp}">
 </head>
 <body>
 <header class="top-app-bar"><span class="logo" onclick="location.href='/'" style="cursor:pointer">${escHtml(SITE_CONFIG.author)}</span><div class="spacer"></div></header>
