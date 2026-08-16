@@ -93,7 +93,7 @@ $('logoutBtn').addEventListener('click',logout);
 // ════════════════════════════════════════
 //  路由 (Hash-based)
 // ════════════════════════════════════════
-var pageTitles={dashboard:'仪表盘',articles:'文章管理',editor:'写文章',comments:'评论管理',friends:'友链管理',trash:'回收站',settings:'设置'};
+var pageTitles={dashboard:'仪表盘',articles:'文章管理',editor:'写文章',comments:'评论管理',friends:'友链管理',trash:'回收站',settings:'设置',tags:'标签管理'};
 var routes={
   '/':function(){renderDashboard()},
   '/articles':function(){renderArticles()},
@@ -102,7 +102,8 @@ var routes={
   '/friends':function(){renderFriends()},
   '/images':function(){renderImages()},
   '/trash':function(){renderTrash()},
-  '/settings':function(){renderSettings()}
+  '/settings':function(){renderSettings()},
+  '/tags':function(){renderTagManager()}
 };
 function parseHash(){var h=(location.hash||'').replace(/^#/,'')||'/';return h}
 function route(){
@@ -117,6 +118,7 @@ function route(){
   else if(path==='/images'||path.match(/^\/images\//)){page='images'}
   else if(path==='/trash')page='trash';
   else if(path==='/settings')page='settings';
+  else if(path==='/tags')page='tags';
   else page='dashboard';
   if(page!=='editor'){
     clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
@@ -713,11 +715,28 @@ function renderCmtTree(list,pageSlug){
     if(c.parent_id&&byId[c.parent_id]){byId[c.parent_id]._children.push(c)}
     else{roots.push(c)}
   });
+  var _cmtSelected=new Set();
+  function _updateCmtBatch(){
+    var bar=$('cmtBatchBar');if(!bar)return;
+    if(_cmtSelected.size>0){bar.style.display='flex';bar.innerHTML='<span>'+_cmtSelected.size+' 条选中</span><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._batchDelCmt()">批量删除</button>'}
+    else{bar.style.display='none'}
+  }
+  window._batchDelCmt=function(){
+    var ids=Array.from(_cmtSelected);
+    showDialog('<h3>确认删除</h3><p>删除 '+ids.length+' 条评论？</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._doBatchDelCmt()">删除</button></div>')
+  };
+  window._doBatchDelCmt=function(){
+    closeDialog();
+    var ids=Array.from(_cmtSelected);var done=0;
+    ids.forEach(function(id){
+      api('DELETE','/api/admin/comments/'+id).then(function(){done++;if(done===ids.length){toast('已删除 '+ids.length+' 条');loadPageComments(cmtSelectedPage)}})
+    })
+  };
   function renderNode(c,depth){
     var indent=depth*24;
     var pinIcon='<svg viewBox="0 0 16 16" width="13" height="13" fill="'+(c.pinned?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M9.83 2.17a1.41 1.41 0 0 0-2 0L3.29 6.71a1 1 0 0 0-.29.71V8a1 1 0 0 0 1 1h1l-3 5h2l3-3v4l1-1 1 1v-4l3 3h2l-3-5h1a1 1 0 0 0 1-1v-.59a1 1 0 0 0-.29-.71z"/></svg>';
     var h='<div class="cmt-item" data-depth="'+depth+'" style="margin-left:'+indent+'px">'
-      +'<div class="cmt-header"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
+      +'<div class="cmt-header"><input type="checkbox" class="cmt-cb" data-id="'+c.id+'" style="margin-right:6px;accent-color:var(--primary)"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +'<div class="cmt-body">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
@@ -729,9 +748,16 @@ function renderCmtTree(list,pageSlug){
     c._children.forEach(function(child){h+=renderNode(child,depth+1)});
     return h
   }
-  var html='';
+  var html='<div id="cmtBatchBar" class="batch-bar" style="display:none"></div>';
   roots.forEach(function(c){html+=renderNode(c,0)});
-  el.innerHTML=html
+  el.innerHTML=html;
+  el.addEventListener('change',function(e){
+    if(e.target.classList.contains('cmt-cb')){
+      var id=parseInt(e.target.dataset.id);
+      if(e.target.checked)_cmtSelected.add(id);else _cmtSelected.delete(id);
+      _updateCmtBatch()
+    }
+  })
 }
 window._doReply=function(id){
   var el=document.getElementById('reply-'+id);if(!el)return;
@@ -1349,10 +1375,40 @@ window._doImport=function(){
   closeDialog();
   toast('正在导入…');
   api('POST','/api/admin/import-from-github').then(function(d){
-    if(d.ok)toast('导入完成: '+d.imported+' 篇文章');
+    if(d.ok)toast('导入完成: '+d.imported+' 篇文章'+(d.deduped?'，去重 '+d.deduped+' 条':''));
     else toast(d.error||'导入失败')
   }).catch(function(){toast('导入失败')})
 };
+
+// ════════════════════════════════════════
+//  标签管理
+// ════════════════════════════════════════
+function renderTagManager(){
+  var c=$('content');
+  c.innerHTML='<div class="empty">加载中…</div>';
+  api('GET','/api/admin/articles?status=all').then(function(d){
+    var arts=d.articles||[];
+    var tagMap={},catMap={};
+    arts.forEach(function(a){
+      var tags=[];try{tags=parseTags(a.tags)}catch(e){}
+      tags.forEach(function(t){if(!tagMap[t])tagMap[t]=[];tagMap[t].push(a)});
+      if(a.category){if(!catMap[a.category])catMap[a.category]=[];catMap[a.category].push(a)}
+    });
+    var tagList=Object.keys(tagMap).sort();
+    var catList=Object.keys(catMap).sort();
+    var html='<div class="settings-section"><h3>标签 ('+tagList.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    tagList.forEach(function(t){
+      html+='<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--outline-variant);border-radius:8px;font-size:13px;background:var(--surface-container)"><span>'+esc(t)+'</span><span style="color:var(--outline);font-size:11px">'+tagMap[t].length+'</span></div>';
+    });
+    html+='</div></div>';
+    html+='<div class="settings-section"><h3>分类 ('+catList.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    catList.forEach(function(t){
+      html+='<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--outline-variant);border-radius:8px;font-size:13px;background:var(--surface-container)"><span>'+esc(t)+'</span><span style="color:var(--outline);font-size:11px">'+catMap[t].length+'</span></div>';
+    });
+    html+='</div></div>';
+    c.innerHTML=html
+  })
+}
 
 // ════════════════════════════════════════
 //  Markdown 解析 (预览用)
