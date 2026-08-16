@@ -629,7 +629,7 @@ function renderComments(){
   cmtSelectedPage='';
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
-    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div style="padding:8px 12px;display:flex;gap:6px"><input class="md3-input" id="cmtSearch" placeholder="搜索…" style="height:32px;font-size:12px;flex:1"><select class="md3-input" id="cmtFilter" style="height:32px;font-size:12px;width:80px"><option value="all">全部</option><option value="with">有评论</option><option value="without">无评论</option></select></div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
+    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
@@ -655,48 +655,25 @@ function loadCommentArticles(){
     cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
     var pages=d.pages||[];
     var el=$('cmtArticleList');if(!el)return;
-    var commentPageSet={};
-    pages.forEach(function(p){commentPageSet[p]=true});
-    function renderList(filter,search){
-      var items=pages;
-      if(filter==='with')items=pages;
-      else if(filter==='without'){
-        items=cmtAllArticles.filter(function(a){return!commentPageSet['/posts/'+a.slug+'/']}).map(function(a){return'/posts/'+a.slug+'/'})
-      }
-      if(search){
-        var q=search.toLowerCase();
-        items=items.filter(function(p){
-          var s=p.replace(/^\/posts\//,'').replace(/\/$/,'');
-          var art=findArtBySlug(s);
-          var t=art?art.title:s;
-          return t.toLowerCase().indexOf(q)!==-1||s.toLowerCase().indexOf(q)!==-1
-        })
-      }
-      if(!items.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
-      el.innerHTML=items.map(function(p){
-        var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
-        var art=findArtBySlug(slug);
-        var title=art?art.title:'';
-        var displayName=title?esc(title):esc(slug);
-        return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
-          +'<div class="cmt-art-title">'+displayName+'</div>'
-          +'<div class="cmt-art-slug">'+esc(p)+'</div>'
-          +'</div>'
-      }).join('');
-      el.onclick=function(e){
-        var item=e.target.closest('.cmt-art-item');
-        if(!item)return;
-        [].forEach.call(el.children,function(i){i.classList.remove('active')});
-        item.classList.add('active');
-        cmtSelectedPage=item.dataset.page;
-        loadPageComments(cmtSelectedPage)
-      };
-    }
-    renderList('with','');
-    var filterEl=document.getElementById('cmtFilter');
-    var searchEl=document.getElementById('cmtSearch');
-    if(filterEl)filterEl.addEventListener('change',function(){renderList(this.value,searchEl?searchEl.value:'')});
-    if(searchEl)searchEl.addEventListener('input',function(){renderList(filterEl?filterEl.value:'with',this.value)});
+    if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
+    el.innerHTML=pages.map(function(p){
+      var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+      var art=findArtBySlug(slug);
+      var title=art?art.title:'';
+      var displayName=title?esc(title):esc(slug);
+      return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
+        +'<div class="cmt-art-title">'+displayName+'</div>'
+        +'<div class="cmt-art-slug">'+esc(p)+'</div>'
+        +'</div>'
+    }).join('');
+    el.onclick=function(e){
+      var item=e.target.closest('.cmt-art-item');
+      if(!item)return;
+      [].forEach.call(el.children,function(i){i.classList.remove('active')});
+      item.classList.add('active');
+      cmtSelectedPage=item.dataset.page;
+      loadPageComments(cmtSelectedPage)
+    };
     if(pages.length&&!cmtSelectedPage){
       el.children[0].classList.add('active');
       cmtSelectedPage=pages[0];
