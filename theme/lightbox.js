@@ -157,8 +157,27 @@ window.__initLightbox = function(articleBody) {
 
     if (origImgEl) origRect = origImgEl.getBoundingClientRect();
     waitLoad(function() {
-      lbImg.style.animation = 'lbEnterAnim .3s cubic-bezier(0,0,.2,1) both';
-      setTimeout(function() { lbImg.style.animation = ''; }, 350);
+      // FLIP: grow from the clicked image rect into the centered stage.
+      if (origRect && lbImg.naturalWidth) {
+        var r = lbImg.getBoundingClientRect();
+        var sx = origRect.width / r.width;
+        var sy = origRect.height / r.height;
+        var sF = Math.min(sx, sy);
+        var dx = origRect.left + origRect.width / 2 - (r.left + r.width / 2);
+        var dy = origRect.top + origRect.height / 2 - (r.top + r.height / 2);
+        lbImg.style.transition = 'none';
+        lbImg.style.transformOrigin = '50% 50%';
+        lbImg.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sF + ')';
+        lbImg.style.opacity = '0';
+        void lbImg.offsetWidth;
+        lbImg.style.transition = 'transform 320ms var(--motion-emphasized), opacity 220ms var(--motion-standard)';
+        lbImg.style.transform = '';
+        lbImg.style.opacity = '1';
+        setTimeout(function() { lbImg.style.transition = ''; }, 340);
+      } else {
+        lbImg.style.animation = 'lbEnterAnim .3s cubic-bezier(0,0,.2,1) both';
+        setTimeout(function() { lbImg.style.animation = ''; }, 350);
+      }
     });
   }
 
