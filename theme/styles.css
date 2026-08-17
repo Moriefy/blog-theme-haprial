@@ -193,7 +193,7 @@ a{color:var(--primary);text-decoration:none}
 /* ── About ── */
 .about-center{text-align:center;padding:40px 0 28px}
 /* About: staggered block reveal when the page becomes active */
-@keyframes aboutReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes aboutReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 #pageAbout.active .about-center>*{animation:aboutReveal var(--dur-med) var(--motion-standard-decelerate) both}
 #pageAbout.active .about-center>*:nth-child(1){animation-delay:20ms}
 #pageAbout.active .about-center>*:nth-child(2){animation-delay:70ms}
@@ -435,7 +435,8 @@ a{color:var(--primary);text-decoration:none}
 @media(max-width:1200px){.toc{display:none}.toc-toggle{display:flex}}
 @media(max-width:768px){
   .page.slide-in-right,.page.slide-in-left,.page.slide-out-left,.page.slide-out-right{animation:none!important}
-  .card.show{animation:none!important;opacity:1;transform:none}
+  /* 移动端放开首页卡片的交错入场 animation（保留 reduced-motion 下的 429 行禁用保护） */
+  .card.show{opacity:1;transform:translateY(0)}
   .mermaid-block svg,.mermaid-block svg text{-webkit-user-select:text;user-select:text;touch-action:auto}
   .mermaid-block.zoomed svg{touch-action:none}
   .mermaid-block svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
