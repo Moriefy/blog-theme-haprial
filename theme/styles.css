@@ -105,11 +105,11 @@ a{color:var(--primary);text-decoration:none}
 /* ── Article Cards ── */
 #articleList{scroll-margin-top:104px}
 .article-list{padding-bottom:8px}
-.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:content}
+.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:content;transition:transform var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard),background var(--dur-fast) var(--motion-standard)}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-med) var(--motion-standard-decelerate) backwards}
 .card+.card{border-top:1px solid var(--outline-variant)}
-.card:hover{background:var(--surface-container-low)}
+.card:hover{background:var(--surface-container-low);transform:translateY(-2px);box-shadow:var(--e2)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
 .card:hover .card-title{color:var(--primary);transition:color var(--dur-med) var(--motion-standard)}
 .card-date{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;color:var(--outline);margin-bottom:3px;font-weight:400}
@@ -192,6 +192,21 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── About ── */
 .about-center{text-align:center;padding:40px 0 28px}
+/* About: staggered block reveal when the page becomes active */
+@keyframes aboutReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#pageAbout.active .about-center>*{animation:aboutReveal var(--dur-med) var(--motion-standard-decelerate) both}
+#pageAbout.active .about-center>*:nth-child(1){animation-delay:20ms}
+#pageAbout.active .about-center>*:nth-child(2){animation-delay:70ms}
+#pageAbout.active .about-center>*:nth-child(3){animation-delay:120ms}
+#pageAbout.active .about-center>*:nth-child(4){animation-delay:170ms}
+#pageAbout.active .about-center>*:nth-child(5){animation-delay:220ms}
+#pageAbout.active .about-center>*:nth-child(6){animation-delay:270ms}
+#pageAbout.active .about-center>*:nth-child(7){animation-delay:320ms}
+#pageAbout.active .about-center>*:nth-child(8){animation-delay:370ms}
+#pageAbout.active .about-center>*:nth-child(9){animation-delay:420ms}
+#pageAbout.active .about-center>*:nth-child(10){animation-delay:470ms}
+#pageAbout.active .about-center>*:nth-child(11){animation-delay:520ms}
+#pageAbout.active .about-center>*:nth-child(12){animation-delay:570ms}
 .about-mono{width:72px;height:72px;border-radius:36px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden}
 .about-mono img{width:100%;height:100%;object-fit:cover}
 [data-theme="dark"] .about-mono{background:#D4DDE3}
@@ -411,7 +426,7 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Reduced Motion ── */
 @media(prefers-reduced-motion:reduce){
-  .ripple,.card,.tag-card,.cat-card,.fl-card,.archive-card,.sv-item,.page.slide-in-right,.page.slide-in-left,.hero h1,.hero p,.filter-bar.on,.no-results.show,.skel-line::after{animation:none!important}
+  .ripple,.card,.tag-card,.cat-card,.fl-card,.archive-card,.sv-item,.page.slide-in-right,.page.slide-in-left,.hero h1,.hero p,.filter-bar.on,.no-results.show,.skel-line::after,.about-center>*{animation:none!important}
   .si,.article-body>*,.toc,.toc-drawer,.toc-scrim,.search-view,.article-view,.fab,.fab-comment,.tab-bar,.rprog,.card,.tag-card,.cat-card,.fl-card,.archive-card,.icon-btn,.art-nav-btn,.pg-btn,.sv-item,.footer-link,.about-link{transition:none!important}
   .lightbox-img,.lightbox{transition:none!important}
 }

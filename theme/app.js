@@ -549,7 +549,7 @@ function toggleTheme(){var cur=document.documentElement.getAttribute('data-theme
 window.addEventListener('popstate',function(){if(searchView.classList.contains('open')){closeSearch(true);return}var st=history.state;if(!st)st=parseHash();applyRoute(st)});
 
 /* Ripple: cards excluded — they only ripple on click, not pointerdown */
-document.addEventListener('pointerdown',function(e){var el=e.target.closest('.fl-card,.art-nav-btn,.archive-card');if(!el||el.disabled||el.offsetParent===null)return;createRipple(e,el)},{passive:true});
+document.addEventListener('pointerdown',function(e){var el=e.target.closest('.fl-card,.art-nav-btn,.archive-card,#filterClear');if(!el||el.disabled||el.offsetParent===null)return;createRipple(e,el)},{passive:true});
 
 
 document.addEventListener('click',function(e){
