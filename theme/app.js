@@ -538,11 +538,18 @@ function renderFriends(){$('flGrid').innerHTML=friends.map(function(f,i){return'
 function createRipple(e,el){if(reducedMotion)return;if(el.querySelectorAll('.ripple').length>3)return;var r=el.getBoundingClientRect(),s=Math.max(r.width,r.height)*2,sp=document.createElement('span');sp.className='ripple';sp.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(e.clientX-r.left-s/2)+'px;top:'+(e.clientY-r.top-s/2)+'px';el.appendChild(sp);sp.addEventListener('animationend',function(){sp.remove()})}
 function syncAllIcons(t){document.querySelectorAll('.theme-wrap').forEach(function(w){var s=w.querySelector('.sun'),m=w.querySelector('.moon');if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}})}
 function setTheme(t){applyTheme(t)}
+/* Re-render rendered Mermaid charts so their baked-in colours follow the new theme.
+   Mermaid SVGs freeze theme colours (fill/stroke) as inline attrs at render time,
+   so without re-rendering they go stale after a theme switch (boxes stay dark). */
+function rerenderMermaidsOnTheme(){
+  if(!articleBody)return;var blocks=[].slice.call(articleBody.querySelectorAll('.mermaid-block'));var i;
+  for(i=0;i<blocks.length;i++){var b=blocks[i];if(b._zoomCleanup){try{b._zoomCleanup()}catch(e){}}b.innerHTML='';b.removeAttribute('data-mr');_renderMermaidBlock(b)}
+}
 function applyTheme(t){var el=document.documentElement;var apply=function(){el.setAttribute('data-theme',t);try{localStorage.setItem('th',t)}catch(e){}syncAllIcons(t);var btn=document.getElementById('themeBtn');if(btn)btn.setAttribute('aria-pressed',t==='dark'?'true':'false')};
   /* Prefer native CSS View Transitions (GPU-composited snapshot = no per-node style recalc)
      when available & not reduced-motion. Falls back to the old class-based tween otherwise. */
-  if(!reducedMotion&&!isLowEnd&&document.startViewTransition){var vt=document.startViewTransition(function(){apply();return Promise.resolve()});vt.finished.catch(function(){});return}
-  el.classList.add('theme-transitioning');apply();setTimeout(function(){el.classList.remove('theme-transitioning')},250)
+  if(!reducedMotion&&!isLowEnd&&document.startViewTransition){var vt=document.startViewTransition(function(){apply();rerenderMermaidsOnTheme();return Promise.resolve()});vt.finished.catch(function(){});return}
+  el.classList.add('theme-transitioning');apply();rerenderMermaidsOnTheme();setTimeout(function(){el.classList.remove('theme-transitioning')},250)
 }
 function toggleTheme(){var cur=document.documentElement.getAttribute('data-theme')||'light';setTheme(cur==='light'?'dark':'light')}
 
