@@ -420,3 +420,17 @@ tr:hover td{background:var(--surface-container-high)}
 [data-theme="dark"] .batch-bar .md3-btn{color:#1B2A33}
 [data-theme="dark"] .paste-bar .md3-btn{color:#1B2A33;border-color:rgba(0,0,0,.2)}
 [data-theme="dark"] .ctx-menu{background:var(--surface-container);border-color:var(--outline-variant)}
+
+/* ══════════════════════════════════════
+   Skeleton 加载骨架屏
+   ══════════════════════════════════════ */
+.skeleton{position:relative;overflow:hidden;background:var(--surface-container-high);border-radius:8px;min-height:14px}
+.skeleton::after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:sk-shimmer 1.4s infinite}
+[data-theme="dark"] .skeleton::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+@keyframes sk-shimmer{100%{transform:translateX(100%)}}
+.sk-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.sk-card{height:92px;border-radius:12px}
+.sk-row{height:16px;margin-bottom:10px;border-radius:6px}
+.sk-row.w60{width:60%}.sk-row.w40{width:40%}.sk-row.w80{width:80%}
+.sk-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0}
+.sk-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--outline-variant)}

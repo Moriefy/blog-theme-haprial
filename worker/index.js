@@ -501,6 +501,89 @@ export default {
           return json({ ok: true, status: newStatus, github: ghResult });
         }
 
+        // POST /api/admin/articles/batch — 批量发布/下架/删除
+        if (method === 'POST' && path === '/api/admin/articles/batch') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Boolean) : [];
+          const action = body.action;
+          if (!ids.length) return json({ error: '未选择文章' }, 400);
+          if (!['publish', 'draft', 'delete'].includes(action)) return json({ error: '不支持的操作' }, 400);
+          let success = 0, failed = 0; const errors = [];
+          for (const id of ids) {
+            const art = await env.DB.prepare("SELECT * FROM articles WHERE id=?").bind(id).first();
+            if (!art) { failed++; errors.push(`#${id} 不存在`); continue; }
+            try {
+              if (action === 'delete') {
+                await env.DB.prepare("INSERT INTO trash (original_id,type,title,slug,data) VALUES (?,?,?,?,?)").bind(art.id, 'article', art.title, art.slug, JSON.stringify(art)).run();
+                await env.DB.prepare("DELETE FROM articles WHERE id=?").bind(id).run();
+                const gh = await githubDelete(env, `content/blog/${art.slug}.md`, `blog delete: ${art.title}`);
+                if (!gh.ok && gh.error !== 'file not found on GitHub') { throw new Error('GitHub 删除失败'); }
+                success++;
+              } else {
+                const newStatus = action === 'publish' ? 'published' : 'draft';
+                await env.DB.prepare("UPDATE articles SET status=?, updated_at=datetime('now') WHERE id=?").bind(newStatus, id).run();
+                let gh = { ok: true };
+                if (action === 'publish') {
+                  const md = buildMd(art);
+                  gh = await githubPush(env, `content/blog/${art.slug}.md`, md, `blog publish: ${art.title}`);
+                } else {
+                  // 下架：仅当当前是已发布状态才删除 GitHub 文件
+                  if (art.status === 'published') {
+                    gh = await githubDelete(env, `content/blog/${art.slug}.md`, `blog unpublish: ${art.title}`);
+                  }
+                }
+                if (!gh.ok) { throw new Error(gh.error || 'GitHub 同步失败'); }
+                success++;
+              }
+            } catch (e) { failed++; errors.push(`${art.title}: ${e.message}`); }
+          }
+          return json({ ok: true, success, failed, errors, action });
+        }
+
+        // POST /api/admin/tags/replace — 标签重命名/合并（同步更新 D1 与 GitHub 文件）
+        if (method === 'POST' && path === '/api/admin/tags/replace') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const { oldTag, newTag, mode } = body;
+          if (!oldTag || !newTag) return json({ error: '参数缺失' }, 400);
+          if (mode !== 'rename' && mode !== 'merge') return json({ error: 'mode 必须为 rename 或 merge' }, 400);
+          const parseTagsArr = (t) => {
+            if (!t) return [];
+            if (Array.isArray(t)) return t;
+            if (typeof t === 'string') {
+              const s = t.trim();
+              if (!s || s === 'null' || s === 'undefined' || s === '[]') return [];
+              if (s.charAt(0) === '[') { try { const arr = JSON.parse(s); return Array.isArray(arr) ? arr : []; } catch (e) {} }
+              return s.split(',').map(x => x.trim()).filter(Boolean);
+            }
+            return [];
+          };
+          const { results } = await env.DB.prepare("SELECT * FROM articles").all();
+          let changed = 0;
+          const errors = [];
+          for (const art of results) {
+            const tags = parseTagsArr(art.tags);
+            if (!tags.includes(oldTag)) continue;
+            let newTags;
+            if (mode === 'rename') {
+              newTags = tags.map(t => t === oldTag ? newTag : t);
+            } else { // merge：移除旧标签，并入新标签
+              newTags = tags.filter(t => t !== oldTag);
+              if (!newTags.includes(newTag)) newTags.push(newTag);
+            }
+            // 去重
+            newTags = [...new Set(newTags)];
+            await env.DB.prepare("UPDATE articles SET tags=?, updated_at=datetime('now') WHERE id=?").bind(JSON.stringify(newTags), art.id).run();
+            // 同步 GitHub 文件
+            try {
+              const md = buildMd({ ...art, tags: newTags });
+              const gh = await githubPush(env, `content/blog/${art.slug}.md`, md, `blog tag ${mode}: ${oldTag} -> ${newTag}`);
+              if (!gh.ok) throw new Error(gh.error || 'GitHub 同步失败');
+            } catch (e) { errors.push(`${art.title}: ${e.message}`); }
+            changed++;
+          }
+          return json({ ok: true, changed, errors });
+        }
+
         // ── 评论管理 ──
         // GET /api/admin/comments
         if (method === 'GET' && path === '/api/admin/comments') {
@@ -651,7 +734,6 @@ export default {
           await env.DB.prepare("DELETE FROM trash").run();
           return json({ ok: true });
         }
-
         // ── 统计 ──
         if (method === 'GET' && path === '/api/admin/stats') {
           const arts = await env.DB.prepare("SELECT COUNT(*) as c FROM articles").first();
@@ -662,6 +744,28 @@ export default {
           const trash = await env.DB.prepare("SELECT COUNT(*) as c FROM trash").first();
           return json({ articles: arts.c, published: published.c, drafts: drafts.c, comments: comments.c, friends: friends.c, trash: trash.c });
         }
+
+        // ── 站点配置 site.config.json ──
+        // GET /api/admin/site-config — 从 GitHub 读取 site.config.json
+        if (method === 'GET' && path === '/api/admin/site-config') {
+          const fileData = await githubFetch(env, 'site.config.json');
+          if (!fileData) return json({ error: '无法从 GitHub 读取 site.config.json（请检查 GITHUB_TOKEN 与仓库）' }, 500);
+          let config;
+          try { config = JSON.parse(fileData.content); } catch (e) { return json({ error: 'site.config.json 解析失败: ' + e.message }, 500); }
+          return json({ ok: true, config, sha: fileData.sha });
+        }
+
+        // PUT /api/admin/site-config — 写回 site.config.json
+        if (method === 'PUT' && path === '/api/admin/site-config') {
+          let body; try { body = await request.json(); } catch { return json({ error: '无效请求' }, 400); }
+          const { config, sha } = body;
+          if (!config || typeof config !== 'object') return json({ error: '缺少配置内容' }, 400);
+          const content = JSON.stringify(config, null, 2) + '\n';
+          const gh = await githubPush(env, 'site.config.json', content, 'chore(site-config): update site config from admin');
+          if (!gh.ok) return json({ error: '推送 site.config.json 失败: ' + (gh.error || '未知错误') }, 500);
+          return json({ ok: true, github: gh });
+        }
+
 
         // ── 修改密码 ──
         if (method === 'POST' && path === '/api/admin/password') {

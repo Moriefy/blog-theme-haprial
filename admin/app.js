@@ -161,8 +161,32 @@ window.addEventListener('hashchange',route);
 // ════════════════════════════════════════
 function renderDashboard(){
   var c=$('content');
-  c.innerHTML='<div class="stats-grid"><div class="stat-card"><div class="stat-num">…</div><div class="stat-label">加载中</div></div></div>';
-  api('GET','/api/admin/stats').then(function(d){
+  c.innerHTML='<div class="sk-stats"><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div></div>'
+    +'<div class="card" style="margin-bottom:16px"><div class="card-title">快捷操作</div><div style="display:flex;gap:12px;flex-wrap:wrap"><div class="skeleton" style="width:120px;height:40px;border-radius:20px"></div><div class="skeleton" style="width:120px;height:40px;border-radius:20px"></div></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">'
+    +'<div class="card"><div class="card-title">最近文章</div><div class="sk-line"><div class="skeleton sk-avatar" style="border-radius:6px;width:18px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar" style="border-radius:6px;width:18px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar" style="border-radius:6px;width:18px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div></div>'
+    +'<div class="card"><div class="card-title">最新评论</div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div></div>'
+    +'</div>';
+  Promise.all([
+    api('GET','/api/admin/stats'),
+    api('GET','/api/admin/articles?status=all'),
+    api('GET','/api/admin/comments?limit=5')
+  ]).then(function(res){
+    var d=res[0],artsRes=res[1],cmtsRes=res[2];
+    var arts=(artsRes.articles||[]).slice(0,5);
+    var cmts=(cmtsRes.comments||[]).slice(0,5);
+    var artHtml=arts.length?'<div style="display:flex;flex-direction:column">':('<div class="empty">暂无文章</div>');
+    arts.forEach(function(a){
+      var st=a.status==='published'?'<span style="color:var(--primary);font-size:11px;border:1px solid var(--primary);border-radius:10px;padding:1px 8px">已发布</span>':'<span style="color:var(--outline);font-size:11px;border:1px solid var(--outline-variant);border-radius:10px;padding:1px 8px">草稿</span>';
+      artHtml+='<a href="#/editor/'+a.id+'" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--outline-variant);text-decoration:none;color:inherit"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+esc(a.title)+'</span><span style="display:flex;gap:8px;align-items:center;flex-shrink:0">'+st+'<span style="color:var(--outline);font-size:12px">'+(a.date||'')+'</span></span></a>';
+    });
+    if(arts.length)artHtml+='</div><button class="md3-btn md3-btn-text" style="margin-top:8px" onclick="location.hash=\'#/articles\'">查看全部 →</button>';
+    var cmtHtml=cmts.length?'<div style="display:flex;flex-direction:column">':('<div class="empty">暂无评论</div>');
+    cmts.forEach(function(cm){
+      var plain=cm.content_html?cm.content_html.replace(/<[^>]+>/g,'').slice(0,60):'';
+      cmtHtml+='<a href="#/comments" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--outline-variant);text-decoration:none;color:inherit"><div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--primary-container);color:var(--on-primary-container);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">'+esc((cm.nickname||'?').charAt(0))+'</div><div style="flex:1;overflow:hidden"><div style="font-size:13px;font-weight:600">'+esc(cm.nickname||'匿名')+'<span style="color:var(--outline);font-weight:400;font-size:11px;margin-left:8px">'+(cm.created_at||'').replace('T',' ').slice(0,16)+'</span></div><div style="font-size:12px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(plain)+'</div></div></a>';
+    });
+    if(cmts.length)cmtHtml+='</div><button class="md3-btn md3-btn-text" style="margin-top:8px" onclick="location.hash=\'#/comments\'">查看全部 →</button>';
     c.innerHTML='<div class="stats-grid">'
       +sc(d.published,'已发布')+sc(d.drafts,'草稿')+sc(d.comments,'评论')
       +sc(d.friends,'友链')+sc(d.trash,'回收站')+'</div>'
@@ -173,7 +197,11 @@ function renderDashboard(){
       +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/comments\'">管理评论</button>'
       +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/friends\'">管理友链</button>'
       +'</div></div>'
-  })
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px">'
+      +'<div class="card"><div class="card-title">最近文章</div>'+artHtml+'</div>'
+      +'<div class="card"><div class="card-title">最新评论</div>'+cmtHtml+'</div>'
+      +'</div>'
+  }).catch(function(){c.innerHTML='<div class="empty">加载失败</div>'})
 }
 function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div><div class="stat-label">'+l+'</div></div>'}
 
@@ -196,7 +224,7 @@ function renderArticles(){
     +'<select class="md3-input" id="artTagFilter"><option value="">标签</option></select>'
     +'</div>'
     +'<div id="artBatchBar" class="batch-bar" style="display:none"></div>'
-    +'<div class="table-wrap"><table><thead><tr><th style="width:32px"></th><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="7" style="text-align:center;padding:40px">加载中…</td></tr></tbody></table></div>'
+    +'<div class="table-wrap"><table><thead><tr><th style="width:32px"></th><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="7" style="padding:20px 16px"><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div></td></tr></tbody></table></div>'
     +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
   $('artSearch').addEventListener('input',function(){clearTimeout(artSearchTimer);artSearchTimer=setTimeout(function(){artSearch=$('artSearch').value.trim().toLowerCase();artPage=0;renderArtList()},300)});
   $('artStatus').addEventListener('change',function(){artFilter=this.value;artPage=0;renderArtList()});
@@ -243,7 +271,7 @@ function renderArtList(){
   else{tb.innerHTML=pageItems.map(function(a){
     var tags=[];try{tags=parseTags(a.tags)}catch(e){}
     var checked=artSelected.has(a.id)?' checked':'';
-    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' <span style="color:var(--primary)">'+_ico.pin+'</span>':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
+    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' <span style="color:var(--primary)">'+_ico.pin+'</span>':'')+(a.excerpt?'<div style="font-size:12px;color:var(--on-surface-variant);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px">'+esc(a.excerpt)+'</div>':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
     +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
     +'<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+a.id+')">导出</button>'
     +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
@@ -278,14 +306,37 @@ function _artUpdateBatchBar(){
   var bar=$('artBatchBar');if(!bar)return;
   if(artSelected.size>0){
     bar.style.display='flex';
+    var h='<span>'+artSelected.size+' 篇选中</span>';
+    h+='<button class="md3-btn md3-btn-text" onclick="window._artBatch(\'publish\')">批量发布</button>';
+    h+='<button class="md3-btn md3-btn-text" onclick="window._artBatch(\'draft\')">批量下架</button>';
+    h+='<button class="md3-btn md3-btn-danger" onclick="window._artBatch(\'delete\')">批量删除</button>';
     if(artSelected.size===1){
       var id=Array.from(artSelected)[0];
-      bar.innerHTML='<span>'+artSelected.size+' 篇选中</span><button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+id+')">导出 MD</button>';
+      h+='<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+id+')">导出 MD</button>';
     }else{
-      bar.innerHTML='<span>'+artSelected.size+' 篇选中</span><button class="md3-btn md3-btn-text" onclick="window._exportSelectedArts()">导出 ZIP</button>';
+      h+='<button class="md3-btn md3-btn-text" onclick="window._exportSelectedArts()">导出 ZIP</button>';
     }
+    bar.innerHTML=h;
   }else{bar.style.display='none'}
 }
+window._artBatch=function(action){
+  if(!artSelected.size){toast('请先选择文章');return}
+  var labels={publish:'发布',draft:'下架',delete:'删除'};
+  var tips={publish:'将批量发布所选文章到博客',draft:'已发布的文章将批量下架',delete:'所选文章将移入回收站，并从 GitHub 删除文件'};
+  showDialog('<h3>批量'+labels[action]+'</h3><p>'+tips[action]+'（共 '+artSelected.size+' 篇）</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn '+(action==='delete'?'md3-btn-danger':'md3-btn-filled')+'" onclick="window._confirmArtBatch(\''+action+'\')">确认'+labels[action]+'</button></div>')
+};
+window._confirmArtBatch=function(action){
+  closeDialog();
+  toast('批量处理中…');
+  api('POST','/api/admin/articles/batch',{ids:Array.from(artSelected),action:action}).then(function(d){
+    if(d.ok){
+      var labels={publish:'发布',draft:'下架',delete:'删除'};
+      toast('批量'+labels[action]+'完成：成功 '+d.success+' 篇'+(d.failed?('，失败 '+d.failed+' 篇'):''));
+      artSelected.clear();
+      loadAllArticles()
+    }else{toast(d.error||'批量操作失败')}
+  })
+};
 document.addEventListener('change',function(e){
   if(e.target.classList.contains('art-cb')){
     var id=parseInt(e.target.dataset.id);
@@ -371,6 +422,7 @@ function renderEditor(){
     +'<button onclick="window._insMd(\'> \',\'\')">Quote</button>'
     +'<button onclick="window._insMd(\'- \',\'\')">List</button>'
     +'<button onclick="window._insMd(\'---\\n\',\'\')">HR</button>'
+    +'<button onclick="window._insertTable()" title="插入表格">表格</button>'
     +'<input type="file" accept="image/*" multiple style="display:none" id="edImgUpload">'
     +'<button type="button" onclick="document.getElementById(\'edImgUpload\').click()">Img+</button>'
     +'<span style="flex:1"></span>'
@@ -433,6 +485,26 @@ function renderEditor(){
       };
       reader.readAsDataURL(file)
     })
+  });
+  // 图片粘贴上传（Ctrl/Cmd+V 粘贴剪贴板中的图片）
+  ed.addEventListener('paste',function(e){
+    var items=(e.clipboardData&&e.clipboardData.items)||[];
+    var imgFile=null;
+    Array.from(items).forEach(function(it){if(it.kind==='file'&&it.type.indexOf('image/')===0&&!imgFile)imgFile=it.getAsFile()});
+    if(!imgFile)return;
+    e.preventDefault();
+    var dateVal=$('edDate').value||new Date().toISOString().slice(0,10);
+    var folder=dateVal.slice(0,4)+'/'+dateVal.slice(5,7);
+    toast('正在上传粘贴的图片…');
+    var reader=new FileReader();
+    reader.onload=function(){
+      var base64=reader.result.split(',')[1];
+      api('POST','/api/admin/images/upload',{data:base64,name:(imgFile.name||'clipboard.png').replace(/[^a-zA-Z0-9._-]/g,'_')||'clipboard.png',folder:folder}).then(function(d){
+        if(d.ok){window._insMd('![]('+d.url+')');toast('图片已粘贴上传')}
+        else toast(d.error||'图片上传失败')
+      }).catch(function(){toast('图片上传失败')})
+    };
+    reader.readAsDataURL(imgFile)
   });
   if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
   window.addEventListener('resize',function(){var btn=$('previewToggleBtn');if(btn)btn.style.display=window.innerWidth<=768?'':'none'});
@@ -529,12 +601,14 @@ function updatePreview(){
 }
 function _edUpdateWordcount(){
   var el=$('edWordcount');if(!el)return;
-  var text=($('edContent').value||'').replace(/<[^>]+>/g,'').replace(/[#*`~\[\]()!>\-|]/g,'');
+  var raw=$('edContent').value||'';
+  var text=raw.replace(/<[^>]+>/g,'').replace(/[#*`~\[\]()!>\-|]/g,'');
   var cn=(text.match(/[\u4e00-\u9fff]/g)||[]).length;
   var en=(text.match(/[a-zA-Z]+/g)||[]).length;
   var total=cn+en;
   var min=Math.ceil(cn/400+en/200);if(min<1)min=1;
-  el.textContent=total+' 字 · 约 '+min+' 分钟阅读';
+  // 精准统计：中文字符 + 英文字母/单词（按 CJK 与拉丁分列，便于作者把握篇幅）
+  el.textContent=total+' 字（中 '+cn+' · 英 '+en+'）· 约 '+min+' 分钟阅读';
 }
 window._edSetSaveStatus=function(text,type){
   ['edSaveStatus','edSaveStatusTop'].forEach(function(id){
@@ -548,6 +622,15 @@ window._insMd=function(before,after){
   ta.value=ta.value.substring(0,s)+before+sel+after+ta.value.substring(e);
   ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;
   ta.focus();updatePreview()
+};
+// 插入一个 2×2 的 Markdown 表格模板到光标处
+window._insertTable=function(){
+  var table='\n| 列1 | 列2 |\n| --- | --- |\n| 单元格 | 单元格 |\n\n';
+  var ta=$('edContent');var s=ta.selectionStart,e=ta.selectionEnd;
+  ta.value=ta.value.substring(0,s)+table+ta.value.substring(e);
+  ta.selectionStart=s;ta.selectionEnd=s;
+  ta.focus();updatePreview();
+  toast('已插入表格模板');
 };
 window._previewToggle=function(){
   var pp=$('edPreview');
@@ -640,7 +723,7 @@ function renderComments(){
   cmtSelectedPage='';
   var c=$('content');
   c.innerHTML='<div class="cmt-layout">'
-    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="empty">加载中…</div></div></div>'
+    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w80"></div></div></div>'
     +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
     +'</div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
@@ -713,7 +796,7 @@ function loadPageComments(pageSlug){
   if(artId)headerHtml+=' <a href="#/editor/'+artId+'" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">编辑文章</a>';
   headerHtml+=' <a href="'+SITE_URL+'/#/posts/'+slug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
   $('cmtMainHeader').innerHTML=headerHtml;
-  $('cmtList').innerHTML='<div class="empty">加载中…</div>';
+  $('cmtList').innerHTML='<div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div>';
   api('GET','/api/admin/comments?limit=200&page_slug='+encodeURIComponent(pageSlug)).then(function(d){
     cmtData=d;
     renderCmtTree(d.comments,pageSlug)
@@ -818,7 +901,7 @@ window._doConfirmDel=function(id){closeDialog();api('DELETE','/api/admin/comment
 // ════════════════════════════════════════
 function renderFriends(){
   var c=$('content');
-  c.innerHTML='<div id="friendList"><div class="empty">加载中…</div></div>';
+  c.innerHTML='<div id="friendList"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-filled" onclick="window._addFriend()">+ 添加友链</button>';
   loadFriends()
 }
@@ -865,7 +948,7 @@ window._confirmDelFriend=function(id){closeDialog();api('DELETE','/api/admin/fri
 // ════════════════════════════════════════
 function renderTrash(){
   var c=$('content');
-  c.innerHTML='<div id="trashList"><div class="empty">加载中…</div></div>';
+  c.innerHTML='<div id="trashList"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div>';
   $('topbarActions').innerHTML='<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._emptyTrash()">清空回收站</button>';
   api('GET','/api/admin/trash').then(function(d){
     trashList=d.trash||[];
@@ -899,7 +982,7 @@ function renderImages(){
   else if(h==='/images')imgCurrentFolder='';
   var c=$('content');
   c.innerHTML='<div class="breadcrumb" id="imgBreadcrumb"></div>'
-    +'<div class="img-grid" id="imgGrid"><div class="empty">加载中…</div></div>'
+    +'<div class="img-grid" id="imgGrid"><div class="skeleton" style="width:100%;height:140px"></div><div class="skeleton" style="width:100%;height:140px"></div><div class="skeleton" style="width:100%;height:140px"></div><div class="skeleton" style="width:100%;height:140px"></div></div>'
     +'<div class="batch-bar" id="imgBatchBar"></div>'
     +'<div class="paste-bar" id="imgPasteBar"></div>'
     +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
@@ -1086,9 +1169,9 @@ function _imgUpdateSelectUI(){
   if(window.imgSelectMode&&window.imgSelected.size>0){
     bar.style.display='flex';
     bar.innerHTML='<span>'+window.imgSelected.size+' 项</span>'
-      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCopy()">"+_ico.copy+" 复制</button>'
-      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCut()">"+_ico.scissors+" 剪切</button>'
-      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_imgBatchDelete()">"+_ico.trash+" 删除</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCopy()">'+_ico.copy+' 复制</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCut()">'+_ico.scissors+' 剪切</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_imgBatchDelete()">'+_ico.trash+' 删除</button>'
   }else{
     bar.style.display='none'
   }
@@ -1131,8 +1214,8 @@ window._imgMenu=function(e,url,path){
   menu.className='ctx-menu';
   menu.style.left=Math.min(e.clientX,innerWidth-180)+'px';
   menu.style.top=Math.min(e.clientY,innerHeight-200)+'px';
-  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">"+_ico.copy+" 复制</button>'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">"+_ico.scissors+" 剪切</button>'
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">'+_ico.copy+' 复制</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">'+_ico.scissors+' 剪切</button>'
     +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
     +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window._copyMdUrl(\''+url+'\');this.parentElement.remove()">复制 Markdown</button>'
@@ -1163,7 +1246,7 @@ function _imgUpdatePasteBar(){
   bar.style.display='flex';
   bar.innerHTML='<span>'+label+' '+count+' 项</span>'
     +'<button class="md3-btn md3-btn-text" onclick="_imgShowPastePicker()">选择目标并粘贴</button>'
-    +'<button class="md3-btn md3-btn-text" onclick="imgClipboard=null;_imgUpdatePasteBar()">"+_ico.close+"</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="imgClipboard=null;_imgUpdatePasteBar()">'+_ico.close+'</button>'
 }
 window._imgShowPastePicker=function(){
   if(!imgClipboard||!imgClipboard.paths.length){toast('剪贴板为空');return}
@@ -1202,7 +1285,7 @@ function _fpLoad(path){
 }
 function _fpRender(){
   var el=document.getElementById('fpBody');if(!el)return;
-  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--outline);font-size:13px">加载中…</div>';
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--outline);font-size:13px"><div class="skeleton sk-row w80" style="margin:0 auto"></div></div>';
   _fpLoad(_fpPath).then(function(folders){
     var html='';
     // 返回上一级
@@ -1361,9 +1444,99 @@ function renderSettings(){
     +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">从 GitHub 导入数据</button>'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._exportData()">导出全站数据</button>'
     +'<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论数据</button>'
-    +'<button class="md3-btn md3-btn-filled" onclick="window._exportAllArticlesZip()">导出全部文章 (ZIP)</button>'
-    +'</div></div>'
-}
+     +'<button class="md3-btn md3-btn-filled" onclick="window._exportAllArticlesZip()">导出全部文章 (ZIP)</button>'
+     +'</div></div>'
+     +'<div class="settings-section"><h3>站点配置 (site.config.json)</h3>'
+     +'<p style="color:var(--outline);font-size:12px;margin:4px 0 10px">图形化编辑站点头部配置，保存后将推送到 GitHub 仓库根目录</p>'
+     +'<div id="siteCfgBox"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div></div>'
+ }
+ window._loadSiteConfig=function(){
+   var box=$('siteCfgBox');if(!box)return;
+   box.innerHTML='<div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div>';
+   api('GET','/api/admin/site-config').then(function(d){
+     if(!d.ok||!d.config){box.innerHTML='<p style="color:var(--error)">读取配置失败：'+(d.error||'未知错误')+'</p>';return}
+     window._siteCfgSha=d.sha;
+     window._siteCfg=JSON.parse(JSON.stringify(d.config));
+     var cfg=d.config;
+     function escv(v){return esc(v==null?'':String(v))}
+     function rowHtml(type,inner){
+       return '<div class="cfg-row" data-type="'+type+'" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+inner
+         +'<button class="md3-btn md3-btn-text" style="padding:4px 8px;min-width:0" title="删除" onclick="window._cfgDelRow(this)">✕</button></div>'
+     }
+     function skillRows(arr){var h='';(arr||[]).forEach(function(s){h+=rowHtml('skill','<input class="md3-input cfg-skill" value="'+escv(s)+'" placeholder="技能" style="flex:1;min-width:160px">')});return h}
+     function linkRows(arr){var h='';(arr||[]).forEach(function(l){h+=rowHtml('link','<input class="md3-input cfg-link-name" value="'+escv(l.name)+'" placeholder="名称" style="flex:1;min-width:120px"><input class="md3-input cfg-link-url" value="'+escv(l.url)+'" placeholder="URL" style="flex:2;min-width:220px">')});return h}
+     function catRows(arr){var h='';(arr||[]).forEach(function(c){h+=rowHtml('cat','<input class="md3-input cfg-cat-name" value="'+escv(c.name)+'" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-slug" value="'+escv(c.slug)+'" placeholder="slug" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-desc" value="'+escv(c.desc)+'" placeholder="描述" style="flex:2;min-width:150px"><input class="md3-input cfg-cat-color" type="color" value="'+escv(c.color||'#6750a4')+'" style="width:48px;padding:2px">')});return h}
+     function friendRows(arr){var h='';(arr||[]).forEach(function(f){h+=rowHtml('friend','<input class="md3-input cfg-friend-name" value="'+escv(f.name)+'" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-friend-url" value="'+escv(f.url)+'" placeholder="URL" style="flex:2;min-width:160px"><input class="md3-input cfg-friend-avatar" value="'+escv(f.avatar)+'" placeholder="头像" style="flex:2;min-width:140px"><input class="md3-input cfg-friend-desc" value="'+escv(f.desc)+'" placeholder="描述" style="flex:1;min-width:110px">')});return h}
+     var c=cfg.comments||{};
+     var h='<div class="meta-grid">'
+       +'<div class="meta-field"><label>站点标题</label><input class="md3-input" id="cfgTitle" value="'+escv(cfg.title)+'"></div>'
+       +'<div class="meta-field"><label>副标题</label><input class="md3-input" id="cfgTagline" value="'+escv(cfg.tagline)+'"></div>'
+       +'<div class="meta-field full"><label>站点描述</label><textarea class="md3-input" id="cfgDesc" rows="2">'+escv(cfg.description)+'</textarea></div>'
+       +'<div class="meta-field"><label>站点 URL</label><input class="md3-input" id="cfgUrl" value="'+escv(cfg.url)+'"></div>'
+       +'<div class="meta-field"><label>作者</label><input class="md3-input" id="cfgAuthor" value="'+escv(cfg.author)+'"></div>'
+       +'<div class="meta-field full"><label>作者简介（每行一段）</label><textarea class="md3-input" id="cfgBio" rows="3">'+escv(Array.isArray(cfg.bio)?cfg.bio.join('\n'):cfg.bio)+'</textarea></div>'
+       +'</div>'
+       +'<h4 style="margin:16px 0 8px">技能标签 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'skill\')">+ 添加</button></h4><div id="cfgSkills">'+skillRows(cfg.skills)+'</div>'
+       +'<h4 style="margin:16px 0 8px">社交链接 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'link\')">+ 添加</button></h4><div id="cfgLinks">'+linkRows(cfg.links)+'</div>'
+       +'<h4 style="margin:16px 0 8px">分类 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'cat\')">+ 添加</button></h4><div id="cfgCats">'+catRows(cfg.categories)+'</div>'
+       +'<h4 style="margin:16px 0 8px">友链 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'friend\')">+ 添加</button></h4><div id="cfgFriends">'+friendRows(cfg.friends)+'</div>'
+       +'<h4 style="margin:16px 0 8px">评论设置</h4><div class="meta-grid">'
+       +'<div class="meta-field"><label>启用评论</label><select class="md3-input" id="cfgCmtsEnabled"><option value="true"'+(c.enabled?' selected':'')+'>启用</option><option value="false"'+(c.enabled?'':' selected')+'>禁用</option></select></div>'
+       +'<div class="meta-field"><label>提供商</label><input class="md3-input" id="cfgCmtsProvider" value="'+escv(c.provider)+'"></div>'
+       +'<div class="meta-field full"><label>评论 API</label><input class="md3-input" id="cfgCmtsApi" value="'+escv(c.api)+'"></div>'
+       +'</div>'
+       +'<div style="margin-top:20px;display:flex;gap:8px"><button class="md3-btn md3-btn-filled" onclick="window._saveSiteConfig()">保存站点配置</button><button class="md3-btn md3-btn-text" onclick="window._loadSiteConfig()">重新加载</button></div>';
+     box.innerHTML=h
+   }).catch(function(){box.innerHTML='<p style="color:var(--error)">网络错误</p>'})
+ };
+ window._cfgAddRow=function(type){
+   var map={
+     skill:'<input class="md3-input cfg-skill" placeholder="技能" style="flex:1;min-width:160px">',
+     link:'<input class="md3-input cfg-link-name" placeholder="名称" style="flex:1;min-width:120px"><input class="md3-input cfg-link-url" placeholder="URL" style="flex:2;min-width:220px">',
+     cat:'<input class="md3-input cfg-cat-name" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-slug" placeholder="slug" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-desc" placeholder="描述" style="flex:2;min-width:150px"><input class="md3-input cfg-cat-color" type="color" value="#6750a4" style="width:48px;padding:2px">',
+     friend:'<input class="md3-input cfg-friend-name" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-friend-url" placeholder="URL" style="flex:2;min-width:160px"><input class="md3-input cfg-friend-avatar" placeholder="头像" style="flex:2;min-width:140px"><input class="md3-input cfg-friend-desc" placeholder="描述" style="flex:1;min-width:110px">'
+   };
+   var box=$('cfg'+type.charAt(0).toUpperCase()+type.slice(1)+'s');
+   if(box&&map[type])box.insertAdjacentHTML('beforeend','<div class="cfg-row" data-type="'+type+'" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+map[type]+'<button class="md3-btn md3-btn-text" style="padding:4px 8px;min-width:0" title="删除" onclick="window._cfgDelRow(this)">✕</button></div>')
+ };
+ window._cfgDelRow=function(btn){var row=btn.closest('.cfg-row');if(row)row.parentNode.removeChild(row)};
+ window._saveSiteConfig=function(){
+   function v(id){var el=$(id);return el?el.value.trim():''}
+   function collectRows(type,defs){
+     var out=[];
+     document.querySelectorAll('.cfg-row[data-type="'+type+'"]').forEach(function(row){
+       var item={};
+       defs.forEach(function(fd){var el=row.querySelector(fd.sel);if(el)item[fd.key]=el.value.trim()});
+       var hasVal=false;for(var k in item){if(item[k]){hasVal=true;break}}
+       if(hasVal)out.push(item)
+     });
+     return out
+   }
+   function collectSkills(){
+     var out=[];
+     document.querySelectorAll('.cfg-skill').forEach(function(el){var t=el.value.trim();if(t)out.push(t)});
+     return out
+   }
+   var orig=window._siteCfg||{};
+   var cfg=JSON.parse(JSON.stringify(orig));
+   cfg.title=v('cfgTitle');
+   cfg.tagline=v('cfgTagline');
+   cfg.description=v('cfgDesc');
+   cfg.url=v('cfgUrl');
+   cfg.author=v('cfgAuthor');
+   var bioText=v('cfgBio');
+   cfg.bio=bioText?bioText.split('\n').map(function(s){return s.trim()}).filter(Boolean):[];
+   cfg.skills=collectSkills();
+   cfg.links=collectRows('link',[{sel:'.cfg-link-name',key:'name'},{sel:'.cfg-link-url',key:'url'}]);
+   cfg.categories=collectRows('cat',[{sel:'.cfg-cat-name',key:'name'},{sel:'.cfg-cat-slug',key:'slug'},{sel:'.cfg-cat-desc',key:'desc'},{sel:'.cfg-cat-color',key:'color'}]);
+   cfg.friends=collectRows('friend',[{sel:'.cfg-friend-name',key:'name'},{sel:'.cfg-friend-url',key:'url'},{sel:'.cfg-friend-avatar',key:'avatar'},{sel:'.cfg-friend-desc',key:'desc'}]);
+   cfg.comments={enabled:($('cfgCmtsEnabled')?$('cfgCmtsEnabled').value==='true':true),provider:v('cfgCmtsProvider'),api:v('cfgCmtsApi')};
+   toast('保存中…');
+   api('PUT','/api/admin/site-config',{config:cfg,sha:window._siteCfgSha}).then(function(d){
+     if(d.ok){toast('站点配置已保存并推送到 GitHub');window._siteCfg=JSON.parse(JSON.stringify(cfg))}
+     else toast(d.error||'保存失败')
+   }).catch(function(){toast('网络错误')})
+ };
 window._saveWebsite=function(){
   var w=$('setWebsite').value.trim();
   if(!w){toast('请输入网站地址');return}
@@ -1399,7 +1572,7 @@ window._doImport=function(){
 // ════════════════════════════════════════
 function renderTagManager(){
   var c=$('content');
-  c.innerHTML='<div class="empty">加载中…</div>';
+  c.innerHTML='<div class="settings-section"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div>';
   api('GET','/api/admin/articles?status=all').then(function(d){
     var arts=d.articles||[];
     var tagMap={},catMap={};
@@ -1410,9 +1583,13 @@ function renderTagManager(){
     });
     var tagList=Object.keys(tagMap).sort();
     var catList=Object.keys(catMap).sort();
-    var html='<div class="settings-section"><h3>标签 ('+tagList.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
-    tagList.forEach(function(t){
-      html+='<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--outline-variant);border-radius:8px;font-size:13px;background:var(--surface-container)"><span>'+esc(t)+'</span><span style="color:var(--outline);font-size:11px">'+tagMap[t].length+'</span></div>';
+    window._tagListData=tagList;
+    var html='<div class="settings-section"><h3>标签 ('+tagList.length+')</h3><p style="color:var(--outline);font-size:12px;margin:4px 0 10px">点击 ✎ 重命名，⇄ 合并（同步更新文章与 GitHub 文件）</p><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    tagList.forEach(function(t,ti){
+      html+='<div style="display:inline-flex;align-items:center;gap:4px;padding:6px 8px 6px 12px;border:1px solid var(--outline-variant);border-radius:8px;font-size:13px;background:var(--surface-container)"><span>'+esc(t)+'</span><span style="color:var(--outline);font-size:11px">'+tagMap[t].length+'</span>'
+        +'<button class="md3-btn md3-btn-text" style="padding:2px 5px;font-size:12px;min-width:0" title="重命名" onclick="window._tagRename('+ti+')">✎</button>'
+        +'<button class="md3-btn md3-btn-text" style="padding:2px 5px;font-size:12px;min-width:0" title="合并到其他标签" onclick="window._tagMerge('+ti+')">⇄</button>'
+        +'</div>';
     });
     html+='</div></div>';
     html+='<div class="settings-section"><h3>分类 ('+catList.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
@@ -1423,6 +1600,40 @@ function renderTagManager(){
     c.innerHTML=html
   })
 }
+
+// 标签重命名 / 合并
+window._tagRename=function(ti){
+  var tags=window._tagListData||[];
+  var oldTag=tags[ti];if(!oldTag){toast('标签不存在');return}
+  window._tagOpOld=oldTag;
+  showDialog('<h3>重命名标签</h3><p>将「'+esc(oldTag)+'」重命名为：</p><input class="md3-input" id="tagNewName" value="'+esc(oldTag)+'" style="margin-top:8px"><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._confirmTagReplace(\'rename\')">重命名</button></div>');
+  setTimeout(function(){var el=$('tagNewName');if(el){el.focus();el.select()}},60)
+};
+window._tagMerge=function(ti){
+  var tags=window._tagListData||[];
+  var oldTag=tags[ti];if(!oldTag){toast('标签不存在');return}
+  window._tagOpOld=oldTag;
+  var opts='';
+  tags.forEach(function(t,oi){if(oi!==ti)opts+='<option value="'+esc(t)+'">'+esc(t)+'</option>'});
+  showDialog('<h3>合并标签</h3><p>将「'+esc(oldTag)+'」合并到：</p><select class="md3-input" id="tagMergeTarget" style="margin-top:8px">'+opts+'</select><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._confirmTagReplace(\'merge\')">合并</button></div>')
+};
+window._confirmTagReplace=function(mode){
+  var oldTag=window._tagOpOld;
+  var newTag=mode==='rename'
+    ?($('tagNewName')?$('tagNewName').value.trim():'')
+    :($('tagMergeTarget')?$('tagMergeTarget').value:'');
+  if(!newTag){toast('请输入目标标签名');return}
+  if(newTag===oldTag){closeDialog();toast('新旧标签相同');return}
+  closeDialog();
+  toast('处理中…');
+  api('POST','/api/admin/tags/replace',{oldTag:oldTag,newTag:newTag,mode:mode}).then(function(d){
+    if(d.ok){
+      var msg=(mode==='rename'?'重命名':'合并')+'完成：更新 '+d.changed+' 篇文章'+(d.errors&&d.errors.length?('，'+d.errors.length+' 处 GitHub 同步失败'):'');
+      toast(msg);
+      renderTagManager()
+    }else{toast(d.error||'操作失败')}
+  })
+};
 
 // ════════════════════════════════════════
 //  Markdown 解析 (预览用)
