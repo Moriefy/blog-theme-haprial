@@ -969,14 +969,15 @@ function renderCmtTree(list,pageSlug){
     var indent=depth*24;
     var pinIcon='<svg viewBox="0 0 16 16" width="13" height="13" fill="'+(c.pinned?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M9.83 2.17a1.41 1.41 0 0 0-2 0L3.29 6.71a1 1 0 0 0-.29.71V8a1 1 0 0 0 1 1h1l-3 5h2l3-3v4l1-1 1 1v-4l3 3h2l-3-5h1a1 1 0 0 0 1-1v-.59a1 1 0 0 0-.29-.71z"/></svg>';
     var expandBtn='';
-    if(c.content_html&&c.content_html.length>200){
-      expandBtn='<span class="cmt-expand" onclick="toggleCommentExpand('+c.id+')">展开全文</span>';
+    var shouldExpand=c.content_html&&c.content_html.length>300;
+    if(shouldExpand){
+      expandBtn='<span class="cmt-expand" id="cmt-expand-'+c.id+'" onclick="toggleCommentExpand('+c.id+')">展开全文</span>';
     }
     var h='<div class="cmt-item" data-depth="'+depth+'" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><input type="checkbox" class="cmt-cb" data-id="'+c.id+'" style="margin-right:6px;accent-color:var(--primary)"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +expandBtn
-      +'<div class="cmt-body" id="cmt-body-'+c.id+'">'+c.content_html+'</div>'
+      +'<div class="cmt-body" id="cmt-body-'+c.id+'" style="'+(shouldExpand?'max-height:200px;overflow:hidden':'')+'">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
       +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
       +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'" onclick="_doLike('+c.id+')">'+(c.liked>0?'<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg> '+c.liked:'<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>')+'</button>'
@@ -989,7 +990,7 @@ function renderCmtTree(list,pageSlug){
   // 评论展开/收起功能
   window.toggleCommentExpand=function(id){
     var body=document.getElementById('cmt-body-'+id);
-    var expandBtn=body.previousElementSibling;
+    var expandBtn=document.getElementById('cmt-expand-'+id);
     if(!body||!expandBtn)return;
     if(body.classList.contains('expanded')){
       body.classList.remove('expanded');
@@ -1062,7 +1063,14 @@ function renderFriends(){
 }
 function loadFriends(){
   api('GET','/api/admin/friends').then(function(d){
-    friends=d.friends||[];
+    var allFriends=d.friends||[];
+    // 去重：按ID去重
+    var seen={};
+    friends=allFriends.filter(function(f){
+      if(seen[f.id])return false;
+      seen[f.id]=true;
+      return true;
+    });
     var el=$('friendList');if(!el)return;
     if(!friends.length){el.innerHTML='<div class="empty">暂无友链</div>';return}
     el.innerHTML=friends.map(function(f){
@@ -1606,6 +1614,8 @@ function renderSettings(){
      +'<div class="settings-section"><h3>站点配置 (site.config.json)</h3>'
      +'<p style="color:var(--outline);font-size:12px;margin:4px 0 10px">图形化编辑站点头部配置，保存后将推送到 GitHub 仓库根目录</p>'
      +'<div id="siteCfgBox"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div></div>'
+  // 加载站点配置
+  setTimeout(function(){window._loadSiteConfig()},100);
  }
  window._loadSiteConfig=function(){
    var box=$('siteCfgBox');if(!box)return;
