@@ -235,9 +235,10 @@ tr:hover td{background:var(--surface-container-high)}
 .cmt-nick{font-weight:600;font-size:14px;color:var(--on-surface)}
 .cmt-badge{font-size:10px;background:var(--primary);color:var(--on-primary);padding:2px 8px;border-radius:6px;font-weight:600;line-height:1.4}
 .cmt-time{font-size:12px;color:var(--outline)}
-.cmt-body{font-size:14px;color:var(--on-surface-variant);line-height:1.75;margin-bottom:8px;max-height:200px;overflow:hidden;position:relative}
+.cmt-body{font-size:14px;color:var(--on-surface-variant);line-height:1.75;margin-bottom:8px;position:relative}
 .cmt-body.expanded{max-height:none}
 .cmt-body::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,var(--surface-container))}
+.cmt-body.cmt-no-collapse::after{display:none}
 .cmt-body.expanded::after{display:none}
 .cmt-body code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--surface-container-high);padding:2px 6px;border-radius:4px}
 .cmt-body strong{font-weight:600;color:var(--on-surface)}

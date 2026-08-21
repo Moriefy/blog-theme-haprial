@@ -973,11 +973,12 @@ function renderCmtTree(list,pageSlug){
     if(shouldExpand){
       expandBtn='<span class="cmt-expand" id="cmt-expand-'+c.id+'" onclick="toggleCommentExpand('+c.id+')">展开全文</span>';
     }
+    var bodyStyle=shouldExpand?'max-height:200px;overflow:hidden':'';
     var h='<div class="cmt-item" data-depth="'+depth+'" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><input type="checkbox" class="cmt-cb" data-id="'+c.id+'" style="margin-right:6px;accent-color:var(--primary)"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
       +expandBtn
-      +'<div class="cmt-body" id="cmt-body-'+c.id+'" style="'+(shouldExpand?'max-height:200px;overflow:hidden':'')+'">'+c.content_html+'</div>'
+      +'<div class="cmt-body'+(shouldExpand?'':' cmt-no-collapse')+'" id="cmt-body-'+c.id+'" style="'+bodyStyle+'">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
       +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
       +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'" onclick="_doLike('+c.id+')">'+(c.liked>0?'<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg> '+c.liked:'<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>')+'</button>'
