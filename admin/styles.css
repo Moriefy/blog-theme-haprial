@@ -399,7 +399,8 @@ tr:hover td{background:var(--surface-container-high)}
   .cmt-main #cmtList{padding:0 16px 16px}
   .cmt-main-header{padding:12px 16px;font-size:13px}
   .cmt-item{padding:10px 0}
-  .cmt-body{max-height:150px;font-size:13px}
+   .cmt-body:not(.cmt-no-collapse){max-height:150px;font-size:13px}
+   .cmt-body.expanded{max-height:none}
   .cmt-actions .md3-btn{height:36px;padding:0 12px;min-width:44px;font-size:12px}
   .reply-box{padding:10px}
   .reply-box textarea{min-height:80px;font-size:14px}

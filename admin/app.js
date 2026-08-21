@@ -1065,21 +1065,31 @@ function renderFriends(){
 function loadFriends(){
   api('GET','/api/admin/friends').then(function(d){
     var allFriends=d.friends||[];
-    // 去重：按ID去重
-    var seen={};
+    // 去重：同时按ID和名称+URL去重
+    var seenId={};
+    var seenNameUrl={};
     friends=allFriends.filter(function(f){
-      if(seen[f.id])return false;
-      seen[f.id]=true;
+      // 按ID去重
+      if(seenId[f.id])return false;
+      seenId[f.id]=true;
+      // 按名称+URL去重
+      var key=(f.name||'').toLowerCase()+'|'+(f.url||'').toLowerCase();
+      if(seenNameUrl[key])return false;
+      seenNameUrl[key]=true;
       return true;
     });
     var el=$('friendList');if(!el)return;
     if(!friends.length){el.innerHTML='<div class="empty">暂无友链</div>';return}
-    el.innerHTML=friends.map(function(f){
+    // 清空现有内容
+    el.innerHTML='';
+    // 重新渲染
+    var html=friends.map(function(f){
       return '<div class="list-card">'
         +'<img class="friend-avatar" src="'+esc(f.avatar||'')+'" alt="'+esc(f.name)+'" onerror="this.style.display=\'none\'">'
         +'<div class="friend-info"><div class="friend-name">'+esc(f.name)+'</div><div class="friend-url">'+esc(f.url)+'</div><div class="friend-desc">'+esc(f.desc||'')+'</div></div>'
         +'<div class="action-group"><button class="md3-btn md3-btn-text" onclick="window._editFriend('+f.id+')">编辑</button><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delFriend('+f.id+')">删除</button></div></div>'
-    }).join('')
+    }).join('');
+    el.innerHTML=html;
   })
 }
 function friendForm(f){
