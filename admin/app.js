@@ -67,6 +67,10 @@ function checkAuth(){
 function showLogin(){
   $('loginPage').style.display='flex';
   $('app').style.display='none';
+  // 重置登录错误状态
+  $('loginError').style.display='none';
+  $('loginError').textContent='';
+  $('loginPassword').value='';
   // 检查是否已设置密码
   api('GET','/api/admin/setup/status').then(function(d){
     if(!d.passwordSet){
@@ -83,14 +87,44 @@ function showLogin(){
 }
 function showApp(){$('loginPage').style.display='none';$('app').style.display='flex';route();_initGlobalSearch()}
 function _initGlobalSearch(){
-  var btn=document.getElementById('adminSearchBtn');if(!btn)return;
-  btn.addEventListener('click',function(){
-    var q=prompt('搜索文章…');
-    if(!q)return;
-    q=q.toLowerCase();
-    location.hash='#/articles';
-    setTimeout(function(){var el=document.getElementById('artSearch');if(el){el.value=q;el.dispatchEvent(new Event('input'))}},100)
-  })
+  var searchInput=document.getElementById('adminSearchInput');if(!searchInput)return;
+  var debounceTimer;
+  searchInput.addEventListener('input',function(){
+    clearTimeout(debounceTimer);
+    debounceTimer=setTimeout(function(){
+      var q=searchInput.value.trim();
+      if(!q)return;
+      q=q.toLowerCase();
+      if(currentPage!=='articles'){
+        location.hash='#/articles';
+        setTimeout(function(){
+          var artSearch=document.getElementById('artSearch');
+          if(artSearch){artSearch.value=q;artSearch.dispatchEvent(new Event('input'))}
+        },150);
+      }else{
+        var artSearch=document.getElementById('artSearch');
+        if(artSearch){artSearch.value=q;artSearch.dispatchEvent(new Event('input'))}
+      }
+    },300);
+  });
+  searchInput.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){
+      e.preventDefault();
+      var q=searchInput.value.trim();
+      if(!q)return;
+      q=q.toLowerCase();
+      if(currentPage!=='articles'){
+        location.hash='#/articles';
+        setTimeout(function(){
+          var artSearch=document.getElementById('artSearch');
+          if(artSearch){artSearch.value=q;artSearch.dispatchEvent(new Event('input'))}
+        },150);
+      }else{
+        var artSearch=document.getElementById('artSearch');
+        if(artSearch){artSearch.value=q;artSearch.dispatchEvent(new Event('input'))}
+      }
+    }
+  });
 }
 function logout(){token='';try{localStorage.removeItem('admin_token')}catch(e){};showLogin()}
 
@@ -128,7 +162,7 @@ function route(){
   if(path==='/')page='dashboard';
   else if(path==='/articles')page='articles';
   else if(path==='/editor'){page='editor';editingId=null}
-  else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(RegExp.$1)}
+  else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(path.match(/^\/editor\/(\d+)$/)[1])}
   else if(path==='/comments')page='comments';
   else if(path==='/friends')page='friends';
   else if(path==='/images'||path.match(/^\/images\//)){page='images'}
@@ -290,14 +324,14 @@ function renderArtList(){
 window._togglePub=function(id){
   api('POST','/api/admin/articles/'+id+'/publish').then(function(d){
     if(d.ok){toast(d.status==='published'?'已发布':'已下架');loadAllArticles()}
-  })
+  }).catch(function(e){toast('操作失败: '+e.message)})
 };
 window._delArt=function(id){
   showDialog('<h3>确认删除</h3><p>文章将移入回收站，GitHub 文件将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelArt('+id+')">删除</button></div>')
 };
 window._confirmDelArt=function(id){
   closeDialog();
-  api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadAllArticles()}})
+  api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadAllArticles()}}).catch(function(e){toast('删除失败: '+e.message)})
 };
 // 文章多选
 window._selectAllArts=function(){var filtered=getFilteredArticles();filtered.forEach(function(a){artSelected.add(a.id)});renderArtList();_artUpdateBatchBar()};
@@ -309,6 +343,8 @@ function _artUpdateBatchBar(){
     var h='<span>'+artSelected.size+' 篇选中</span>';
     h+='<button class="md3-btn md3-btn-text" onclick="window._artBatch(\'publish\')">批量发布</button>';
     h+='<button class="md3-btn md3-btn-text" onclick="window._artBatch(\'draft\')">批量下架</button>';
+    h+='<button class="md3-btn md3-btn-text" onclick="window._artBatchCategory()">移动分类</button>';
+    h+='<button class="md3-btn md3-btn-text" onclick="window._artBatchTag()">添加标签</button>';
     h+='<button class="md3-btn md3-btn-danger" onclick="window._artBatch(\'delete\')">批量删除</button>';
     if(artSelected.size===1){
       var id=Array.from(artSelected)[0];
@@ -324,6 +360,60 @@ window._artBatch=function(action){
   var labels={publish:'发布',draft:'下架',delete:'删除'};
   var tips={publish:'将批量发布所选文章到博客',draft:'已发布的文章将批量下架',delete:'所选文章将移入回收站，并从 GitHub 删除文件'};
   showDialog('<h3>批量'+labels[action]+'</h3><p>'+tips[action]+'（共 '+artSelected.size+' 篇）</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn '+(action==='delete'?'md3-btn-danger':'md3-btn-filled')+'" onclick="window._confirmArtBatch(\''+action+'\')">确认'+labels[action]+'</button></div>')
+};
+window._artBatchCategory=function(){
+  if(!artSelected.size){toast('请先选择文章');return}
+  // 获取所有分类
+  var cats={};
+  articles.forEach(function(a){if(a.category)cats[a.category]=1});
+  var catOptions=Object.keys(cats).sort().map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>'}).join('');
+  var html='<h3>批量移动分类</h3><p>将 '+artSelected.size+' 篇文章移动到指定分类</p>'
+    +'<div style="margin:16px 0"><label style="display:block;font-size:13px;margin-bottom:6px">目标分类</label>'
+    +'<select id="batchCategory" class="md3-input" style="width:100%;max-width:300px">'
+    +'<option value="">选择分类</option>'
+    +catOptions
+    +'</select></div>'
+    +'<div style="margin-top:8px"><input type="text" id="newCategory" class="md3-input" placeholder="或输入新分类名" style="width:100%;max-width:300px"></div>'
+    +'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="_confirmBatchCategory()">确认移动</button></div>';
+  showDialog(html);
+};
+window._confirmBatchCategory=function(){
+  var category=document.getElementById('batchCategory').value;
+  var newCategory=document.getElementById('newCategory').value.trim();
+  if(newCategory)category=newCategory;
+  if(!category){toast('请选择或输入分类');return}
+  closeDialog();
+  toast('批量移动分类中…');
+  api('POST','/api/admin/articles/batch',{ids:Array.from(artSelected),action:'set_category',category:category}).then(function(d){
+    if(d.ok){
+      toast('批量移动分类完成：成功 '+d.success+' 篇'+(d.failed?('，失败 '+d.failed+' 篇'):''));
+      artSelected.clear();
+      loadAllArticles()
+    }else{toast(d.error||'批量操作失败')}
+  })
+};
+window._artBatchTag=function(){
+  if(!artSelected.size){toast('请先选择文章');return}
+  var html='<h3>批量添加标签</h3><p>为 '+artSelected.size+' 篇文章添加标签</p>'
+    +'<div style="margin:16px 0"><label style="display:block;font-size:13px;margin-bottom:6px">标签（逗号分隔）</label>'
+    +'<input type="text" id="batchTags" class="md3-input" placeholder="标签1, 标签2, 标签3" style="width:100%;max-width:400px"></div>'
+    +'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="_confirmBatchTag()">确认添加</button></div>';
+  showDialog(html);
+};
+window._confirmBatchTag=function(){
+  var tagsStr=document.getElementById('batchTags').value.trim();
+  if(!tagsStr){toast('请输入标签');return}
+  var tags=tagsStr.split(/[,，]/).map(function(t){return t.trim()}).filter(function(t){return t});
+  if(!tags.length){toast('请输入有效标签');return}
+  closeDialog();
+  toast('批量添加标签中…');
+  api('POST','/api/admin/articles/batch',{ids:Array.from(artSelected),action:'add_tags',tags:tags}).then(function(d){
+    if(d.ok){
+      toast('批量添加标签完成：成功 '+d.success+' 篇'+(d.failed?('，失败 '+d.failed+' 篇'):''));
+      artSelected.clear();
+      loadAllArticles()
+    }else{toast(d.error||'批量操作失败')}
+  })
 };
 window._confirmArtBatch=function(action){
   closeDialog();
@@ -344,6 +434,16 @@ document.addEventListener('change',function(e){
     _artUpdateBatchBar()
   }
 });
+// YAML 转义函数
+function escapeYamlString(str){
+  if(!str)return '';
+  // 如果字符串包含冒号、引号、换行等特殊字符，用双引号包裹并转义
+  if(/[:#\[\]{}&*!|>'"`,\n\r]/.test(str)){
+    return '"'+str.replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r')+'"';
+  }
+  return '"'+str+'"';
+}
+
 // 单篇导出
 window._exportSingleArt=function(id){
   var a=articles.find(function(x){return x.id===id});
@@ -351,7 +451,8 @@ window._exportSingleArt=function(id){
   api('GET','/api/admin/articles/'+id).then(function(d){
     if(!d.article)return;
     var art=d.article;
-    var md='---\ntitle: "'+art.title+'"\ndate: '+art.date+'\ncategory: '+art.category+'\ntags: ['+parseTags(art.tags).join(', ')+']\nexcerpt: "'+(art.excerpt||'')+'"\n---\n\n'+art.content;
+    var tags=parseTags(art.tags).map(function(t){return escapeYamlString(t)}).join(', ');
+    var md='---\ntitle: '+escapeYamlString(art.title)+'\ndate: '+art.date+'\ncategory: '+(art.category||'')+'\ntags: ['+tags+']\nexcerpt: '+escapeYamlString(art.excerpt||'')+'\n---\n\n'+art.content;
     var blob=new Blob([md],{type:'text/markdown'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(art.date||'article')+'.md';a.click();URL.revokeObjectURL(a.href);
     toast('已导出')
@@ -368,7 +469,8 @@ function _exportArtsAsZip(artsToExport){
     api('GET','/api/admin/articles/'+a.id).then(function(d){
       if(d.article){
         var art=d.article;
-        var md='---\ntitle: "'+art.title+'"\ndate: '+art.date+'\ncategory: '+art.category+'\ntags: ['+parseTags(art.tags).join(', ')+']\nexcerpt: "'+(art.excerpt||'')+'"\n---\n\n'+art.content;
+        var tags=parseTags(art.tags).map(function(t){return escapeYamlString(t)}).join(', ');
+        var md='---\ntitle: '+escapeYamlString(art.title)+'\ndate: '+art.date+'\ncategory: '+(art.category||'')+'\ntags: ['+tags+']\nexcerpt: '+escapeYamlString(art.excerpt||'')+'\n---\n\n'+art.content;
         zip.file((art.date||'unknown')+'-'+(art.slug||a.id)+'.md',md);
       }
       done++;
@@ -421,8 +523,11 @@ function renderEditor(){
     +'<button onclick="window._insMd(\'![alt](\',\')\')">Img</button>'
     +'<button onclick="window._insMd(\'> \',\'\')">Quote</button>'
     +'<button onclick="window._insMd(\'- \',\'\')">List</button>'
+    +'<button onclick="window._insMd(\'- [ ] \',\'\')" title="任务列表">☑</button>'
     +'<button onclick="window._insMd(\'---\\n\',\'\')">HR</button>'
     +'<button onclick="window._insertTable()" title="插入表格">表格</button>'
+    +'<button onclick="window._insMd(\'[^1]: \',\'\')" title="脚注">脚注</button>'
+    +'<button onclick="window._clearFormat()" title="清除格式">清除</button>'
     +'<input type="file" accept="image/*" multiple style="display:none" id="edImgUpload">'
     +'<button type="button" onclick="document.getElementById(\'edImgUpload\').click()">Img+</button>'
     +'<span style="flex:1"></span>'
@@ -507,7 +612,10 @@ function renderEditor(){
     reader.readAsDataURL(imgFile)
   });
   if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
-  window.addEventListener('resize',function(){var btn=$('previewToggleBtn');if(btn)btn.style.display=window.innerWidth<=768?'':'none'});
+  // 移除旧监听器防止内存泄漏
+  if(window._editorResizeHandler){window.removeEventListener('resize',window._editorResizeHandler)}
+  window._editorResizeHandler=function(){var btn=$('previewToggleBtn');if(btn)btn.style.display=window.innerWidth<=768?'':'none'};
+  window.addEventListener('resize',window._editorResizeHandler);
   // 编辑器图片上传
   var edImgInput=$('edImgUpload');
   if(edImgInput){
@@ -524,7 +632,7 @@ function renderEditor(){
           api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
             done++;
             if(d.ok){
-              window._insMd('![',']('+d.url+')');
+              window._insMd('![]('+d.url+')');
             }
             if(done===total)toast('上传完成');
             else toast('上传中… '+done+'/'+total);
@@ -622,6 +730,34 @@ window._insMd=function(before,after){
   ta.value=ta.value.substring(0,s)+before+sel+after+ta.value.substring(e);
   ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;
   ta.focus();updatePreview()
+};
+// 清除格式功能
+window._clearFormat=function(){
+  var ta=$('edContent');var s=ta.selectionStart,e=ta.selectionEnd;var sel=ta.value.substring(s,e);
+  if(!sel){toast('请先选择文本');return}
+  // 移除常见的 Markdown 格式标记
+  var cleaned=sel
+    .replace(/^\*\*|\*\*$/g,'')  // 粗体
+    .replace(/^\*|\*$/g,'')      // 斜体
+    .replace(/^~~|~~$/g,'')      // 删除线
+    .replace(/^`|`$/g,'')        // 行内代码
+    .replace(/^#{1,6}\s+/g,'')   // 标题
+    .replace(/^>\s?/g,'')        // 引用
+    .replace(/^[-*]\s+/g,'')     // 列表项
+    .replace(/^\d+\.\s+/g,'')    // 有序列表
+    .replace(/^\[[^\]]+\]\([^)]+\)$/g,'$1') // 链接，保留文本
+    .replace(/^!\[[^\]]+\]\([^)]+\)$/g,'') // 图片，移除
+    .replace(/^[-*_]{3,}$/g,'')  // 水平线
+    .replace(/\[([^\]]+)\]\([^)]+\)/g,'$1') // 链接
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g,'$1') // 图片 alt 文本
+    .replace(/\*\*(.+?)\*\*/g,'$1') // 粗体
+    .replace(/\*(.+?)\*/g,'$1')   // 斜体
+    .replace(/~~(.+?)~~/g,'$1')   // 删除线
+    .replace(/`([^`]+)`/g,'$1');   // 行内代码
+  ta.value=ta.value.substring(0,s)+cleaned+ta.value.substring(e);
+  ta.selectionStart=s;ta.selectionEnd=s+cleaned.length;
+  ta.focus();updatePreview();
+  toast('已清除格式');
 };
 // 插入一个 2×2 的 Markdown 表格模板到光标处
 window._insertTable=function(){
@@ -832,10 +968,15 @@ function renderCmtTree(list,pageSlug){
   function renderNode(c,depth){
     var indent=depth*24;
     var pinIcon='<svg viewBox="0 0 16 16" width="13" height="13" fill="'+(c.pinned?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M9.83 2.17a1.41 1.41 0 0 0-2 0L3.29 6.71a1 1 0 0 0-.29.71V8a1 1 0 0 0 1 1h1l-3 5h2l3-3v4l1-1 1 1v-4l3 3h2l-3-5h1a1 1 0 0 0 1-1v-.59a1 1 0 0 0-.29-.71z"/></svg>';
+    var expandBtn='';
+    if(c.content_html&&c.content_html.length>200){
+      expandBtn='<span class="cmt-expand" onclick="toggleCommentExpand('+c.id+')">展开全文</span>';
+    }
     var h='<div class="cmt-item" data-depth="'+depth+'" style="margin-left:'+indent+'px">'
       +'<div class="cmt-header"><input type="checkbox" class="cmt-cb" data-id="'+c.id+'" style="margin-right:6px;accent-color:var(--primary)"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
       +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
-      +'<div class="cmt-body">'+c.content_html+'</div>'
+      +expandBtn
+      +'<div class="cmt-body" id="cmt-body-'+c.id+'">'+c.content_html+'</div>'
       +'<div class="cmt-actions">'
       +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
       +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'" onclick="_doLike('+c.id+')">'+(c.liked>0?'<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg> '+c.liked:'<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>')+'</button>'
@@ -845,6 +986,19 @@ function renderCmtTree(list,pageSlug){
     c._children.forEach(function(child){h+=renderNode(child,depth+1)});
     return h
   }
+  // 评论展开/收起功能
+  window.toggleCommentExpand=function(id){
+    var body=document.getElementById('cmt-body-'+id);
+    var expandBtn=body.previousElementSibling;
+    if(!body||!expandBtn)return;
+    if(body.classList.contains('expanded')){
+      body.classList.remove('expanded');
+      expandBtn.textContent='展开全文';
+    }else{
+      body.classList.add('expanded');
+      expandBtn.textContent='收起';
+    }
+  };
   var html='<div id="cmtBatchBar" class="batch-bar" style="display:none"></div>';
   roots.forEach(function(c){html+=renderNode(c,0)});
   el.innerHTML=html;
@@ -870,7 +1024,8 @@ window._doSendReply=function(id){
   // 从已渲染的 DOM 中获取 depth
   var item=document.getElementById('reply-'+id);
   if(item){var parentItem=item.closest('.cmt-item');if(parentItem)depth=(parseInt(parentItem.dataset.depth||'0'))+1}
-  api('POST','/api/admin/comments',{page:cmtSelectedPage,parent_id:id,depth:depth,nickname:'Moriefy',email:'3518972914@qq.com',website:adminWebsite,content:input.value.trim()}).then(function(d){
+  // 使用管理员配置的网站地址，昵称使用"管理员"
+  api('POST','/api/admin/comments',{page:cmtSelectedPage,parent_id:id,depth:depth,nickname:'管理员',email:'admin@'+(adminWebsite||'example.com').replace(/^https?:\/\//,''),website:adminWebsite,content:input.value.trim()}).then(function(d){
     if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
   })
 };
@@ -1214,15 +1369,17 @@ window._imgMenu=function(e,url,path){
   menu.className='ctx-menu';
   menu.style.left=Math.min(e.clientX,innerWidth-180)+'px';
   menu.style.top=Math.min(e.clientY,innerHeight-200)+'px';
-  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">'+_ico.copy+' 复制</button>'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">'+_ico.scissors+' 剪切</button>'
+  var escapedUrl=esc(url);
+  var escapedPath=esc(path);
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+escapedPath+'\');this.parentElement.remove()">'+_ico.copy+' 复制</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+escapedPath+'\');this.parentElement.remove()">'+_ico.scissors+' 剪切</button>'
     +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window._copyMdUrl(\''+url+'\');this.parentElement.remove()">复制 Markdown</button>'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(\''+url+'\',\'_blank\');this.parentElement.remove()">新窗口打开</button>'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgFindRefs(\''+url+'\');this.parentElement.remove()">查找引用</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+escapedUrl+'\');this.parentElement.remove()">复制链接</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window._copyMdUrl(\''+escapedUrl+'\');this.parentElement.remove()">复制 Markdown</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(decodeURIComponent(\''+escapedUrl+'\'),\'_blank\');this.parentElement.remove()">新窗口打开</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgFindRefs(\''+escapedUrl+'\');this.parentElement.remove()">查找引用</button>'
     +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
-    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="deleteImage(\''+path+'\');this.parentElement.remove()">删除</button>';
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="deleteImage(\''+escapedPath+'\');this.parentElement.remove()">删除</button>';
   document.body.appendChild(menu);
   setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
 };
@@ -1358,7 +1515,7 @@ window._fpSelect=function(el,folder){
 window._fpDoPaste=function(){
   if(!imgClipboard||!imgClipboard.paths.length){closeDialog();return}
   var dest=window._fpTargetFolder;
-  if(dest===undefined){toast('请选择目标文件夹');return}
+  if(dest===undefined||dest===''){toast('请选择目标文件夹');return}
   var type=imgClipboard.type;
   var paths=imgClipboard.paths;
   var total=paths.length,done=0,failed=0;
