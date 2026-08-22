@@ -789,7 +789,7 @@ window._previewToggle=function(){
   if(window.innerWidth<=768){
     pp.classList.toggle('show');
     if(pp.classList.contains('show')){
-      pp.style.position='fixed';pp.style.inset='0';pp.style.zIndex='50';pp.style.background='var(--surface)';pp.style.border='none';pp.style.borderRadius='0';pp.style.padding='0';pp.style.overflow='auto';
+      pp.style.position='fixed';pp.style.inset='0';pp.style.zIndex='50';pp.style.background='var(--surface)';pp.style.border='none';pp.style.borderRadius='0';pp.style.padding='';pp.style.overflow='auto';
       if(!$('previewCloseBar')){
         var bar=document.createElement('div');
         bar.id='previewCloseBar';
