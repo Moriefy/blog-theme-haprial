@@ -671,7 +671,8 @@ function renderEditor(){
       $('edTags').value=tags.join(', ');
       $('edExcerpt').value=a.excerpt||'';
       ed.value=a.content||'';
-      updatePreview()
+      updatePreview();
+      _edUpdateWordcount()
     })
   }else{
     $('edDate').value=new Date().toISOString().slice(0,10);
@@ -694,7 +695,8 @@ function renderEditor(){
         }
       }
     }catch(e){}
-    updatePreview()
+    updatePreview();
+    _edUpdateWordcount()
   }
   // 自动保存
   clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
