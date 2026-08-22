@@ -1,0 +1,20 @@
+{
+    "projectType": "blank",
+    "title": "空白工作区",
+    "description": "这是一个空白工作区，只包含基础目录结构。你可以编辑 .operit/config.json 来配置项目类型、服务器和命令，例如：server.enabled、preview.type、commands 等。",
+    "server": {
+        "enabled": false,
+        "port": 8080,
+        "autoStart": false
+    },
+    "preview": {
+        "type": "terminal",
+        "url": "",
+        "showPreviewButton": false,
+        "previewButtonLabel": ""
+    },
+    "commands": [],
+    "export": {
+        "enabled": false
+    }
+}

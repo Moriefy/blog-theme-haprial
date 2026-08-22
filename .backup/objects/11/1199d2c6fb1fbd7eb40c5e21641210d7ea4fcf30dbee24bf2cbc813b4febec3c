@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 | Haprial</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <h1 id="loginTitle"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> 管理后台</h1>
+    <p id="loginDesc">输入密码登录 Haprial 博客管理系统</p>
+    <div id="loginError" class="error"></div>
+    <form id="loginForm">
+      <input class="md3-input" type="password" id="loginPassword" placeholder="管理密码" autocomplete="current-password" style="margin-bottom:16px">
+      <button class="md3-btn md3-btn-filled" type="submit" style="width:100%;justify-content:center" id="loginBtn">登录</button>
+    </form>
+  </div>
+</div>
+
+<!-- 主应用 -->
+<div id="app" class="app" style="display:none">
+  <!-- 侧边栏 -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">Haprial 管理</div>
+    <div class="sidebar-nav">
+      <a class="nav-item active" href="#/" data-page="dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>仪表盘</span>
+      </a>
+      <a class="nav-item" href="#/articles" data-page="articles">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>文章</span>
+      </a>
+      <a class="nav-item" href="#/editor" data-page="editor">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>写文章</span>
+      </a>
+      <div class="nav-sep"></div>
+      <a class="nav-item" href="#/comments" data-page="comments">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>评论</span>
+      </a>
+      <a class="nav-item" href="#/friends" data-page="friends">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <span>友链</span>
+      </a>
+      <div class="nav-sep"></div>
+      <a class="nav-item" href="#/images" data-page="images">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>图片</span>
+      </a>
+      <a class="nav-item" href="#/trash" data-page="trash">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>回收站</span>
+      </a>
+      <a class="nav-item" href="#/tags" data-page="tags">
+        <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <span>标签</span>
+      </a>
+      <div class="nav-sep"></div>
+      <a class="nav-item" href="#/analytics" data-page="analytics">
+        <svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span>数据分析</span>
+      </a>
+      <a class="nav-item" href="#/seo" data-page="seo">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8a3 3 0 0 1 3 3"/></svg>
+        <span>SEO优化</span>
+      </a>
+      <a class="nav-item" href="#/performance" data-page="performance">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>性能监控</span>
+      </a>
+      <a class="nav-item" href="#/backup" data-page="backup">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>备份管理</span>
+      </a>
+      <a class="nav-item" href="#/theme" data-page="theme">
+        <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="2.5"/><path d="M17.7 13.7L14 17.4l-4.2-4.2-3.5 3.5"/><circle cx="13.5" cy="17.5" r="2.5"/></svg>
+        <span>主题设置</span>
+      </a>
+      <a class="nav-item" href="#/integrations" data-page="integrations">
+        <svg viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+        <span>集成管理</span>
+      </a>
+      <a class="nav-item" href="#/push" data-page="push">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>推送通知</span>
+      </a>
+      <a class="nav-item" href="#/settings" data-page="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>设置</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="logoutBtn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>退出登录</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 移动端底部导航 -->
+  <nav class="mobile-tabs" id="mobileTabs">
+    <a class="mobile-tab active" href="#/" data-page="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>首页</span></a>
+    <a class="mobile-tab" href="#/articles" data-page="articles"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>文章</span></a>
+    <a class="mobile-tab" href="#/editor" data-page="editor"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>写文</span></a>
+    <a class="mobile-tab" href="#/comments" data-page="comments"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>评论</span></a>
+    <a class="mobile-tab" href="#/friends" data-page="friends"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>友链</span></a>
+    <a class="mobile-tab" href="#/images" data-page="images"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>图片</span></a>
+    <a class="mobile-tab" href="#/settings" data-page="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>设置</span></a>
+  </nav>
+
+  <!-- 主内容区 -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="pageTitle">仪表盘</div>
+      <div class="topbar-actions" id="topbarActions"></div>
+      <div class="search-container">
+        <input type="text" class="md3-input search-input" id="adminSearchInput" placeholder="搜索文章…" style="height:36px;width:200px;border-radius:18px;padding:0 12px 0 36px;font-size:13px;background:var(--surface-container-high)">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <button class="md3-btn md3-btn-text" id="adminThemeBtn" style="padding:0 8px;min-width:0" title="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+    </header>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<!-- 弹窗 -->
+<div class="dialog-overlay" id="dialogOverlay">
+  <div class="dialog" id="dialog"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

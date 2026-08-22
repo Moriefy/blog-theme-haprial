@@ -1,0 +1,29 @@
+import io
+
+f = '/data/user/0/com.ai.assistance.operit/files/workspace/4df4d538-4ddb-4ab6-a689-2b3faef4780b/blog/theme/app.js'
+with io.open(f, 'r', encoding='utf-8') as fh:
+    src = fh.read()
+
+# Change 1: declare timers
+old1 = "var headingCache=null,lastActiveId=null,scrollRaf=null,artScrollRaf=null,resizeTimer=null;var _artScrollMax=0;"
+new1 = "var headingCache=null,lastActiveId=null,scrollRaf=null,artScrollRaf=null,resizeTimer=null;var _artScrollMax=0,_tabWCTimer=null,_rprogWCTimer=null;"
+
+# Change 2: updateTabIndicator dynamic will-change
+old2 = "tabBar.style.width=w+'px';tabBar.style.transform='translateX('+x+'px)'}}"
+new2 = "tabBar.style.width=w+'px';tabBar.style.willChange='transform';tabBar.style.transform='translateX('+x+'px)';clearTimeout(_tabWCTimer);_tabWCTimer=setTimeout(function(){if(tabBar)tabBar.style.willChange=''},320)}}"
+
+# Change 3: rprog dynamic will-change during scroll
+old3 = "articleView.addEventListener('scroll',function(){if(artScrollRaf)return;"
+new3 = "articleView.addEventListener('scroll',function(){rprog.style.willChange='transform';clearTimeout(_rprogWCTimer);_rprogWCTimer=setTimeout(function(){if(rprog)rprog.style.willChange=''},150);if(artScrollRaf)return;"
+
+count = 0
+for o, n in [(old1,new1),(old2,new2),(old3,new3)]:
+    if o in src:
+        src = src.replace(o, n, 1)
+        count += 1
+    else:
+        print('NOT_FOUND: ' + o[:60])
+
+with io.open(f, 'w', encoding='utf-8') as fh:
+    fh.write(src)
+print('DONE changed=' + str(count))

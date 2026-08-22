@@ -1,0 +1,20 @@
+var h=require('http'),f=require('fs'),p=require('path');
+var root=process.cwd()+'/dist';
+h.createServer(function(req,res){
+  var url=decodeURIComponent(req.url.split('?')[0]);
+  var fp=(url==='/')?'/index.html':url;
+  var file=p.join(root,fp);
+  if(file.indexOf(root)!==0){res.writeHead(403);res.end('no');return;}
+  f.readFile(file,function(e,d){
+    if(e){res.writeHead(404);res.end('nf');return;}
+    var ct='text/html';
+    if(fp.endsWith('.js'))ct='application/javascript';
+    else if(fp.endsWith('.css'))ct='text/css';
+    else if(fp.endsWith('.json'))ct='application/json';
+    else if(fp.endsWith('.svg'))ct='image/svg+xml';
+    else if(fp.endsWith('.png'))ct='image/png';
+    else if(fp.endsWith('.webp'))ct='image/webp';
+    res.writeHead(200,{'Content-Type':ct});
+    res.end(d);
+  });
+}).listen(8848,'0.0.0.0',function(){console.log('serving on 8848');});

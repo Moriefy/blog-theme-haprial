@@ -1,0 +1,1723 @@
+(function(){
+'use strict';
+var API='https://comments.pluslogic.eu.org';
+var SITE_URL='https://pluslogic.eu.org';
+var token='';
+var currentPage='';
+var articles=[],friends=[],trashList=[];
+var cmtData={comments:[],total:0,pages:[]};
+
+// MD Icons
+var _ico={
+  sun:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  search:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  key:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5l-4 4L7 7l-1.5 1.5 4 4-4 4h6l4-4 1.5-1.5-4-4 4-4z"/><line x1="9" y1="15" x2="4.5" y2="19.5"/><line x1="14.5" y1="4" x2="20" y2="9.5"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  scissors:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  close:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  inbox:'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>'
+};
+
+// Theme
+var _th=null;try{_th=localStorage.getItem('admin_theme')}catch(e){}
+if(!_th)_th=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',_th);
+function _toggleTheme(){_th=_th==='light'?'dark':'light';document.documentElement.classList.add('theme-transitioning');document.documentElement.setAttribute('data-theme',_th);try{localStorage.setItem('admin_theme',_th)}catch(e){};var btn=document.getElementById('adminThemeBtn');if(btn)btn.innerHTML=_th==='dark'?_ico.sun:_ico.moon;setTimeout(function(){document.documentElement.classList.remove('theme-transitioning')},250)}
+setTimeout(function(){var btn=document.getElementById('adminThemeBtn');if(btn){btn.innerHTML=_th==='dark'?_ico.sun:_ico.moon;btn.addEventListener('click',_toggleTheme)}},0);
+var editingId=null;
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML};
+
+// ── API ──
+function api(method,path,body){
+  var opts={method:method,headers:{}};
+  if(token)opts.headers['Authorization']='Bearer '+token;
+  if(body){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(body)}
+  return fetch(API+path,opts).then(function(r){
+    if(r.status===401){logout();throw new Error('登录已过期')}
+    return r.json()
+  })
+}
+
+// ── Toast ──
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},3000)}
+
+// ── Dialog ──
+function showDialog(html){$('dialog').innerHTML=html;$('dialogOverlay').classList.add('open')}
+function closeDialog(){$('dialogOverlay').classList.remove('open')}
+window.closeDialog=closeDialog;
+$('dialogOverlay').addEventListener('click',function(e){if(e.target===this)closeDialog()});
+
+// ── 时间 ──
+function timeAgo(ds){var s=Math.floor((Date.now()-new Date(ds+'Z').getTime())/1000);if(s<60)return'刚刚';if(s<3600)return(s/60|0)+'分钟前';if(s<86400)return(s/3600|0)+'小时前';if(s<2592000)return(s/86400|0)+'天前';return new Date(ds+'Z').toLocaleDateString('zh-CN')}
+
+// ════════════════════════════════════════
+//  认证
+// ════════════════════════════════════════
+function checkAuth(){
+  try{token=localStorage.getItem('admin_token')||''}catch(e){}
+  if(!token){showLogin();return}
+  api('GET','/api/admin/verify').then(function(d){if(d.ok)showApp();else showLogin()}).catch(showLogin)
+}
+function showLogin(){
+  $('loginPage').style.display='flex';
+  $('app').style.display='none';
+  // 重置登录错误状态
+  $('loginError').style.display='none';
+  $('loginError').textContent='';
+  $('loginPassword').value='';
+  // 检查是否已设置密码
+  api('GET','/api/admin/setup/status').then(function(d){
+    if(!d.passwordSet){
+      $('loginTitle').innerHTML=_ico.key+' 首次设置';
+      $('loginDesc').textContent='这是你第一次使用，请设置管理密码';
+      $('loginBtn').textContent='设置密码';
+    }else{
+      $('loginTitle').innerHTML=_ico.lock+' 管理后台';
+      $('loginDesc').textContent='输入密码登录 Haprial 博客管理系统';
+      $('loginBtn').textContent='登录';
+    }
+  }).catch(function(){});
+  $('loginPassword').focus()
+}
+function showApp(){$('loginPage').style.display='none';$('app').style.display='flex';route();_initGlobalSearch()}
+function _initGlobalSearch(){
+  var btn=document.getElementById('adminSearchBtn');if(!btn)return;
+  btn.addEventListener('click',function(){
+    var q=prompt('搜索文章…');
+    if(!q)return;
+    q=q.toLowerCase();
+    location.hash='#/articles';
+    setTimeout(function(){var el=document.getElementById('artSearch');if(el){el.value=q;el.dispatchEvent(new Event('input'))}},100)
+  })
+}
+function logout(){token='';try{localStorage.removeItem('admin_token')}catch(e){};showLogin()}
+
+$('loginForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var pw=$('loginPassword').value;if(!pw)return;
+  var btn=$('loginBtn');if(btn.disabled)return;btn.disabled=true;btn.textContent='登录中…';
+  $('loginError').style.display='none';
+  api('POST','/api/admin/auth',{password:pw}).then(function(d){
+    if(d.ok){token=d.token;try{localStorage.setItem('admin_token',token)}catch(e){};showApp()}
+    else{$('loginError').textContent=d.error||'登录失败';$('loginError').style.display='block';btn.disabled=false;btn.textContent='登录'}
+  }).catch(function(){$('loginError').textContent='网络错误';$('loginError').style.display='block';btn.disabled=false;btn.textContent='登录'})
+});
+$('logoutBtn').addEventListener('click',logout);
+
+// ════════════════════════════════════════
+//  路由 (Hash-based)
+// ════════════════════════════════════════
+var pageTitles={dashboard:'仪表盘',articles:'文章管理',editor:'写文章',comments:'评论管理',friends:'友链管理',trash:'回收站',settings:'设置',tags:'标签管理'};
+var routes={
+  '/':function(){renderDashboard()},
+  '/articles':function(){renderArticles()},
+  '/editor':function(){renderEditor()},
+  '/comments':function(){renderComments()},
+  '/friends':function(){renderFriends()},
+  '/images':function(){renderImages()},
+  '/trash':function(){renderTrash()},
+  '/settings':function(){renderSettings()},
+  '/tags':function(){renderTagManager()}
+};
+function parseHash(){var h=(location.hash||'').replace(/^#/,'')||'/';return h}
+function route(){
+  var path=parseHash();
+  var page='dashboard';
+  if(path==='/')page='dashboard';
+  else if(path==='/articles')page='articles';
+  else if(path==='/editor'){page='editor';editingId=null}
+  else if(path.match(/^\/editor\/(\d+)$/)){page='editor';editingId=parseInt(RegExp.$1)}
+  else if(path==='/comments')page='comments';
+  else if(path==='/friends')page='friends';
+  else if(path==='/images'||path.match(/^\/images\//)){page='images'}
+  else if(path==='/trash')page='trash';
+  else if(path==='/settings')page='settings';
+  else if(path==='/tags')page='tags';
+  else page='dashboard';
+  if(page!=='editor'){
+    clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+    window._autoSaveLocal=null;window._autoSaveD1=null;
+    if(window._edBeforeUnload){window.removeEventListener('beforeunload',window._edBeforeUnload);window._edBeforeUnload=null}
+  }
+  if(page!=='images'&&window._imgLbKeydown){document.removeEventListener('keydown',window._imgLbKeydown);window._imgLbKeydown=null}
+  currentPage=page;
+  // 更新导航高亮
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page)});
+  document.querySelectorAll('.mobile-tab[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page)});
+  $('pageTitle').textContent=pageTitles[page]||page;
+  $('topbarActions').innerHTML='';
+  // 渲染页面
+  var fn=routes[path]||routes['/'];
+  if(path.match(/^\/editor\/\d+$/))fn=routes['/editor'];
+  if(path.match(/^\/images\//))fn=routes['/images'];
+  fn()
+}
+window.addEventListener('hashchange',route);
+
+// ════════════════════════════════════════
+//  仪表盘
+// ════════════════════════════════════════
+function renderDashboard(){
+  var c=$('content');
+  c.innerHTML='<div class="sk-stats"><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div></div>'
+    +'<div class="card" style="margin-bottom:16px"><div class="card-title">快捷操作</div><div style="display:flex;gap:12px;flex-wrap:wrap"><div class="skeleton" style="width:120px;height:40px;border-radius:20px"></div><div class="skeleton" style="width:120px;height:40px;border-radius:20px"></div></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">'
+    +'<div class="card"><div class="card-title">最近文章</div><div class="sk-line"><div class="skeleton sk-avatar" style="border-radius:6px;width:18px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar" style="border-radius:6px;width:18px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar" style="border-radius:6px;width:18px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div></div>'
+    +'<div class="card"><div class="card-title">最新评论</div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div></div>'
+    +'</div>';
+  Promise.all([
+    api('GET','/api/admin/stats'),
+    api('GET','/api/admin/articles?status=all'),
+    api('GET','/api/admin/comments?limit=5')
+  ]).then(function(res){
+    var d=res[0],artsRes=res[1],cmtsRes=res[2];
+    var arts=(artsRes.articles||[]).slice(0,5);
+    var cmts=(cmtsRes.comments||[]).slice(0,5);
+    var artHtml=arts.length?'<div style="display:flex;flex-direction:column">':('<div class="empty">暂无文章</div>');
+    arts.forEach(function(a){
+      var st=a.status==='published'?'<span style="color:var(--primary);font-size:11px;border:1px solid var(--primary);border-radius:10px;padding:1px 8px">已发布</span>':'<span style="color:var(--outline);font-size:11px;border:1px solid var(--outline-variant);border-radius:10px;padding:1px 8px">草稿</span>';
+      artHtml+='<a href="#/editor/'+a.id+'" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--outline-variant);text-decoration:none;color:inherit"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+esc(a.title)+'</span><span style="display:flex;gap:8px;align-items:center;flex-shrink:0">'+st+'<span style="color:var(--outline);font-size:12px">'+(a.date||'')+'</span></span></a>';
+    });
+    if(arts.length)artHtml+='</div><button class="md3-btn md3-btn-text" style="margin-top:8px" onclick="location.hash=\'#/articles\'">查看全部 →</button>';
+    var cmtHtml=cmts.length?'<div style="display:flex;flex-direction:column">':('<div class="empty">暂无评论</div>');
+    cmts.forEach(function(cm){
+      var plain=cm.content_html?cm.content_html.replace(/<[^>]+>/g,'').slice(0,60):'';
+      cmtHtml+='<a href="#/comments" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--outline-variant);text-decoration:none;color:inherit"><div style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--primary-container);color:var(--on-primary-container);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">'+esc((cm.nickname||'?').charAt(0))+'</div><div style="flex:1;overflow:hidden"><div style="font-size:13px;font-weight:600">'+esc(cm.nickname||'匿名')+'<span style="color:var(--outline);font-weight:400;font-size:11px;margin-left:8px">'+(cm.created_at||'').replace('T',' ').slice(0,16)+'</span></div><div style="font-size:12px;color:var(--on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(plain)+'</div></div></a>';
+    });
+    if(cmts.length)cmtHtml+='</div><button class="md3-btn md3-btn-text" style="margin-top:8px" onclick="location.hash=\'#/comments\'">查看全部 →</button>';
+    c.innerHTML='<div class="stats-grid">'
+      +sc(d.published,'已发布')+sc(d.drafts,'草稿')+sc(d.comments,'评论')
+      +sc(d.friends,'友链')+sc(d.trash,'回收站')+'</div>'
+      +'<div class="card"><div class="card-title">快捷操作</div>'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+      +'<button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">写文章</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/articles\'">管理文章</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/comments\'">管理评论</button>'
+      +'<button class="md3-btn md3-btn-outlined" onclick="location.hash=\'#/friends\'">管理友链</button>'
+      +'</div></div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px">'
+      +'<div class="card"><div class="card-title">最近文章</div>'+artHtml+'</div>'
+      +'<div class="card"><div class="card-title">最新评论</div>'+cmtHtml+'</div>'
+      +'</div>'
+  }).catch(function(){c.innerHTML='<div class="empty">加载失败</div>'})
+}
+function sc(n,l){return '<div class="stat-card"><div class="stat-num">'+n+'</div><div class="stat-label">'+l+'</div></div>'}
+
+// ════════════════════════════════════════
+//  文章管理
+// ════════════════════════════════════════
+var artPage=0,artPerPage=10,artFilter='all',artYear='',artCat='',artTag='',artSearch='',artSelected=new Set();
+window._artNav=function(p){artPage=p;renderArtList()};
+window._artPrev=function(){artPage--;renderArtList()};
+window._artNext=function(){artPage++;renderArtList()};
+var artSearchTimer=null;
+function renderArticles(){
+  var c=$('content');
+  artSelected.clear();
+  c.innerHTML='<div class="filter-bar">'
+    +'<input class="md3-input" id="artSearch" placeholder="搜索…" style="max-width:120px;min-width:80px">'
+    +'<select class="md3-input" id="artStatus"><option value="all">状态</option><option value="published">已发布</option><option value="draft">草稿</option></select>'
+    +'<select class="md3-input" id="artYearFilter"><option value="">年份</option></select>'
+    +'<select class="md3-input" id="artCatFilter"><option value="">分类</option></select>'
+    +'<select class="md3-input" id="artTagFilter"><option value="">标签</option></select>'
+    +'</div>'
+    +'<div id="artBatchBar" class="batch-bar" style="display:none"></div>'
+    +'<div class="table-wrap"><table><thead><tr><th style="width:32px"></th><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="7" style="padding:20px 16px"><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div></td></tr></tbody></table></div>'
+    +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
+  $('artSearch').addEventListener('input',function(){clearTimeout(artSearchTimer);artSearchTimer=setTimeout(function(){artSearch=$('artSearch').value.trim().toLowerCase();artPage=0;renderArtList()},300)});
+  $('artStatus').addEventListener('change',function(){artFilter=this.value;artPage=0;renderArtList()});
+  $('artYearFilter').addEventListener('change',function(){artYear=this.value;artPage=0;renderArtList()});
+  $('artCatFilter').addEventListener('change',function(){artCat=this.value;artPage=0;renderArtList()});
+  $('artTagFilter').addEventListener('change',function(){artTag=this.value;artPage=0;renderArtList()});
+  loadAllArticles();
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-text" onclick="window._selectAllArts()">全选</button><button class="md3-btn md3-btn-text" onclick="window._deselectAllArts()">取消</button><button class="md3-btn md3-btn-text" onclick="window._exportAllArticles()">导出全部</button><button class="md3-btn md3-btn-filled" onclick="location.hash=\'#/editor\'">+ 新文章</button>'
+}
+function loadAllArticles(){
+  api('GET','/api/admin/articles?status=all').then(function(d){
+    articles=d.articles||[];
+    // 填充筛选下拉
+    var years={},cats={},tags={};
+    articles.forEach(function(a){
+      var y=(a.date||'').slice(0,4);if(y)years[y]=1;
+      if(a.category)cats[a.category]=1;
+      try{parseTags(a.tags).forEach(function(t){tags[t]=1})}catch(e){}
+    });
+    var ySel=$('artYearFilter');if(ySel)ySel.innerHTML='<option value="">全部年份</option>'+Object.keys(years).sort().reverse().map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join('');
+    var cSel=$('artCatFilter');if(cSel)cSel.innerHTML='<option value="">全部分类</option>'+Object.keys(cats).sort().map(function(c){return '<option value="'+c+'">'+c+'</option>'}).join('');
+    var tSel=$('artTagFilter');if(tSel)tSel.innerHTML='<option value="">全部标签</option>'+Object.keys(tags).sort().map(function(t){return '<option value="'+t+'">'+t+'</option>'}).join('');
+    renderArtList()
+  })
+}
+function getFilteredArticles(){
+  return articles.filter(function(a){
+    if(artSearch&&(a.title||'').toLowerCase().indexOf(artSearch)===-1)return false;
+    if(artFilter!=='all'&&a.status!==artFilter)return false;
+    if(artYear&&(a.date||'').slice(0,4)!==artYear)return false;
+    if(artCat&&a.category!==artCat)return false;
+    if(artTag){var tags=[];try{tags=parseTags(a.tags)}catch(e){};if(tags.indexOf(artTag)===-1)return false}
+    return true
+  })
+}
+function renderArtList(){
+  var filtered=getFilteredArticles();
+  var total=Math.ceil(filtered.length/artPerPage);if(total<1)total=1;
+  if(artPage>=total)artPage=total-1;if(artPage<0)artPage=0;
+  var start=artPage*artPerPage;
+  var pageItems=filtered.slice(start,start+artPerPage);
+  var tb=$('artBody');if(!tb)return;
+  if(!pageItems.length){tb.innerHTML='<tr><td colspan="7" class="empty">暂无文章</td></tr>'}
+  else{tb.innerHTML=pageItems.map(function(a){
+    var tags=[];try{tags=parseTags(a.tags)}catch(e){}
+    var checked=artSelected.has(a.id)?' checked':'';
+    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' <span style="color:var(--primary)">'+_ico.pin+'</span>':'')+(a.excerpt?'<div style="font-size:12px;color:var(--on-surface-variant);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px">'+esc(a.excerpt)+'</div>':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
+    +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+a.id+')">导出</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
+    +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
+    +'</td></tr>'
+  }).join('')}
+  // 分页
+  var pg=$('artPagination');if(!pg)return;
+  if(total<=1){pg.innerHTML='';return}
+  var h='<button class="md3-btn md3-btn-text"'+(artPage===0?' disabled':'')+' onclick="_artPrev()">上一页</button>';
+  for(var i=0;i<total;i++)h+='<button class="md3-btn md3-btn-text'+(i===artPage?' md3-btn-filled':'')+'" onclick="_artNav('+i+')">'+(i+1)+'</button>';
+  h+='<button class="md3-btn md3-btn-text"'+(artPage>=total-1?' disabled':'')+' onclick="_artNext()">下一页</button>';
+  pg.innerHTML=h
+}
+
+window._togglePub=function(id){
+  api('POST','/api/admin/articles/'+id+'/publish').then(function(d){
+    if(d.ok){toast(d.status==='published'?'已发布':'已下架');loadAllArticles()}
+  })
+};
+window._delArt=function(id){
+  showDialog('<h3>确认删除</h3><p>文章将移入回收站，GitHub 文件将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelArt('+id+')">删除</button></div>')
+};
+window._confirmDelArt=function(id){
+  closeDialog();
+  api('DELETE','/api/admin/articles/'+id).then(function(d){if(d.ok){toast('已移入回收站');loadAllArticles()}})
+};
+// 文章多选
+window._selectAllArts=function(){var filtered=getFilteredArticles();filtered.forEach(function(a){artSelected.add(a.id)});renderArtList();_artUpdateBatchBar()};
+window._deselectAllArts=function(){artSelected.clear();renderArtList();_artUpdateBatchBar()};
+function _artUpdateBatchBar(){
+  var bar=$('artBatchBar');if(!bar)return;
+  if(artSelected.size>0){
+    bar.style.display='flex';
+    var h='<span>'+artSelected.size+' 篇选中</span>';
+    h+='<button class="md3-btn md3-btn-text" onclick="window._artBatch(\'publish\')">批量发布</button>';
+    h+='<button class="md3-btn md3-btn-text" onclick="window._artBatch(\'draft\')">批量下架</button>';
+    h+='<button class="md3-btn md3-btn-danger" onclick="window._artBatch(\'delete\')">批量删除</button>';
+    if(artSelected.size===1){
+      var id=Array.from(artSelected)[0];
+      h+='<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+id+')">导出 MD</button>';
+    }else{
+      h+='<button class="md3-btn md3-btn-text" onclick="window._exportSelectedArts()">导出 ZIP</button>';
+    }
+    bar.innerHTML=h;
+  }else{bar.style.display='none'}
+}
+window._artBatch=function(action){
+  if(!artSelected.size){toast('请先选择文章');return}
+  var labels={publish:'发布',draft:'下架',delete:'删除'};
+  var tips={publish:'将批量发布所选文章到博客',draft:'已发布的文章将批量下架',delete:'所选文章将移入回收站，并从 GitHub 删除文件'};
+  showDialog('<h3>批量'+labels[action]+'</h3><p>'+tips[action]+'（共 '+artSelected.size+' 篇）</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn '+(action==='delete'?'md3-btn-danger':'md3-btn-filled')+'" onclick="window._confirmArtBatch(\''+action+'\')">确认'+labels[action]+'</button></div>')
+};
+window._confirmArtBatch=function(action){
+  closeDialog();
+  toast('批量处理中…');
+  api('POST','/api/admin/articles/batch',{ids:Array.from(artSelected),action:action}).then(function(d){
+    if(d.ok){
+      var labels={publish:'发布',draft:'下架',delete:'删除'};
+      toast('批量'+labels[action]+'完成：成功 '+d.success+' 篇'+(d.failed?('，失败 '+d.failed+' 篇'):''));
+      artSelected.clear();
+      loadAllArticles()
+    }else{toast(d.error||'批量操作失败')}
+  })
+};
+document.addEventListener('change',function(e){
+  if(e.target.classList.contains('art-cb')){
+    var id=parseInt(e.target.dataset.id);
+    if(e.target.checked)artSelected.add(id);else artSelected.delete(id);
+    _artUpdateBatchBar()
+  }
+});
+// 单篇导出
+window._exportSingleArt=function(id){
+  var a=articles.find(function(x){return x.id===id});
+  if(!a){toast('文章不存在');return}
+  api('GET','/api/admin/articles/'+id).then(function(d){
+    if(!d.article)return;
+    var art=d.article;
+    var md='---\ntitle: "'+art.title+'"\ndate: '+art.date+'\ncategory: '+art.category+'\ntags: ['+parseTags(art.tags).join(', ')+']\nexcerpt: "'+(art.excerpt||'')+'"\n---\n\n'+art.content;
+    var blob=new Blob([md],{type:'text/markdown'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(art.date||'article')+'.md';a.click();URL.revokeObjectURL(a.href);
+    toast('已导出')
+  })
+};
+// 批量导出
+function _exportArtsAsZip(artsToExport){
+  if(!artsToExport.length){toast('没有要导出的文章');return}
+  if(typeof JSZip==='undefined'){toast('JSZip 未加载');return}
+  toast('打包中…');
+  var zip=new JSZip();
+  var done=0,total=artsToExport.length;
+  artsToExport.forEach(function(a){
+    api('GET','/api/admin/articles/'+a.id).then(function(d){
+      if(d.article){
+        var art=d.article;
+        var md='---\ntitle: "'+art.title+'"\ndate: '+art.date+'\ncategory: '+art.category+'\ntags: ['+parseTags(art.tags).join(', ')+']\nexcerpt: "'+(art.excerpt||'')+'"\n---\n\n'+art.content;
+        zip.file((art.date||'unknown')+'-'+(art.slug||a.id)+'.md',md);
+      }
+      done++;
+      if(done===total){
+        zip.generateAsync({type:'blob'}).then(function(blob){
+          var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blog-export-'+new Date().toISOString().slice(0,10)+'.zip';a.click();URL.revokeObjectURL(a.href);
+          toast('已导出 '+total+' 篇文章')
+        })
+      }
+    })
+  })
+}
+window._exportSelectedArts=function(){
+  var selected=articles.filter(function(a){return artSelected.has(a.id)});
+  _exportArtsAsZip(selected)
+};
+window._exportAllArticles=function(){
+  _exportArtsAsZip(articles)
+};
+window._exportAllArticlesZip=function(){
+  api('GET','/api/admin/articles?status=all').then(function(d){
+    var all=d.articles||[];
+    if(!all.length){toast('没有文章');return}
+    _exportArtsAsZip(all)
+  })
+};
+
+// ════════════════════════════════════════
+//  编辑器
+// ════════════════════════════════════════
+function renderEditor(){
+  var c=$('content');
+  c.innerHTML='<div class="meta-grid">'
+    +'<div class="meta-field full"><label>标题</label><input class="md3-input" id="edTitle" placeholder="文章标题"></div>'
+    +'<div class="meta-field"><label>日期</label><input class="md3-input" id="edDate" type="date"></div>'
+    +'<div class="meta-field"><label>备注（文件名后缀）</label><input class="md3-input" id="edSlug" placeholder="webassembly"></div>'
+    +'<div class="meta-field"><label>分类</label><input class="md3-input" id="edCat" placeholder="tech / design / think / culture"></div>'
+    +'<div class="meta-field"><label>标签（逗号分隔）</label><input class="md3-input" id="edTags" placeholder="标签1, 标签2, 标签3"></div>'
+    +'<div class="meta-field full"><label>摘要</label><textarea class="md3-input" id="edExcerpt" rows="2" placeholder="文章摘要"></textarea></div>'
+    +'</div>'
+    +'<div class="toolbar">'
+    +'<button onclick="window._insMd(\'**\',\'**\')"><b>B</b></button>'
+    +'<button onclick="window._insMd(\'*\',\'*\')"><i>I</i></button>'
+    +'<button onclick="window._insMd(\'~~\',\'~~\')"><s>S</s></button>'
+    +'<button onclick="window._insMd(\'`\',\'`\')">Code</button>'
+    +'<button onclick="window._insMd(\'\\n```\\n\',\'\\n```\\n\')">Block</button>'
+    +'<button onclick="window._insMd(\'## \',\'\')">H2</button>'
+    +'<button onclick="window._insMd(\'### \',\'\')">H3</button>'
+    +'<button onclick="window._insMd(\'[text](\',\')\')">Link</button>'
+    +'<button onclick="window._insMd(\'![alt](\',\')\')">Img</button>'
+    +'<button onclick="window._insMd(\'> \',\'\')">Quote</button>'
+    +'<button onclick="window._insMd(\'- \',\'\')">List</button>'
+    +'<button onclick="window._insMd(\'---\\n\',\'\')">HR</button>'
+    +'<button onclick="window._insertTable()" title="插入表格">表格</button>'
+    +'<input type="file" accept="image/*" multiple style="display:none" id="edImgUpload">'
+    +'<button type="button" onclick="document.getElementById(\'edImgUpload\').click()">Img+</button>'
+    +'<span style="flex:1"></span>'
+    +'<span class="ed-save-status" id="edSaveStatus"></span>'
+    +'<button class="md3-btn md3-btn-text" onclick="window._previewToggle()" id="previewToggleBtn" style="display:none">预览</button>'
+    +'</div>'
+    +'<div class="editor-wrap">'
+    +'<div class="editor-pane"><textarea id="edContent" placeholder="Markdown 内容…"></textarea></div>'
+    +'<div class="preview-pane" id="edPreview"></div>'
+    +'</div>'
+    +'<div class="ed-wordcount" id="edWordcount"></div>';
+  $('topbarActions').innerHTML='<span class="ed-save-status" id="edSaveStatusTop"></span><button class="md3-btn md3-btn-outlined" onclick="window._saveDraft()">存草稿</button><button class="md3-btn md3-btn-filled" onclick="window._saveArticle()">发布</button>';
+  var ed=$('edContent');
+  // 日期变化时自动填充备注前缀
+  $('edDate').addEventListener('change',function(){
+    if(editingId)return;
+    var slug=$('edSlug');
+    if(slug.dataset.manual)return;
+    slug.value=this.value.replace(/-/g,'');
+  });
+  $('edSlug').addEventListener('input',function(){this.dataset.manual='1'});
+  ed.addEventListener('input',function(){updatePreview();_edUpdateWordcount()});
+  // 滚动同步：编辑器 → 预览
+  var scrollSyncTimer=null;
+  ed.addEventListener('scroll',function(){
+    clearTimeout(scrollSyncTimer);
+    scrollSyncTimer=setTimeout(function(){
+      var pct=ed.scrollTop/(ed.scrollHeight-ed.clientHeight||1);
+      var pp=$('edPreview');
+      pp.scrollTop=pct*(pp.scrollHeight-pp.clientHeight)
+    },16)
+  });
+  ed.addEventListener('keydown',function(e){
+    if(e.key==='Tab'){e.preventDefault();var s=this.selectionStart,end=this.selectionEnd;this.value=this.value.substring(0,s)+'  '+this.value.substring(end);this.selectionStart=this.selectionEnd=s+2;updatePreview()}
+    if(e.ctrlKey||e.metaKey){
+      if(e.key==='s'){e.preventDefault();window._saveArticle()}
+      if(e.key==='b'){e.preventDefault();window._insMd('**','**')}
+      if(e.key==='i'){e.preventDefault();window._insMd('*','*')}
+      if(e.key==='k'){e.preventDefault();var sel=this.value.substring(this.selectionStart,this.selectionEnd);window._insMd('['+(sel||'text')+'](',')')}
+    }
+  });
+  // Drag & drop upload
+  ed.addEventListener('dragover',function(e){e.preventDefault();ed.style.borderColor='var(--primary)'});
+  ed.addEventListener('dragleave',function(){ed.style.borderColor=''});
+  ed.addEventListener('drop',function(e){
+    e.preventDefault();ed.style.borderColor='';
+    var files=[];Array.from(e.dataTransfer.files).forEach(function(f){if(f.type.startsWith('image/'))files.push(f)});
+    if(!files.length)return;
+    var dateVal=$('edDate').value||new Date().toISOString().slice(0,10);
+    var folder=dateVal.slice(0,4)+'/'+dateVal.slice(5,7);
+    var done=0;toast('上传中… 0/'+files.length);
+    files.forEach(function(file){
+      var reader=new FileReader();
+      reader.onload=function(){
+        var base64=reader.result.split(',')[1];
+        api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
+          done++;if(d.ok)window._insMd('![]('+d.url+')');
+          if(done===files.length)toast('上传完成');else toast('上传中… '+done+'/'+files.length);
+        }).catch(function(){done++;toast('上传失败')})
+      };
+      reader.readAsDataURL(file)
+    })
+  });
+  // 图片粘贴上传（Ctrl/Cmd+V 粘贴剪贴板中的图片）
+  ed.addEventListener('paste',function(e){
+    var items=(e.clipboardData&&e.clipboardData.items)||[];
+    var imgFile=null;
+    Array.from(items).forEach(function(it){if(it.kind==='file'&&it.type.indexOf('image/')===0&&!imgFile)imgFile=it.getAsFile()});
+    if(!imgFile)return;
+    e.preventDefault();
+    var dateVal=$('edDate').value||new Date().toISOString().slice(0,10);
+    var folder=dateVal.slice(0,4)+'/'+dateVal.slice(5,7);
+    toast('正在上传粘贴的图片…');
+    var reader=new FileReader();
+    reader.onload=function(){
+      var base64=reader.result.split(',')[1];
+      api('POST','/api/admin/images/upload',{data:base64,name:(imgFile.name||'clipboard.png').replace(/[^a-zA-Z0-9._-]/g,'_')||'clipboard.png',folder:folder}).then(function(d){
+        if(d.ok){window._insMd('![]('+d.url+')');toast('图片已粘贴上传')}
+        else toast(d.error||'图片上传失败')
+      }).catch(function(){toast('图片上传失败')})
+    };
+    reader.readAsDataURL(imgFile)
+  });
+  if(window.innerWidth<=768){$('previewToggleBtn').style.display=''}
+  // 移除旧监听器防止内存泄漏
+  if(window._editorResizeHandler){window.removeEventListener('resize',window._editorResizeHandler)}
+  window._editorResizeHandler=function(){var btn=$('previewToggleBtn');if(btn)btn.style.display=window.innerWidth<=768?'':'none'};
+  window.addEventListener('resize',window._editorResizeHandler);
+  // 编辑器图片上传
+  var edImgInput=$('edImgUpload');
+  if(edImgInput){
+    edImgInput.addEventListener('change',function(e){
+      var files=e.target.files;if(!files||!files.length)return;
+      var dateVal=$('edDate').value||new Date().toISOString().slice(0,10);
+      var folder=dateVal.slice(0,4)+'/'+dateVal.slice(5,7);
+      var done=0,total=files.length;
+      toast('上传中… 0/'+total);
+      Array.from(files).forEach(function(file){
+        var reader=new FileReader();
+        reader.onload=function(){
+          var base64=reader.result.split(',')[1];
+          api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
+            done++;
+            if(d.ok){
+              window._insMd('![]('+d.url+')');
+            }
+            if(done===total)toast('上传完成');
+            else toast('上传中… '+done+'/'+total);
+          }).catch(function(){done++;toast('上传失败: '+file.name)})
+        };
+        reader.readAsDataURL(file)
+      });
+      e.target.value=''
+    })
+  }
+  if(editingId){
+    api('GET','/api/admin/articles/'+editingId).then(function(d){
+      if(!d.article)return;
+      var a=d.article;
+      $('edTitle').value=a.title||'';
+      $('edDate').value=a.date||'';
+      $('edSlug').value=a.slug||'';
+      $('edCat').value=a.category||'';
+      var tags=[];try{tags=parseTags(a.tags)}catch(e){}
+      $('edTags').value=tags.join(', ');
+      $('edExcerpt').value=a.excerpt||'';
+      ed.value=a.content||'';
+      updatePreview()
+    })
+  }else{
+    $('edDate').value=new Date().toISOString().slice(0,10);
+    $('edSlug').value=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    // 从 localStorage 恢复未保存的草稿
+    try{
+      var saved=localStorage.getItem('haprial_draft_new');
+      if(saved){
+        var d=JSON.parse(saved);
+        if(d.title||d.content){
+          if(confirm('检测到未保存的草稿「'+(d.title||'无标题')+'」，是否恢复？')){
+            if(d.title)$('edTitle').value=d.title;
+            if(d.date)$('edDate').value=d.date;
+            if(d.slug)$('edSlug').value=d.slug;
+            if(d.cat)$('edCat').value=d.cat;
+            if(d.tags)$('edTags').value=d.tags;
+            if(d.excerpt)$('edExcerpt').value=d.excerpt;
+            if(d.content)ed.value=d.content;
+          }else{localStorage.removeItem('haprial_draft_new')}
+        }
+      }
+    }catch(e){}
+    updatePreview()
+  }
+  // 自动保存
+  clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+  window._autoSaveLocal=setInterval(function(){
+    try{
+      var key=editingId?'haprial_draft_'+editingId:'haprial_draft_new';
+      localStorage.setItem(key,JSON.stringify({
+        title:$('edTitle').value,date:$('edDate').value,slug:$('edSlug').value,
+        cat:$('edCat').value,tags:$('edTags').value,excerpt:$('edExcerpt').value,
+        content:$('edContent').value
+      }))
+      _edSetSaveStatus('已保存本地','ok');
+    }catch(e){}
+  },5000);
+  window._autoSaveD1=setInterval(function(){
+    if(!editingId)return;
+    var cur=$('edContent').value;
+    if(cur!==_lastSavedContent){_edSetSaveStatus('保存中…','');saveArticle('draft');_lastSavedContent=cur}
+  },60000);
+  // beforeunload 防丢失
+  window._edBeforeUnload=function(e){e.preventDefault();e.returnValue=''};
+  window.addEventListener('beforeunload',window._edBeforeUnload);
+  _edUpdateWordcount()
+}
+function updatePreview(){
+  var raw=$('edContent').value;
+  $('edPreview').innerHTML=mdToHtml(raw)
+}
+function _edUpdateWordcount(){
+  var el=$('edWordcount');if(!el)return;
+  var raw=$('edContent').value||'';
+  var text=raw.replace(/<[^>]+>/g,'').replace(/[#*`~\[\]()!>\-|]/g,'');
+  var cn=(text.match(/[\u4e00-\u9fff]/g)||[]).length;
+  var en=(text.match(/[a-zA-Z]+/g)||[]).length;
+  var total=cn+en;
+  var min=Math.ceil(cn/400+en/200);if(min<1)min=1;
+  // 精准统计：中文字符 + 英文字母/单词（按 CJK 与拉丁分列，便于作者把握篇幅）
+  el.textContent=total+' 字（中 '+cn+' · 英 '+en+'）· 约 '+min+' 分钟阅读';
+}
+window._edSetSaveStatus=function(text,type){
+  ['edSaveStatus','edSaveStatusTop'].forEach(function(id){
+    var el=$(id);if(!el)return;
+    el.textContent=text;
+    el.className='ed-save-status'+(type?' ed-save-'+type:'');
+  });
+};
+window._insMd=function(before,after){
+  var ta=$('edContent');var s=ta.selectionStart,e=ta.selectionEnd;var sel=ta.value.substring(s,e);
+  ta.value=ta.value.substring(0,s)+before+sel+after+ta.value.substring(e);
+  ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;
+  ta.focus();updatePreview()
+};
+// 插入一个 2×2 的 Markdown 表格模板到光标处
+window._insertTable=function(){
+  var table='\n| 列1 | 列2 |\n| --- | --- |\n| 单元格 | 单元格 |\n\n';
+  var ta=$('edContent');var s=ta.selectionStart,e=ta.selectionEnd;
+  ta.value=ta.value.substring(0,s)+table+ta.value.substring(e);
+  ta.selectionStart=s;ta.selectionEnd=s;
+  ta.focus();updatePreview();
+  toast('已插入表格模板');
+};
+window._previewToggle=function(){
+  var pp=$('edPreview');
+  if(window.innerWidth<=768){
+    pp.classList.toggle('show');
+    if(pp.classList.contains('show')){
+      pp.style.position='fixed';pp.style.inset='0';pp.style.zIndex='50';pp.style.background='var(--surface)';pp.style.border='none';pp.style.borderRadius='0';pp.style.padding='0';pp.style.overflow='auto';
+      if(!$('previewCloseBar')){
+        var bar=document.createElement('div');
+        bar.id='previewCloseBar';
+        bar.style.cssText='position:sticky;top:0;z-index:51;display:flex;align-items:center;padding:0 8px;height:48px;background:var(--surface-container);border-bottom:1px solid var(--outline-variant)';
+        bar.innerHTML='<span style="flex:1;font-size:14px;font-weight:600;padding-left:8px">预览</span><button class="md3-btn md3-btn-text" onclick="window._previewToggle()" style="padding:0 12px">关闭</button>';
+        pp.insertBefore(bar,pp.firstChild)
+      }
+    }else{
+      var bar=$('previewCloseBar');if(bar)bar.remove();
+      pp.style.position='';pp.style.inset='';pp.style.zIndex='';pp.style.background='';pp.style.border='';pp.style.borderRadius='';pp.style.padding='';pp.style.overflow=''
+    }
+  }else{pp.classList.toggle('show')}
+};
+var _saveDebounce=null;
+var _lastSavedContent='';
+window._saveDraft=function(){saveArticle('draft')};
+window._saveArticle=function(){
+  if(_saveDebounce)return;
+  _saveDebounce=true;setTimeout(function(){_saveDebounce=false},2000);
+  saveArticle('published')
+};
+function parseTags(t){
+  if(!t||t==='null'||t==='undefined')return[];
+  if(Array.isArray(t))return t;
+  if(typeof t==='string'){
+    t=t.trim();
+    if(!t||t==='[]')return[];
+    if(t.charAt(0)==='['){try{return JSON.parse(t)}catch(e){}}
+    return t.split(',').map(function(s){return s.trim()}).filter(Boolean)
+  }
+  return[]
+}
+
+function saveArticle(status){
+  var title=$('edTitle').value.trim();
+  var content=$('edContent').value;
+  if(!title){toast('请输入标题');return}
+  if(!content&&status==='published'){toast('请输入内容');return}
+  _lastSavedContent=content;
+  var tags=$('edTags').value.split(',').map(function(t){return t.trim()}).filter(Boolean);
+  var body={title:title,date:$('edDate').value,slug:$('edSlug').value.trim(),tags:tags,category:$('edCat').value.trim(),excerpt:$('edExcerpt').value.trim(),content:content,status:status};
+  var p=editingId?api('PUT','/api/admin/articles/'+editingId,body):api('POST','/api/admin/articles',body);
+  p.then(function(d){
+    if(d.ok){
+      var ghMsg='';
+      if(d.github){
+        if(d.github.ok)ghMsg=' · GitHub 已同步';
+        else if(d.github.error)ghMsg=' · GitHub 失败: '+d.github.error
+      }
+      _edSetSaveStatus('已保存','ok');
+      toast((editingId?'已更新':'已创建')+ghMsg);
+      if(!editingId&&d.id){
+        // 新建文章后：清除新建草稿缓存，设置 editingId
+        try{localStorage.removeItem('haprial_draft_new')}catch(e){}
+        editingId=d.id;
+        location.hash='#/editor/'+d.id;
+        // 重新设置自动保存（使用新的 editingId）
+        clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+        window._autoSaveLocal=setInterval(function(){
+          try{localStorage.setItem('haprial_draft_'+editingId,JSON.stringify({title:$('edTitle').value,date:$('edDate').value,slug:$('edSlug').value,cat:$('edCat').value,tags:$('edTags').value,excerpt:$('edExcerpt').value,content:$('edContent').value}))}catch(e){}
+        },5000);
+        window._autoSaveD1=setInterval(function(){if(editingId)saveArticle('draft')},60000)
+      }else if(status==='published'){
+        // 发布后：停止自动保存，清除草稿缓存
+        clearInterval(window._autoSaveLocal);clearInterval(window._autoSaveD1);
+        try{localStorage.removeItem('haprial_draft_'+editingId)}catch(e){}
+        location.hash='#/articles'
+      }
+    }
+    else toast(d.error||'保存失败')
+  }).catch(function(){toast('网络错误')})
+}
+
+// ════════════════════════════════════════
+//  评论管理（两栏式）
+// ════════════════════════════════════════
+var cmtSelectedPage='';
+var cmtArticles={};// slug -> {title, id}
+var cmtAllArticles=[];// 完整文章列表
+var adminWebsite=SITE_URL;
+try{var _w=localStorage.getItem('admin_website');if(_w)adminWebsite=_w}catch(e){}
+function renderComments(){
+  cmtSelectedPage='';
+  var c=$('content');
+  c.innerHTML='<div class="cmt-layout">'
+    +'<div class="cmt-sidebar" id="cmtSidebar"><div class="cmt-sidebar-header">文章列表</div><div id="cmtArticleList"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w80"></div></div></div>'
+    +'<div class="cmt-main" id="cmtMain"><div class="cmt-main-header" id="cmtMainHeader">选择一篇文章查看评论</div><div id="cmtList"><div class="empty">← 点击左侧文章</div></div></div>'
+    +'</div>';
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论</button>';
+  loadCommentArticles()
+}
+// 导出下载辅助：用 Authorization 头携带 token，避免凭据进入 URL query（浏览器历史/代理日志泄露）
+function _downloadAuth(path,filename){
+  return fetch(API+path,{headers:{'Authorization':'Bearer '+token}}).then(function(r){
+    if(r.status===401){logout();throw new Error('登录已过期')}
+    if(!r.ok)throw new Error('下载失败');
+    return r.blob();
+  }).then(function(blob){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+  }).catch(function(e){toast(e&&e.message||'下载失败')});
+}
+window._exportComments=function(){_downloadAuth('/api/admin/comments/export','comments.json')};
+function findArtBySlug(slug){
+  // 精确匹配
+  for(var i=0;i<cmtAllArticles.length;i++){if(cmtAllArticles[i].slug===slug)return cmtAllArticles[i]}
+  // 按日期前缀模糊匹配
+  var datePrefix=slug.replace(/-.*$/,'');
+  for(var i=0;i<cmtAllArticles.length;i++){if(cmtAllArticles[i].slug.indexOf(datePrefix)===0)return cmtAllArticles[i]}
+  return null
+}
+function loadCommentArticles(){
+  var artsLoaded=false,cmtsLoaded=false,artsData=null,cmtsData=null;
+  function tryRender(){
+    if(!artsLoaded||!cmtsLoaded)return;
+    cmtAllArticles=(artsData&&artsData.articles)||[];
+    var d=cmtsData||{comments:[],total:0,pages:[]};
+    cmtData=d;
+    cmtArticles={};
+    cmtAllArticles.forEach(function(a){cmtArticles[a.slug]=a});
+    var pages=d.pages||[];
+    var el=$('cmtArticleList');if(!el)return;
+    if(!pages.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
+    el.innerHTML=pages.map(function(p){
+      var slug=p.replace(/^\/posts\//,'').replace(/\/$/,'');
+      var art=findArtBySlug(slug);
+      var title=art?art.title:'';
+      var displayName=title?esc(title):esc(slug);
+      return '<div class="cmt-art-item" data-page="'+esc(p)+'">'
+        +'<div class="cmt-art-title">'+displayName+'</div>'
+        +'<div class="cmt-art-slug">'+esc(p)+'</div>'
+        +'</div>'
+    }).join('');
+    el.onclick=function(e){
+      var item=e.target.closest('.cmt-art-item');
+      if(!item)return;
+      [].forEach.call(el.children,function(i){i.classList.remove('active')});
+      item.classList.add('active');
+      cmtSelectedPage=item.dataset.page;
+      loadPageComments(cmtSelectedPage)
+    };
+    if(pages.length&&!cmtSelectedPage){
+      el.children[0].classList.add('active');
+      cmtSelectedPage=pages[0];
+      loadPageComments(cmtSelectedPage)
+    }
+  }
+  api('GET','/api/admin/articles?status=all').then(function(d){artsData=d}).catch(function(){}).finally(function(){artsLoaded=true;tryRender()});
+  api('GET','/api/admin/comments?limit=1').then(function(d){cmtsData=d}).catch(function(){}).finally(function(){cmtsLoaded=true;tryRender()});
+}
+function loadPageComments(pageSlug){
+  var slug=pageSlug.replace(/^\/posts\//,'').replace(/\/$/,'');
+  var art=findArtBySlug(slug);
+  var title=art?art.title:slug;
+  var artId=art?art.id:null;
+  var headerHtml='<span>'+esc(title)+'</span>';
+  if(artId)headerHtml+=' <a href="#/editor/'+artId+'" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">编辑文章</a>';
+  headerHtml+=' <a href="'+SITE_URL+'/#/posts/'+slug+'" target="_blank" style="font-size:12px;font-weight:400;color:var(--primary);margin-left:8px">查看页面 ↗</a>';
+  $('cmtMainHeader').innerHTML=headerHtml;
+  $('cmtList').innerHTML='<div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div><div class="sk-line"><div class="skeleton sk-avatar"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div></div></div>';
+  api('GET','/api/admin/comments?limit=200&page_slug='+encodeURIComponent(pageSlug)).then(function(d){
+    cmtData=d;
+    renderCmtTree(d.comments,pageSlug)
+  })
+}
+function renderCmtTree(list,pageSlug){
+  var el=$('cmtList');if(!el)return;
+  if(!list.length){el.innerHTML='<div class="empty">暂无评论</div>';return}
+  var roots=[];
+  var byId={};
+  list.forEach(function(c){byId[c.id]=c;c._children=[]});
+  list.forEach(function(c){
+    if(c.parent_id&&byId[c.parent_id]){byId[c.parent_id]._children.push(c)}
+    else{roots.push(c)}
+  });
+  var _cmtSelected=new Set();
+  function _updateCmtBatch(){
+    var bar=$('cmtBatchBar');if(!bar)return;
+    if(_cmtSelected.size>0){bar.style.display='flex';bar.innerHTML='<span>'+_cmtSelected.size+' 条选中</span><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._batchDelCmt()">批量删除</button>'}
+    else{bar.style.display='none'}
+  }
+  window._batchDelCmt=function(){
+    var ids=Array.from(_cmtSelected);
+    showDialog('<h3>确认删除</h3><p>删除 '+ids.length+' 条评论？</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._doBatchDelCmt()">删除</button></div>')
+  };
+  window._doBatchDelCmt=function(){
+    closeDialog();
+    var ids=Array.from(_cmtSelected);var done=0;
+    ids.forEach(function(id){
+      api('DELETE','/api/admin/comments/'+id).then(function(){done++;if(done===ids.length){toast('已删除 '+ids.length+' 条');loadPageComments(cmtSelectedPage)}})
+    })
+  };
+  function renderNode(c,depth){
+    var indent=depth*24;
+    var pinIcon='<svg viewBox="0 0 16 16" width="13" height="13" fill="'+(c.pinned?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M9.83 2.17a1.41 1.41 0 0 0-2 0L3.29 6.71a1 1 0 0 0-.29.71V8a1 1 0 0 0 1 1h1l-3 5h2l3-3v4l1-1 1 1v-4l3 3h2l-3-5h1a1 1 0 0 0 1-1v-.59a1 1 0 0 0-.29-.71z"/></svg>';
+    var h='<div class="cmt-item" data-depth="'+depth+'" style="margin-left:'+indent+'px">'
+      +'<div class="cmt-header"><input type="checkbox" class="cmt-cb" data-id="'+c.id+'" style="margin-right:6px;accent-color:var(--primary)"><span class="cmt-nick">'+esc(c.nickname)+'</span>'+(c.is_admin?'<span class="cmt-badge">艾德密</span>':'')+(c.pinned?'<span class="cmt-badge" style="background:var(--on-surface-variant)">置顶</span>':'')
+      +'<span class="cmt-time">'+timeAgo(c.created_at)+'</span></div>'
+      +'<div class="cmt-body">'+c.content_html+'</div>'
+      +'<div class="cmt-actions">'
+      +'<button class="md3-btn md3-btn-text" onclick="_doReply('+c.id+')">回复</button>'
+      +'<button class="md3-btn md3-btn-text cmt-like-btn" data-id="'+c.id+'" onclick="_doLike('+c.id+')">'+(c.liked>0?'<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg> '+c.liked:'<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>')+'</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_doPin('+c.id+')" title="'+(c.pinned?'取消置顶':'置顶')+'">'+pinIcon+'</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_doDel('+c.id+')">删除</button>'
+      +'</div><div id="reply-'+c.id+'"></div></div>';
+    c._children.forEach(function(child){h+=renderNode(child,depth+1)});
+    return h
+  }
+  var html='<div id="cmtBatchBar" class="batch-bar" style="display:none"></div>';
+  roots.forEach(function(c){html+=renderNode(c,0)});
+  el.innerHTML=html;
+  el.addEventListener('change',function(e){
+    if(e.target.classList.contains('cmt-cb')){
+      var id=parseInt(e.target.dataset.id);
+      if(e.target.checked)_cmtSelected.add(id);else _cmtSelected.delete(id);
+      _updateCmtBatch()
+    }
+  })
+}
+window._doReply=function(id){
+  var el=document.getElementById('reply-'+id);if(!el)return;
+  if(el.innerHTML){el.innerHTML='';return}
+  el.innerHTML='<div class="reply-box"><textarea id="replyInput-'+id+'" placeholder="回复…"></textarea><div class="reply-actions"><button class="md3-btn md3-btn-text" onclick="_doCancelReply('+id+')">取消</button><button class="md3-btn md3-btn-filled" onclick="_doSendReply('+id+')">回复</button></div></div>';
+  document.getElementById('replyInput-'+id).focus()
+};
+window._doCancelReply=function(id){var el=document.getElementById('reply-'+id);if(el)el.innerHTML=''};
+window._doSendReply=function(id){
+  var input=document.getElementById('replyInput-'+id);if(!input||!input.value.trim())return;
+  if(!cmtSelectedPage){toast('请先选择一篇文章');return}
+  var depth=0;
+  // 从已渲染的 DOM 中获取 depth
+  var item=document.getElementById('reply-'+id);
+  if(item){var parentItem=item.closest('.cmt-item');if(parentItem)depth=(parseInt(parentItem.dataset.depth||'0'))+1}
+  // 使用管理员配置的网站地址，昵称使用"管理员"
+  api('POST','/api/admin/comments',{page:cmtSelectedPage,parent_id:id,depth:depth,nickname:'管理员',email:'admin@'+(adminWebsite||'example.com').replace(/^https?:\/\//,''),website:adminWebsite,content:input.value.trim()}).then(function(d){
+    if(d.ok){toast('已回复');loadPageComments(cmtSelectedPage)}
+  })
+};
+window._doPin=function(id){
+  api('POST','/api/admin/comments/'+id+'/pin').then(function(d){
+    if(d.ok){toast(d.pinned?'已置顶':'已取消置顶');loadPageComments(cmtSelectedPage)}
+  })
+};
+window._doLike=function(id){
+  var heartFill='<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>';
+  var heartLine='<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:-2px"><path d="M8 14s-5.5-3.5-5.5-7A3.5 3.5 0 018 4a3.5 3.5 0 015.5 3c0 3.5-5.5 7-5.5 7z"/></svg>';
+  var btn=document.querySelector('.cmt-like-btn[data-id="'+id+'"]');
+  if(btn&&!btn.dataset.liked){btn.innerHTML=heartFill+' …';btn.dataset.liked='1'}
+  api('POST','/api/admin/comments/'+id+'/like').then(function(d){
+    if(d.ok){
+      if(btn){btn.innerHTML=heartFill+' '+d.liked;btn.dataset.liked='1'}
+    }else{
+      if(btn){btn.innerHTML=heartLine;delete btn.dataset.liked}
+      toast(d.error||'点赞失败')
+    }
+  }).catch(function(){if(btn){btn.innerHTML=heartLine;delete btn.dataset.liked}})
+};
+window._doDel=function(id){showDialog('<h3>确认删除</h3><p>此评论将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doConfirmDel('+id+')">删除</button></div>')};
+window._doConfirmDel=function(id){closeDialog();api('DELETE','/api/admin/comments/'+id).then(function(d){if(d.ok){toast('已删除');loadPageComments(cmtSelectedPage)}})};
+
+// ════════════════════════════════════════
+//  友链管理
+// ════════════════════════════════════════
+function renderFriends(){
+  var c=$('content');
+  c.innerHTML='<div id="friendList"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div>';
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-filled" onclick="window._addFriend()">+ 添加友链</button>';
+  loadFriends()
+}
+function loadFriends(){
+  api('GET','/api/admin/friends').then(function(d){
+    friends=d.friends||[];
+    var el=$('friendList');if(!el)return;
+    if(!friends.length){el.innerHTML='<div class="empty">暂无友链</div>';return}
+    el.innerHTML=friends.map(function(f){
+      return '<div class="list-card">'
+        +'<img class="friend-avatar" src="'+esc(f.avatar||'')+'" alt="'+esc(f.name)+'" onerror="this.style.display=\'none\'">'
+        +'<div class="friend-info"><div class="friend-name">'+esc(f.name)+'</div><div class="friend-url">'+esc(f.url)+'</div><div class="friend-desc">'+esc(f.desc||'')+'</div></div>'
+        +'<div class="action-group"><button class="md3-btn md3-btn-text" onclick="window._editFriend('+f.id+')">编辑</button><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delFriend('+f.id+')">删除</button></div></div>'
+    }).join('')
+  })
+}
+function friendForm(f){
+  return '<div class="meta-grid" style="margin:0">'
+    +'<div class="meta-field full"><label>名称</label><input class="md3-input" id="frName" value="'+esc(f?f.name:'')+'"></div>'
+    +'<div class="meta-field full"><label>链接</label><input class="md3-input" id="frUrl" value="'+esc(f?f.url:'')+'"></div>'
+    +'<div class="meta-field full"><label>头像 URL</label><input class="md3-input" id="frAvatar" value="'+esc(f?f.avatar:'')+'"></div>'
+    +'<div class="meta-field full"><label>描述</label><input class="md3-input" id="frDesc" value="'+esc(f?f.desc:'')+'"></div>'
+    +'<div class="meta-field"><label>排序</label><input class="md3-input" id="frSort" type="number" value="'+(f?f.sort:0)+'"></div></div>'
+}
+window._addFriend=function(){showDialog('<h3>添加友链</h3>'+friendForm(null)+'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._saveFriend()">添加</button></div>')};
+window._editFriend=function(id){
+  var f=friends.find(function(x){return x.id===id});if(!f)return;
+  showDialog('<h3>编辑友链</h3>'+friendForm(f)+'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._updateFriend('+id+')">保存</button></div>')
+};
+window._saveFriend=function(){
+  var body={name:$('frName').value,url:$('frUrl').value,avatar:$('frAvatar').value,desc:$('frDesc').value,sort:parseInt($('frSort').value)||0};
+  if(!body.name||!body.url){toast('名称和链接必填');return}
+  api('POST','/api/admin/friends',body).then(function(d){if(d.ok){toast('已添加');closeDialog();loadFriends()}})
+};
+window._updateFriend=function(id){
+  var body={name:$('frName').value,url:$('frUrl').value,avatar:$('frAvatar').value,desc:$('frDesc').value,sort:parseInt($('frSort').value)||0};
+  api('PUT','/api/admin/friends/'+id,body).then(function(d){if(d.ok){toast('已更新');closeDialog();loadFriends()}})
+};
+window._delFriend=function(id){showDialog('<h3>确认删除</h3><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmDelFriend('+id+')">删除</button></div>')};
+window._confirmDelFriend=function(id){closeDialog();api('DELETE','/api/admin/friends/'+id).then(function(d){if(d.ok){toast('已删除');loadFriends()}})};
+
+// ════════════════════════════════════════
+//  回收站
+// ════════════════════════════════════════
+function renderTrash(){
+  var c=$('content');
+  c.innerHTML='<div id="trashList"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div>';
+  $('topbarActions').innerHTML='<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._emptyTrash()">清空回收站</button>';
+  api('GET','/api/admin/trash').then(function(d){
+    trashList=d.trash||[];
+    var el=$('trashList');if(!el)return;
+    if(!trashList.length){el.innerHTML='<div class="empty">回收站是空的</div>';return}
+    el.innerHTML=trashList.map(function(t){
+      return '<div class="list-card"><div class="friend-info"><div class="friend-name">'+esc(t.title)+'</div><div class="friend-desc">类型: '+esc(t.type)+' | 删除于 '+esc(t.deleted_at)+'</div></div>'
+        +'<div class="action-group"><button class="md3-btn md3-btn-text" onclick="window._restoreTrash('+t.id+')">恢复</button><button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delTrash('+t.id+')">彻底删除</button></div></div>'
+    }).join('')
+  })
+}
+window._restoreTrash=function(id){api('POST','/api/admin/trash/'+id+'/restore').then(function(d){if(d.ok){toast('已恢复');renderTrash()}})};
+window._delTrash=function(id){api('DELETE','/api/admin/trash/'+id).then(function(d){if(d.ok){toast('已彻底删除');renderTrash()}})};
+window._emptyTrash=function(){showDialog('<h3>清空回收站</h3><p>所有内容将被彻底删除，不可恢复</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="window._confirmEmptyTrash()">清空</button></div>')};
+window._confirmEmptyTrash=function(){closeDialog();api('DELETE','/api/admin/trash').then(function(d){if(d.ok){toast('已清空');renderTrash()}})};
+
+// ════════════════════════════════════════
+//  图片管理
+// ════════════════════════════════════════
+var imgCurrentFolder='';
+window.imgSelectMode=false;
+window.imgSelected=new Set();
+// 文件管理剪贴板
+var imgClipboard=null; // {type:'copy'|'cut', path:'2026/08/img.jpg'}
+function renderImages(){
+  window.imgSelectMode=false;window.imgSelected.clear();
+  // 从 hash 恢复文件夹路径
+  var h=(location.hash||'').replace(/^#/,'');
+  var m=h.match(/^\/images\/?(.*)/);
+  if(m&&m[1])imgCurrentFolder=decodeURIComponent(m[1]);
+  else if(h==='/images')imgCurrentFolder='';
+  var c=$('content');
+  c.innerHTML='<div class="breadcrumb" id="imgBreadcrumb"></div>'
+    +'<div class="img-grid" id="imgGrid"><div class="skeleton" style="width:100%;height:140px"></div><div class="skeleton" style="width:100%;height:140px"></div><div class="skeleton" style="width:100%;height:140px"></div><div class="skeleton" style="width:100%;height:140px"></div></div>'
+    +'<div class="batch-bar" id="imgBatchBar"></div>'
+    +'<div class="paste-bar" id="imgPasteBar"></div>'
+    +'<div id="imgLightbox" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);cursor:zoom-out;align-items:center;justify-content:center" onclick="this.style.display=\'none\'"><img id="imgLightboxImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px"></div>';
+  $('topbarActions').innerHTML='<label class="md3-btn md3-btn-filled" style="cursor:pointer"><input type="file" accept="image/*" multiple style="display:none" id="imgUploadInput">上传</label><button class="md3-btn md3-btn-outlined" id="imgSelectBtn" onclick="_imgToggleSelect()">选择</button><button class="md3-btn md3-btn-outlined" onclick="_imgNewFolder()">新建文件夹</button>';
+  $('imgUploadInput').addEventListener('change',function(e){uploadImages(e.target.files)});
+  // 拖拽上传
+  var grid=$('imgGrid');
+  if(grid){
+    grid.addEventListener('dragover',function(e){e.preventDefault();grid.classList.add('drag-over')});
+    grid.addEventListener('dragleave',function(){grid.classList.remove('drag-over')});
+    grid.addEventListener('drop',function(e){
+      e.preventDefault();grid.classList.remove('drag-over');
+      var files=[];
+      Array.from(e.dataTransfer.files).forEach(function(f){if(f.type.startsWith('image/'))files.push(f)});
+      if(files.length)uploadImages(files);
+      else toast('请拖入图片文件');
+    });
+  }
+  // Lightbox 键盘导航
+  window._imgLbKeydown=function(e){
+    var lb=$('imgLightbox');if(!lb||lb.style.display==='none')return;
+    if(e.key==='Escape'){lb.style.display='none';return}
+    var allImgs=[];document.querySelectorAll('.img-card').forEach(function(el){var u=el.dataset.url;if(u)allImgs.push(u)});
+    if(!allImgs.length)return;
+    var cur=$('imgLightboxImg').src;
+    var idx=allImgs.indexOf(cur);
+    if(e.key==='ArrowRight'&&idx<allImgs.length-1){$('imgLightboxImg').src=allImgs[idx+1]}
+    if(e.key==='ArrowLeft'&&idx>0){$('imgLightboxImg').src=allImgs[idx-1]}
+  };
+  document.addEventListener('keydown',window._imgLbKeydown);
+  loadImages();
+  _imgUpdatePasteBar()
+}
+window._imgNewFolder=function(){
+  showDialog('<h3>新建文件夹</h3><div style="margin:16px 0"><input class="md3-input" id="newFolderName" placeholder="文件夹名称"></div><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="_imgDoNewFolder()">创建</button></div>');
+  setTimeout(function(){var el=$('newFolderName');if(el)el.focus()},100)
+};
+window._imgDoNewFolder=function(){
+  var name=($('newFolderName')||{}).value||'';
+  name=name.trim().replace(/[/\\:*?"<>|]/g,'');
+  if(!name){toast('请输入文件夹名称');return}
+  var path=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
+  api('POST','/api/admin/images/folder',{path:path}).then(function(d){
+    if(d.ok){toast('文件夹已创建');closeDialog();loadImages()}
+    else toast(d.error||'创建失败')
+  })
+};
+function loadImages(){
+  var url='/api/admin/images/list';
+  if(imgCurrentFolder)url+='?folder='+encodeURIComponent(imgCurrentFolder);
+  api('GET',url).then(function(d){
+    var grid=$('imgGrid');if(!grid)return;
+    var bc=$('imgBreadcrumb');
+    // 面包屑 + 返回按钮
+    var bcHtml='';
+    if(imgCurrentFolder){
+      bcHtml+='<a href="javascript:void(0)" onclick="_imgGoBack()" style="color:var(--primary);cursor:pointer;margin-right:8px">← 返回</a>';
+    }
+    bcHtml+='<a href="javascript:void(0)" onclick="_imgGotoFolder(\'\')" style="color:var(--primary);cursor:pointer">图片</a>';
+    if(imgCurrentFolder){
+      var parts=imgCurrentFolder.split('/');
+      var path='';
+      parts.forEach(function(p,i){
+        path+=(i>0?'/':'')+p;
+        bcHtml+=' / <a href="javascript:void(0)" onclick="_imgGotoFolder(\''+path+'\')" style="color:var(--primary);cursor:pointer">'+p+'</a>';
+      });
+    }
+    bc.innerHTML=bcHtml;
+    var html='';
+    (d.folders||[]).forEach(function(f){
+      var folderPath=imgCurrentFolder?imgCurrentFolder+'/'+f:f;
+      html+='<div class="folder-card" data-folder="'+esc(f)+'" onclick="if(!window.imgSelectMode)_imgEnterFolder(this.dataset.folder)">'
+        +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
+        +'<button class="img-menu-btn" onclick="_imgFolderMenu(event,\''+esc(folderPath)+'\')">⋯</button>'
+        +'</div>'
+        +'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+        +'<div style="font-size:12px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f)+'</div>'
+        +'</div>';
+    });
+    (d.images||[]).forEach(function(img){
+      var fullUrl=SITE_URL+img.url;
+      var imgPath=imgCurrentFolder?imgCurrentFolder+'/'+img.name:img.name;
+      html+='<div class="img-card" data-path="'+esc(imgPath)+'" data-url="'+esc(fullUrl)+'">'
+        +'<div class="img-thumb" onclick="if(!window.imgSelectMode)_imgPreview(\''+fullUrl+'\');else _imgToggleItem(this.parentElement)">'
+        +'<img src="'+fullUrl+'" alt="'+esc(img.name)+'" loading="lazy" onerror="this.style.display=\'none\'">'
+        +'</div>'
+        +'<div class="img-name">'+esc(img.name)+'</div>'
+        +'<div class="img-check"></div>'
+        +'<div style="position:absolute;top:6px;right:6px" onclick="event.stopPropagation()">'
+        +'<button class="img-menu-btn" onclick="_imgMenu(event,\''+fullUrl+'\',\''+esc(imgPath)+'\')">⋯</button>'
+        +'</div>'
+        +'</div>';
+    });
+    if(!html)html='<div class="empty">暂无图片</div>';
+    grid.innerHTML=html;
+    _imgUpdateSelectUI()
+  })
+}
+window._imgEnterFolder=function(name){
+  imgCurrentFolder=imgCurrentFolder?imgCurrentFolder+'/'+name:name;
+  history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
+  loadImages()
+};
+window._imgGoBack=function(){
+  var parts=imgCurrentFolder.split('/');
+  parts.pop();
+  imgCurrentFolder=parts.join('/');
+  history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
+  loadImages()
+};
+window._imgGotoFolder=function(folder){
+  imgCurrentFolder=folder;
+  history.pushState({page:'images',folder:imgCurrentFolder},'','#/images/'+encodeURIComponent(imgCurrentFolder));
+  loadImages()
+};
+
+// 手机返回键：子文件夹内按返回→回到上一级，而不是退出图片管理
+window.addEventListener('popstate',function(){
+  if(currentPage!=='images')return;
+  var h=(location.hash||'').replace(/^#/,'');
+  var m=h.match(/^\/images\/?(.*)/);
+  if(m){
+    imgCurrentFolder=decodeURIComponent(m[1]||'');
+    loadImages()
+  }
+});
+window._imgFolderMenu=function(e,path){
+  e.stopPropagation();
+  var old=document.querySelector('.ctx-menu');if(old)old.remove();
+  var menu=document.createElement('div');
+  menu.className='ctx-menu';
+  menu.style.left=Math.min(e.clientX,innerWidth-160)+'px';
+  menu.style.top=Math.min(e.clientY,innerHeight-80)+'px';
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="_imgDeleteFolder(\''+path+'\');this.parentElement.remove()">删除文件夹</button>';
+  document.body.appendChild(menu);
+  setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
+};
+window._imgDeleteFolder=function(path){
+  showDialog('<h3>确认删除</h3><p>文件夹 "'+esc(path)+'" 及其所有内容将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doDeleteFolder(\''+esc(path)+'\')">删除</button></div>')
+};
+window._doDeleteFolder=function(path){
+  closeDialog();
+  api('DELETE','/api/admin/images/folder/'+path).then(function(d){
+    if(d.ok){
+      toast('文件夹已删除');
+      // 如果删除的文件夹在剪贴板中，清空剪贴板
+      if(imgClipboard&&imgClipboard.paths){
+        var affected=imgClipboard.paths.filter(function(p){return p.indexOf(path+'/')===0||p===path});
+        if(affected.length){imgClipboard=null;_imgUpdatePasteBar()}
+      }
+      loadImages()
+    }
+    else toast(d.error||'删除失败')
+  })
+};
+window._imgToggleSelect=function(){
+  window.imgSelectMode=!window.imgSelectMode;
+  window.imgSelected.clear();
+  var btn=$('imgSelectBtn');
+  if(btn)btn.textContent=window.imgSelectMode?'取消':'选择';
+  _imgUpdateSelectUI()
+};
+window._imgToggleItem=function(el){
+  var path=el.dataset.path;
+  if(!path)return;
+  if(window.imgSelected.has(path))window.imgSelected.delete(path);
+  else window.imgSelected.add(path);
+  _imgUpdateSelectUI()
+};
+function _imgUpdateSelectUI(){
+  // 显示/隐藏复选框
+  document.querySelectorAll('.img-card').forEach(function(el){
+    var cb=el.querySelector('.img-check');
+    if(!cb)return;
+    cb.style.display=window.imgSelectMode?'flex':'none';
+    var path=el.dataset.path;
+    cb.textContent=window.imgSelected.has(path)?'✓':'';
+    cb.style.background=window.imgSelected.has(path)?'var(--primary)':'rgba(0,0,0,.3)';
+    el.style.borderColor=window.imgSelected.has(path)?'var(--primary)':'var(--outline-variant)';
+  });
+  // 批量操作栏
+  var bar=$('imgBatchBar');
+  if(!bar)return;
+  if(window.imgSelectMode&&window.imgSelected.size>0){
+    bar.style.display='flex';
+    bar.innerHTML='<span>'+window.imgSelected.size+' 项</span>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCopy()">'+_ico.copy+' 复制</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="_imgBatchCut()">'+_ico.scissors+' 剪切</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="_imgBatchDelete()">'+_ico.trash+' 删除</button>'
+  }else{
+    bar.style.display='none'
+  }
+}
+window._imgBatchCopy=function(){
+  imgClipboard={type:'copy',paths:Array.from(window.imgSelected)};
+  _imgToggleSelect();
+  _imgUpdatePasteBar();
+  toast('已复制 '+imgClipboard.paths.length+' 项，请选择目标文件夹后粘贴')
+};
+window._imgBatchCut=function(){
+  imgClipboard={type:'cut',paths:Array.from(window.imgSelected)};
+  _imgToggleSelect();
+  _imgUpdatePasteBar();
+  toast('已剪切 '+imgClipboard.paths.length+' 项，请选择目标文件夹后粘贴')
+};
+window._imgBatchDelete=function(){
+  var count=window.imgSelected.size;
+  showDialog('<h3>批量删除</h3><p>确认删除 '+count+' 个项目？</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doBatchDelete()">删除</button></div>')
+};
+window._doBatchDelete=function(){
+  closeDialog();
+  var paths=Array.from(window.imgSelected);var done=0,failed=0;
+  paths.forEach(function(p){
+    api('DELETE','/api/admin/images/'+p).then(function(d){
+      if(d.ok)done++;else failed++;
+      if(done+failed===paths.length){toast('已删除 '+done+' 项'+(failed?'，失败 '+failed+' 项':''));window.imgSelectMode=false;window.imgSelected.clear();var btn=$('imgSelectBtn');if(btn)btn.textContent='选择';loadImages()}
+    }).catch(function(){failed++;if(done+failed===paths.length){toast('完成，失败 '+failed+' 项');loadImages()}})
+  })
+};
+window._imgPreview=function(url){
+  var lb=$('imgLightbox');var img=$('imgLightboxImg');
+  if(!lb||!img)return;
+  img.src=url;lb.style.display='flex'
+};
+window._imgMenu=function(e,url,path){
+  e.stopPropagation();
+  var old=document.querySelector('.ctx-menu');if(old)old.remove();
+  var menu=document.createElement('div');
+  menu.className='ctx-menu';
+  menu.style.left=Math.min(e.clientX,innerWidth-180)+'px';
+  menu.style.top=Math.min(e.clientY,innerHeight-200)+'px';
+  menu.innerHTML='<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCopy(\''+esc(path)+'\');this.parentElement.remove()">'+_ico.copy+' 复制</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgCut(\''+esc(path)+'\');this.parentElement.remove()">'+_ico.scissors+' 剪切</button>'
+    +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="copyImageUrl(\''+url+'\');this.parentElement.remove()">复制链接</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window._copyMdUrl(\''+url+'\');this.parentElement.remove()">复制 Markdown</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="window.open(\''+url+'\',\'_blank\');this.parentElement.remove()">新窗口打开</button>'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px" onclick="_imgFindRefs(\''+url+'\');this.parentElement.remove()">查找引用</button>'
+    +'<hr style="border:none;border-top:1px solid var(--outline-variant);margin:4px 0">'
+    +'<button class="md3-btn md3-btn-text" style="width:100%;justify-content:flex-start;border-radius:0;height:36px;font-size:13px;color:var(--error)" onclick="deleteImage(\''+path+'\');this.parentElement.remove()">删除</button>';
+  document.body.appendChild(menu);
+  setTimeout(function(){document.addEventListener('click',function f(){menu.remove();document.removeEventListener('click',f)},{once:true})},10)
+};
+
+// ── 文件管理：复制/剪切/粘贴 ──
+window._imgCopy=function(path){
+  imgClipboard={type:'copy',paths:[path]};
+  _imgUpdatePasteBar();
+  toast('已复制，请选择目标文件夹后粘贴')
+};
+window._imgCut=function(path){
+  imgClipboard={type:'cut',paths:[path]};
+  _imgUpdatePasteBar();
+  toast('已剪切，请选择目标文件夹后粘贴')
+};
+function _imgUpdatePasteBar(){
+  var bar=$('imgPasteBar');if(!bar)return;
+  if(!imgClipboard||!imgClipboard.paths.length){bar.style.display='none';return}
+  var count=imgClipboard.paths.length;
+  var label=imgClipboard.type==='copy'?'复制':'剪切';
+  bar.style.display='flex';
+  bar.innerHTML='<span>'+label+' '+count+' 项</span>'
+    +'<button class="md3-btn md3-btn-text" onclick="_imgShowPastePicker()">选择目标并粘贴</button>'
+    +'<button class="md3-btn md3-btn-text" onclick="imgClipboard=null;_imgUpdatePasteBar()">'+_ico.close+'</button>'
+}
+window._imgShowPastePicker=function(){
+  if(!imgClipboard||!imgClipboard.paths.length){toast('剪贴板为空');return}
+  var count=imgClipboard.paths.length;
+  var label=imgClipboard.type==='copy'?'复制':'移动';
+  _fpPath='';_fpCache={};window._fpTargetFolder='';
+  showDialog('<h3>'+label+'到…</h3>'
+    +'<div id="fpBreadcrumb" style="font-size:13px;color:var(--on-surface-variant);margin-bottom:8px">根目录</div>'
+    +'<div id="fpBody" style="max-height:320px;overflow-y:auto;border:1px solid var(--outline-variant);border-radius:12px;padding:4px"></div>'
+    +'<div style="padding:8px 0;font-size:12px;color:var(--outline)" id="fpSelected">当前选择：根目录</div>'
+    +'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._fpDoPaste()">粘贴到此</button></div>');
+  _fpRender()
+};
+function _fpCheckDone(done,failed,total,type){
+  if(done+failed<total){toast('处理中… '+(done+failed)+'/'+total);return}
+  imgClipboard=null;
+  _imgUpdatePasteBar();
+  loadImages();
+  if(failed===0)toast((type==='cut'?'移动':'复制')+'完成：'+done+' 项');
+  else toast('完成 '+done+' 项，失败 '+failed+' 项')
+}
+
+// ── 文件夹选择器（支持展开子文件夹）──
+var _fpPath='';
+var _fpCache={};
+function _fpLoad(path){
+  return new Promise(function(resolve,reject){
+    if(_fpCache[path+':']){resolve(_fpCache[path+':']);return}
+    var url='/api/admin/images/list'+(path?'?folder='+encodeURIComponent(path):'');
+    api('GET',url).then(function(d){
+      _fpCache[path+':']=d.folders||[];
+      resolve(d.folders||[])
+    }).catch(reject)
+  })
+}
+function _fpRender(){
+  var el=document.getElementById('fpBody');if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--outline);font-size:13px"><div class="skeleton sk-row w80" style="margin:0 auto"></div></div>';
+  _fpLoad(_fpPath).then(function(folders){
+    var html='';
+    // 返回上一级
+    if(_fpPath){
+      html+='<div class="fp-row" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;color:var(--primary)" onclick="_fpUp()">'
+        +'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> 返回上一级</div>'
+    }
+    // 当前文件夹选项
+    var label=_fpPath||'根目录';
+    html+='<div class="fp-row" data-folder="'+esc(_fpPath)+'" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:600" onclick="_fpSelect(this,\''+esc(_fpPath)+'\')">'
+      +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+      +'<span>'+esc(label)+'</span>'
+      +'<span style="margin-left:auto;font-size:12px;color:var(--primary)">← 选择此处</span></div>';
+    // 子文件夹列表
+    if(folders.length){
+      html+='<div style="border-top:1px solid var(--outline-variant);margin:4px 0;padding-top:4px">';
+      folders.forEach(function(f){
+        html+='<div class="fp-row" style="padding:10px 16px;cursor:pointer;border-radius:8px;font-size:14px;display:flex;align-items:center;gap:8px" onclick="_fpOpen(\''+esc(f)+'\')">'
+          +'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+          +'<span>'+esc(f)+'</span>'
+          +'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--outline)" stroke-width="1.5" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg></div>'
+      });
+      html+='</div>'
+    }else if(!_fpPath){
+      html+='<div style="padding:16px;text-align:center;font-size:13px;color:var(--outline)">暂无文件夹</div>'
+    }
+    el.innerHTML=html;
+    // 更新面包屑
+    var bc=document.getElementById('fpBreadcrumb');
+    if(bc){
+      var bcHtml='<span style="cursor:pointer;color:var(--primary)" onclick="_fpGoto(\'\')">根目录</span>';
+      if(_fpPath){
+        var parts=_fpPath.split('/');var acc='';
+        parts.forEach(function(p,i){
+          acc+=(i?'/':'')+p;
+          bcHtml+=' / <span style="cursor:pointer;color:var(--primary)" onclick="_fpGoto(\''+esc(acc)+'\')">'+esc(p)+'</span>'
+        })
+      }
+      bc.innerHTML=bcHtml
+    }
+    // 更新选择状态
+    window._fpTargetFolder=_fpPath;
+    _fpUpdateSel()
+  })
+}
+function _fpUpdateSel(){
+  var sel=document.getElementById('fpSelected');
+  if(sel)sel.textContent='当前选择：'+(window._fpTargetFolder||'根目录')
+}
+window._fpOpen=function(name){
+  _fpPath=_fpPath?_fpPath+'/'+name:name;
+  _fpRender()
+};
+window._fpUp=function(){
+  var parts=_fpPath.split('/');parts.pop();
+  _fpPath=parts.join('/');
+  _fpRender()
+};
+window._fpGoto=function(path){
+  _fpPath=path;
+  _fpRender()
+};
+window._fpSelect=function(el,folder){
+  window._fpTargetFolder=folder;
+  document.querySelectorAll('.fp-row').forEach(function(r){r.style.background='';r.style.color=''});
+  el.style.background='var(--primary-container)';
+  el.style.color='var(--on-primary-container)';
+  _fpUpdateSel()
+};
+window._fpDoPaste=function(){
+  if(!imgClipboard||!imgClipboard.paths.length){closeDialog();return}
+  var dest=window._fpTargetFolder;
+  if(dest===undefined||dest===''){toast('请选择目标文件夹');return}
+  var type=imgClipboard.type;
+  var paths=imgClipboard.paths;
+  var total=paths.length,done=0,failed=0;
+  closeDialog();
+  toast('处理中… 0/'+total);
+  paths.forEach(function(srcPath){
+    api('POST','/api/admin/images/copy',{srcPath:srcPath,destFolder:dest,mode:type}).then(function(d){
+      if(d.ok)done++;else failed++;
+      _fpCheckDone(done,failed,total,type)
+    }).catch(function(){failed++;_fpCheckDone(done,failed,total,type)})
+  })
+};
+window.copyImageUrl=function(url){
+  if(navigator.clipboard){navigator.clipboard.writeText(url);toast('URL 已复制')}
+  else{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('URL 已复制')}
+};
+window._copyMdUrl=function(url){
+  var md='![]('+url+')';
+  if(navigator.clipboard){navigator.clipboard.writeText(md);toast('Markdown 已复制')}
+  else{var ta=document.createElement('textarea');ta.value=md;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Markdown 已复制')}
+};
+window.deleteImage=function(name){
+  showDialog('<h3>确认删除</h3><p>图片 "'+esc(name)+'" 将被删除</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-danger" onclick="_doDeleteImage(\''+esc(name)+'\')">删除</button></div>')
+};
+window._doDeleteImage=function(name){
+  closeDialog();
+  api('DELETE','/api/admin/images/'+name).then(function(d){
+    if(d.ok){
+      toast('已删除');
+      if(imgClipboard&&imgClipboard.paths&&imgClipboard.paths.indexOf(name)!==-1){imgClipboard=null;_imgUpdatePasteBar()}
+      loadImages()
+    }
+    else toast(d.error||'删除失败')
+  }).catch(function(e){toast('删除失败: '+e.message)})
+};
+window._imgFindRefs=function(url){
+  var fileName=url.split('/').pop();
+  api('GET','/api/admin/images/references/'+encodeURIComponent(url)).then(function(d){
+    var arts=d.articles||[];
+    if(!arts.length){showDialog('<h3>查找引用</h3><p>图片 "'+esc(fileName)+'" 未被任何文章引用。</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">关闭</button></div>');return}
+    var list=arts.map(function(a){return '<div style="padding:8px 0;border-bottom:1px solid var(--outline-variant)"><a href="#/editor/'+a.id+'" style="color:var(--primary);font-weight:500" onclick="closeDialog()">'+esc(a.title)+'</a><div style="font-size:12px;color:var(--outline);margin-top:2px">'+esc(a.slug)+'</div></div>'}).join('');
+    showDialog('<h3>查找引用</h3><p>图片 "'+esc(fileName)+'" 被以下 '+arts.length+' 篇文章引用：</p>'+list+'<div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">关闭</button></div>')
+  })
+};
+function uploadImages(files){
+  if(!files||!files.length)return;
+  var folder=imgCurrentFolder||new Date().toISOString().slice(0,7).replace('-','/');
+  var total=files.length,done=0;
+  toast('上传中… 0/'+total);
+  Array.from(files).forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(){
+      var base64=reader.result.split(',')[1];
+      api('POST','/api/admin/images/upload',{data:base64,name:file.name,folder:folder}).then(function(d){
+        done++;
+        if(done===total){toast('上传完成 '+total+' 张');loadImages()}
+        else toast('上传中… '+done+'/'+total)
+      }).catch(function(){done++;toast('上传失败: '+file.name)})
+    };
+    reader.readAsDataURL(file)
+  })
+};
+
+// ════════════════════════════════════════
+//  设置
+// ════════════════════════════════════════
+function renderSettings(){
+  var c=$('content');
+  c.innerHTML='<div class="settings-section"><h3>修改密码</h3>'
+    +'<div style="max-width:400px">'
+    +'<div style="margin-bottom:12px"><input class="md3-input" type="password" id="setOldPw" placeholder="当前密码"></div>'
+    +'<div style="margin-bottom:12px"><input class="md3-input" type="password" id="setNewPw" placeholder="新密码"></div>'
+    +'<div style="margin-bottom:16px"><input class="md3-input" type="password" id="setNewPw2" placeholder="确认新密码"></div>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._changePw()">修改密码</button>'
+    +'</div></div>'
+    +'<div class="settings-section"><h3>管理员评论设置</h3>'
+    +'<div style="max-width:400px">'
+    +'<div style="margin-bottom:12px"><label style="display:block;font-size:12px;font-weight:600;color:var(--on-surface-variant);margin-bottom:4px">网站地址</label><input class="md3-input" id="setWebsite" value="'+esc(adminWebsite)+'" placeholder="https://pluslogic.eu.org"></div>'
+    +'<button class="md3-btn md3-btn-filled" onclick="window._saveWebsite()">保存</button>'
+    +'</div></div>'
+    +'<div class="settings-section"><h3>数据管理</h3>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._importData()">从 GitHub 导入数据</button>'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._exportData()">导出全站数据</button>'
+    +'<button class="md3-btn md3-btn-outlined" onclick="window._exportComments()">导出评论数据</button>'
+     +'<button class="md3-btn md3-btn-filled" onclick="window._exportAllArticlesZip()">导出全部文章 (ZIP)</button>'
+     +'</div></div>'
+     +'<div class="settings-section"><h3>站点配置 (site.config.json)</h3>'
+     +'<p style="color:var(--outline);font-size:12px;margin:4px 0 10px">图形化编辑站点头部配置，保存后将推送到 GitHub 仓库根目录</p>'
+     +'<div id="siteCfgBox"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div></div>'
+ }
+ window._loadSiteConfig=function(){
+   var box=$('siteCfgBox');if(!box)return;
+   box.innerHTML='<div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div>';
+   api('GET','/api/admin/site-config').then(function(d){
+     if(!d.ok||!d.config){box.innerHTML='<p style="color:var(--error)">读取配置失败：'+(d.error||'未知错误')+'</p>';return}
+     window._siteCfgSha=d.sha;
+     window._siteCfg=JSON.parse(JSON.stringify(d.config));
+     var cfg=d.config;
+     function escv(v){return esc(v==null?'':String(v))}
+     function rowHtml(type,inner){
+       return '<div class="cfg-row" data-type="'+type+'" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+inner
+         +'<button class="md3-btn md3-btn-text" style="padding:4px 8px;min-width:0" title="删除" onclick="window._cfgDelRow(this)">✕</button></div>'
+     }
+     function skillRows(arr){var h='';(arr||[]).forEach(function(s){h+=rowHtml('skill','<input class="md3-input cfg-skill" value="'+escv(s)+'" placeholder="技能" style="flex:1;min-width:160px">')});return h}
+     function linkRows(arr){var h='';(arr||[]).forEach(function(l){h+=rowHtml('link','<input class="md3-input cfg-link-name" value="'+escv(l.name)+'" placeholder="名称" style="flex:1;min-width:120px"><input class="md3-input cfg-link-url" value="'+escv(l.url)+'" placeholder="URL" style="flex:2;min-width:220px">')});return h}
+     function catRows(arr){var h='';(arr||[]).forEach(function(c){h+=rowHtml('cat','<input class="md3-input cfg-cat-name" value="'+escv(c.name)+'" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-slug" value="'+escv(c.slug)+'" placeholder="slug" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-desc" value="'+escv(c.desc)+'" placeholder="描述" style="flex:2;min-width:150px"><input class="md3-input cfg-cat-color" type="color" value="'+escv(c.color||'#6750a4')+'" style="width:48px;padding:2px">')});return h}
+     function friendRows(arr){var h='';(arr||[]).forEach(function(f){h+=rowHtml('friend','<input class="md3-input cfg-friend-name" value="'+escv(f.name)+'" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-friend-url" value="'+escv(f.url)+'" placeholder="URL" style="flex:2;min-width:160px"><input class="md3-input cfg-friend-avatar" value="'+escv(f.avatar)+'" placeholder="头像" style="flex:2;min-width:140px"><input class="md3-input cfg-friend-desc" value="'+escv(f.desc)+'" placeholder="描述" style="flex:1;min-width:110px">')});return h}
+     var c=cfg.comments||{};
+     var h='<div class="meta-grid">'
+       +'<div class="meta-field"><label>站点标题</label><input class="md3-input" id="cfgTitle" value="'+escv(cfg.title)+'"></div>'
+       +'<div class="meta-field"><label>副标题</label><input class="md3-input" id="cfgTagline" value="'+escv(cfg.tagline)+'"></div>'
+       +'<div class="meta-field full"><label>站点描述</label><textarea class="md3-input" id="cfgDesc" rows="2">'+escv(cfg.description)+'</textarea></div>'
+       +'<div class="meta-field"><label>站点 URL</label><input class="md3-input" id="cfgUrl" value="'+escv(cfg.url)+'"></div>'
+       +'<div class="meta-field"><label>作者</label><input class="md3-input" id="cfgAuthor" value="'+escv(cfg.author)+'"></div>'
+       +'<div class="meta-field full"><label>作者简介（每行一段）</label><textarea class="md3-input" id="cfgBio" rows="3">'+escv(Array.isArray(cfg.bio)?cfg.bio.join('\n'):cfg.bio)+'</textarea></div>'
+       +'</div>'
+       +'<h4 style="margin:16px 0 8px">技能标签 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'skill\')">+ 添加</button></h4><div id="cfgSkills">'+skillRows(cfg.skills)+'</div>'
+       +'<h4 style="margin:16px 0 8px">社交链接 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'link\')">+ 添加</button></h4><div id="cfgLinks">'+linkRows(cfg.links)+'</div>'
+       +'<h4 style="margin:16px 0 8px">分类 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'cat\')">+ 添加</button></h4><div id="cfgCats">'+catRows(cfg.categories)+'</div>'
+       +'<h4 style="margin:16px 0 8px">友链 <button class="md3-btn md3-btn-text" style="padding:2px 8px" onclick="window._cfgAddRow(\'friend\')">+ 添加</button></h4><div id="cfgFriends">'+friendRows(cfg.friends)+'</div>'
+       +'<h4 style="margin:16px 0 8px">评论设置</h4><div class="meta-grid">'
+       +'<div class="meta-field"><label>启用评论</label><select class="md3-input" id="cfgCmtsEnabled"><option value="true"'+(c.enabled?' selected':'')+'>启用</option><option value="false"'+(c.enabled?'':' selected')+'>禁用</option></select></div>'
+       +'<div class="meta-field"><label>提供商</label><input class="md3-input" id="cfgCmtsProvider" value="'+escv(c.provider)+'"></div>'
+       +'<div class="meta-field full"><label>评论 API</label><input class="md3-input" id="cfgCmtsApi" value="'+escv(c.api)+'"></div>'
+       +'</div>'
+       +'<div style="margin-top:20px;display:flex;gap:8px"><button class="md3-btn md3-btn-filled" onclick="window._saveSiteConfig()">保存站点配置</button><button class="md3-btn md3-btn-text" onclick="window._loadSiteConfig()">重新加载</button></div>';
+     box.innerHTML=h
+   }).catch(function(){box.innerHTML='<p style="color:var(--error)">网络错误</p>'})
+ };
+ window._cfgAddRow=function(type){
+   var map={
+     skill:'<input class="md3-input cfg-skill" placeholder="技能" style="flex:1;min-width:160px">',
+     link:'<input class="md3-input cfg-link-name" placeholder="名称" style="flex:1;min-width:120px"><input class="md3-input cfg-link-url" placeholder="URL" style="flex:2;min-width:220px">',
+     cat:'<input class="md3-input cfg-cat-name" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-slug" placeholder="slug" style="flex:1;min-width:90px"><input class="md3-input cfg-cat-desc" placeholder="描述" style="flex:2;min-width:150px"><input class="md3-input cfg-cat-color" type="color" value="#6750a4" style="width:48px;padding:2px">',
+     friend:'<input class="md3-input cfg-friend-name" placeholder="名称" style="flex:1;min-width:90px"><input class="md3-input cfg-friend-url" placeholder="URL" style="flex:2;min-width:160px"><input class="md3-input cfg-friend-avatar" placeholder="头像" style="flex:2;min-width:140px"><input class="md3-input cfg-friend-desc" placeholder="描述" style="flex:1;min-width:110px">'
+   };
+   var box=$('cfg'+type.charAt(0).toUpperCase()+type.slice(1)+'s');
+   if(box&&map[type])box.insertAdjacentHTML('beforeend','<div class="cfg-row" data-type="'+type+'" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+map[type]+'<button class="md3-btn md3-btn-text" style="padding:4px 8px;min-width:0" title="删除" onclick="window._cfgDelRow(this)">✕</button></div>')
+ };
+ window._cfgDelRow=function(btn){var row=btn.closest('.cfg-row');if(row)row.parentNode.removeChild(row)};
+ window._saveSiteConfig=function(){
+   function v(id){var el=$(id);return el?el.value.trim():''}
+   function collectRows(type,defs){
+     var out=[];
+     document.querySelectorAll('.cfg-row[data-type="'+type+'"]').forEach(function(row){
+       var item={};
+       defs.forEach(function(fd){var el=row.querySelector(fd.sel);if(el)item[fd.key]=el.value.trim()});
+       var hasVal=false;for(var k in item){if(item[k]){hasVal=true;break}}
+       if(hasVal)out.push(item)
+     });
+     return out
+   }
+   function collectSkills(){
+     var out=[];
+     document.querySelectorAll('.cfg-skill').forEach(function(el){var t=el.value.trim();if(t)out.push(t)});
+     return out
+   }
+   var orig=window._siteCfg||{};
+   var cfg=JSON.parse(JSON.stringify(orig));
+   cfg.title=v('cfgTitle');
+   cfg.tagline=v('cfgTagline');
+   cfg.description=v('cfgDesc');
+   cfg.url=v('cfgUrl');
+   cfg.author=v('cfgAuthor');
+   var bioText=v('cfgBio');
+   cfg.bio=bioText?bioText.split('\n').map(function(s){return s.trim()}).filter(Boolean):[];
+   cfg.skills=collectSkills();
+   cfg.links=collectRows('link',[{sel:'.cfg-link-name',key:'name'},{sel:'.cfg-link-url',key:'url'}]);
+   cfg.categories=collectRows('cat',[{sel:'.cfg-cat-name',key:'name'},{sel:'.cfg-cat-slug',key:'slug'},{sel:'.cfg-cat-desc',key:'desc'},{sel:'.cfg-cat-color',key:'color'}]);
+   cfg.friends=collectRows('friend',[{sel:'.cfg-friend-name',key:'name'},{sel:'.cfg-friend-url',key:'url'},{sel:'.cfg-friend-avatar',key:'avatar'},{sel:'.cfg-friend-desc',key:'desc'}]);
+   cfg.comments={enabled:($('cfgCmtsEnabled')?$('cfgCmtsEnabled').value==='true':true),provider:v('cfgCmtsProvider'),api:v('cfgCmtsApi')};
+   toast('保存中…');
+   api('PUT','/api/admin/site-config',{config:cfg,sha:window._siteCfgSha}).then(function(d){
+     if(d.ok){toast('站点配置已保存并推送到 GitHub');window._siteCfg=JSON.parse(JSON.stringify(cfg))}
+     else toast(d.error||'保存失败')
+   }).catch(function(){toast('网络错误')})
+ };
+window._saveWebsite=function(){
+  var w=$('setWebsite').value.trim();
+  if(!w){toast('请输入网站地址');return}
+  adminWebsite=w;
+  try{localStorage.setItem('admin_website',w)}catch(e){}
+  toast('网站地址已保存')
+};
+window._changePw=function(){
+  var old=$('setOldPw').value,new1=$('setNewPw').value,new2=$('setNewPw2').value;
+  if(!old||!new1){toast('请填写完整');return}
+  if(new1!==new2){toast('两次输入的新密码不一致');return}
+  if(new1.length<6){toast('新密码至少6位');return}
+  api('POST','/api/admin/password',{old_password:old,new_password:new1}).then(function(d){
+    if(d.ok){toast('密码已修改');$('setOldPw').value='';$('setNewPw').value='';$('setNewPw2').value=''}
+    else toast(d.error||'修改失败')
+  }).catch(function(){toast('网络错误')})
+};
+window._exportData=function(){_downloadAuth('/api/admin/export','blog-export.json')};
+window._importData=function(){
+  showDialog('<h3>从 GitHub 导入</h3><p>将从 GitHub 仓库的 content/blog/ 目录导入所有文章到 D1 数据库。</p><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._doImport()">开始导入</button></div>')
+};
+window._doImport=function(){
+  closeDialog();
+  toast('正在导入…');
+  api('POST','/api/admin/import-from-github').then(function(d){
+    if(d.ok)toast('导入完成: '+d.imported+' 篇文章'+(d.deduped?'，去重 '+d.deduped+' 条':''));
+    else toast(d.error||'导入失败')
+  }).catch(function(){toast('导入失败')})
+};
+
+// ════════════════════════════════════════
+//  标签管理
+// ════════════════════════════════════════
+function renderTagManager(){
+  var c=$('content');
+  c.innerHTML='<div class="settings-section"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w60"></div><div class="skeleton sk-row w40"></div></div>';
+  api('GET','/api/admin/articles?status=all').then(function(d){
+    var arts=d.articles||[];
+    var tagMap={},catMap={};
+    arts.forEach(function(a){
+      var tags=[];try{tags=parseTags(a.tags)}catch(e){}
+      tags.forEach(function(t){if(!tagMap[t])tagMap[t]=[];tagMap[t].push(a)});
+      if(a.category){if(!catMap[a.category])catMap[a.category]=[];catMap[a.category].push(a)}
+    });
+    var tagList=Object.keys(tagMap).sort();
+    var catList=Object.keys(catMap).sort();
+    window._tagListData=tagList;
+    var html='<div class="settings-section"><h3>标签 ('+tagList.length+')</h3><p style="color:var(--outline);font-size:12px;margin:4px 0 10px">点击 ✎ 重命名，⇄ 合并（同步更新文章与 GitHub 文件）</p><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    tagList.forEach(function(t,ti){
+      html+='<div style="display:inline-flex;align-items:center;gap:4px;padding:6px 8px 6px 12px;border:1px solid var(--outline-variant);border-radius:8px;font-size:13px;background:var(--surface-container)"><span>'+esc(t)+'</span><span style="color:var(--outline);font-size:11px">'+tagMap[t].length+'</span>'
+        +'<button class="md3-btn md3-btn-text" style="padding:2px 5px;font-size:12px;min-width:0" title="重命名" onclick="window._tagRename('+ti+')">✎</button>'
+        +'<button class="md3-btn md3-btn-text" style="padding:2px 5px;font-size:12px;min-width:0" title="合并到其他标签" onclick="window._tagMerge('+ti+')">⇄</button>'
+        +'</div>';
+    });
+    html+='</div></div>';
+    html+='<div class="settings-section"><h3>分类 ('+catList.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    catList.forEach(function(t){
+      html+='<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--outline-variant);border-radius:8px;font-size:13px;background:var(--surface-container)"><span>'+esc(t)+'</span><span style="color:var(--outline);font-size:11px">'+catMap[t].length+'</span></div>';
+    });
+    html+='</div></div>';
+    c.innerHTML=html
+  })
+}
+
+// 标签重命名 / 合并
+window._tagRename=function(ti){
+  var tags=window._tagListData||[];
+  var oldTag=tags[ti];if(!oldTag){toast('标签不存在');return}
+  window._tagOpOld=oldTag;
+  showDialog('<h3>重命名标签</h3><p>将「'+esc(oldTag)+'」重命名为：</p><input class="md3-input" id="tagNewName" value="'+esc(oldTag)+'" style="margin-top:8px"><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._confirmTagReplace(\'rename\')">重命名</button></div>');
+  setTimeout(function(){var el=$('tagNewName');if(el){el.focus();el.select()}},60)
+};
+window._tagMerge=function(ti){
+  var tags=window._tagListData||[];
+  var oldTag=tags[ti];if(!oldTag){toast('标签不存在');return}
+  window._tagOpOld=oldTag;
+  var opts='';
+  tags.forEach(function(t,oi){if(oi!==ti)opts+='<option value="'+esc(t)+'">'+esc(t)+'</option>'});
+  showDialog('<h3>合并标签</h3><p>将「'+esc(oldTag)+'」合并到：</p><select class="md3-input" id="tagMergeTarget" style="margin-top:8px">'+opts+'</select><div class="dialog-actions"><button class="md3-btn md3-btn-text" onclick="closeDialog()">取消</button><button class="md3-btn md3-btn-filled" onclick="window._confirmTagReplace(\'merge\')">合并</button></div>')
+};
+window._confirmTagReplace=function(mode){
+  var oldTag=window._tagOpOld;
+  var newTag=mode==='rename'
+    ?($('tagNewName')?$('tagNewName').value.trim():'')
+    :($('tagMergeTarget')?$('tagMergeTarget').value:'');
+  if(!newTag){toast('请输入目标标签名');return}
+  if(newTag===oldTag){closeDialog();toast('新旧标签相同');return}
+  closeDialog();
+  toast('处理中…');
+  api('POST','/api/admin/tags/replace',{oldTag:oldTag,newTag:newTag,mode:mode}).then(function(d){
+    if(d.ok){
+      var msg=(mode==='rename'?'重命名':'合并')+'完成：更新 '+d.changed+' 篇文章'+(d.errors&&d.errors.length?('，'+d.errors.length+' 处 GitHub 同步失败'):'');
+      toast(msg);
+      renderTagManager()
+    }else{toast(d.error||'操作失败')}
+  })
+};
+
+// ════════════════════════════════════════
+//  Markdown 解析 (预览用)
+// ════════════════════════════════════════
+function mdToHtml(src){
+  var lines=src.split(/\r?\n/),html='',i=0;
+  var inCode=false,codeLang='',codeLines=[];
+  var inList=false,listType='';
+  var inTable=false,tableRows=[],tableAligns=[];
+  var inBq=false,bqLines=[];
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function inline(t){
+    t=t.replace(/\\\$/g,'$');
+    t=t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1" style="max-width:100%">');
+    t=t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+    t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+    t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    t=t.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    t=t.replace(/~~(.+?)~~/g,'<del>$1</del>');
+    t=t.replace(/`([^`]+)`/g,'<code style="background:var(--surface-container-high);padding:2px 6px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:.85em">$1</code>');
+    return t
+  }
+  function flushBq(){if(inBq&&bqLines.length){html+='<blockquote style="border-left:3px solid var(--primary);padding:8px 16px;margin:12px 0;background:var(--surface-container);border-radius:0 8px 8px 0"><p>'+inline(bqLines.join('<br>'))+'</p></blockquote>\n';bqLines=[];inBq=false}}
+  function flushList(){if(inList){html+=listType==='ul'?'</ul>\n':'</ol>\n';inList=false;listType=''}}
+  function flushTable(){
+    if(inTable&&tableRows.length){
+      html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px"><thead><tr>';
+      tableRows[0].forEach(function(h,ci){var a=tableAligns[ci]||'';html+='<th style="text-align:'+(a||'left')+';padding:8px 12px;border:1px solid var(--outline-variant);background:var(--surface-container)">'+inline(h.trim())+'</th>'});
+      html+='</tr></thead><tbody>';
+      for(var r=2;r<tableRows.length;r++){html+='<tr>';tableRows[r].forEach(function(c,ci){var a=tableAligns[ci]||'';html+='<td style="text-align:'+(a||'left')+';padding:8px 12px;border:1px solid var(--outline-variant)">'+inline(c.trim())+'</td>'});html+='</tr>'}
+      html+='</tbody></table></div>\n';tableRows=[];tableAligns=[];inTable=false
+    }
+  }
+  function flushAll(){flushBq();flushList();flushTable()}
+  while(i<lines.length){
+    var line=lines[i];
+    if(line.match(/^```/)){
+      if(inCode){html+='<pre style="background:#1e1e2e;color:#cdd6f4;padding:16px;border-radius:8px;overflow-x:auto;margin:12px 0"><code>'+esc(codeLines.join('\n'))+'</code></pre>\n';inCode=false;codeLines=[];codeLang=''}
+      else{flushAll();inCode=true;codeLang=line.replace(/^```/,'').trim()}
+      i++;continue
+    }
+    if(inCode){codeLines.push(line);i++;continue}
+    if(line.trim()===''){flushAll();i++;continue}
+    if(line.match(/^>\s?/)){flushList();flushTable();inBq=true;bqLines.push(line.replace(/^>\s?/,''));i++;continue}
+    else{flushBq()}
+    if(line.includes('|')&&(line.trim().startsWith('|')||line.trim().match(/^[^|]*\|/))){
+      flushBq();flushList();
+      var cells=line.split('|').filter(function(_,idx,arr){return idx>0&&idx<arr.length-1});
+      var nonEmpty=cells.filter(function(c){return c.trim()!==''});
+      var isSep=nonEmpty.length>0&&nonEmpty.every(function(c){return /^[:\s]*-{3,}[\s:]*$/.test(c.trim())});
+      if(isSep){tableAligns=cells.map(function(c){var t=c.trim();if(t.startsWith(':')&&t.endsWith(':'))return'center';if(t.endsWith(':'))return'right';if(t.startsWith(':'))return'left';return''});tableRows.push(cells);i++;continue}
+      if(!inTable){inTable=true;tableRows=[];tableAligns=[]}
+      tableRows.push(cells);i++;continue
+    }else{flushTable()}
+    var hm=line.match(/^(#{1,6})\s+(.+)$/);
+    if(hm){flushAll();var lv=hm[1].length;html+='<h'+lv+'>'+inline(hm[2].trim())+'</h'+lv+'>\n';i++;continue}
+    if(line.match(/^[-*_]{3,}\s*$/)){flushAll();html+='<hr>\n';i++;continue}
+    if(line.match(/^\s*[-*]\s+/)){
+      flushBq();flushTable();
+      if(!inList||listType!=='ul'){if(inList)flushList();html+='<ul>\n';inList=true;listType='ul'}
+      html+='<li>'+inline(line.replace(/^\s*[-*]\s+/,''))+'</li>\n';i++;continue
+    }
+    if(line.match(/^\s*\d+\.\s+/)){
+      flushBq();flushTable();
+      if(!inList||listType!=='ol'){if(inList)flushList();html+='<ol>\n';inList=true;listType='ol'}
+      html+='<li>'+inline(line.replace(/^\s*\d+\.\s+/,''))+'</li>\n';i++;continue
+    }
+    flushList();flushTable();
+    var para=[line];i++;
+    while(i<lines.length&&lines[i].trim()!==''&&!lines[i].match(/^(#{1,6}\s|```|>\s?|\s*[-*]\s+|\s*\d+\.\s+|[-*_]{3,}\s*$|\|)/)){para.push(lines[i]);i++}
+    html+='<p>'+inline(para.join('<br>'))+'</p>\n'
+  }
+  flushAll();
+  return html
+}
+
+// ── Init ──
+checkAuth()
+})();

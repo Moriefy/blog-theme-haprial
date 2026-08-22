@@ -1,0 +1,22 @@
+SQ=chr(39)
+p='blog/theme/app.js'
+s=open(p,encoding='utf-8').read()
+
+# renderTags: add (t,i) and --sd
+old1='sorted.map(function(t){return'+SQ+'<div class="tag-card" data-tag="'+SQ+'+t.n+'+SQ+'\">'
+new1='sorted.map(function(t,i){return'+SQ+'<div class="tag-card" data-tag="'+SQ+'+t.n+'+SQ+'" style="--sd:'+SQ+'+i*30+'+SQ+'ms">'
+# renderCats: add (c,i) and --sd
+old2='cats.map(function(c){return'+SQ+'<div class="cat-card" data-cat="'+SQ+'+c.f+'+SQ+'\">'
+new2='cats.map(function(c,i){return'+SQ+'<div class="cat-card" data-cat="'+SQ+'+c.f+'+SQ+'" style="--sd:'+SQ+'+i*30+'+SQ+'ms">'
+# renderFriends: add (f,i) and --sd on fl-card
+old3='friends.map(function(f){return'+SQ+'<a class="fl-card" href="'+SQ+'+escHtml(f.u)+'+SQ+'" target="_blank" rel="noopener">'
+new3='friends.map(function(f,i){return'+SQ+'<a class="fl-card" href="'+SQ+'+escHtml(f.u)+'+SQ+'" target="_blank" rel="noopener" style="--sd:'+SQ+'+i*30+'+SQ+'ms">'
+
+for name,o,n in [('tags',old1,new1),('cats',old2,new2),('friends',old3,new3)]:
+    c=s.count(o)
+    print(name,'count',c)
+    assert c==1, ('mismatch',name)
+    s=s.replace(o,n)
+
+open(p,'w',encoding='utf-8').write(s)
+print('ALL DONE')

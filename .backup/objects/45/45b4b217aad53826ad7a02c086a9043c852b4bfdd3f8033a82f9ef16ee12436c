@@ -1,0 +1,8 @@
+p='/data/user/0/com.ai.assistance.operit/files/workspace/4df4d538-4ddb-4ab6-a689-2b3faef4780b/blog/theme/app.js'
+s=open(p).read()
+Q=chr(34)
+edits=[
+("sorted.map(function(t){return'+chr(60)+'div class='+Q+'tag-card'+Q+' data-tag='+Q+"'+t.n+'"+Q+'>'+chr(60)+'/div>',".replace("+'",''), ""),  # placeholder replaced below
+]
+# simpler: build with format
+build1="sorted.map(function(t){return'<div class=\""+"tag-card\" data-tag=\""+"'+t.n+'"+'">' + "'"

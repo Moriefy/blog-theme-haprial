@@ -1,0 +1,114 @@
+import sys
+path = sys.argv[1] if len(sys.argv) > 1 else None
+if path is None:
+    paths = [
+        '/data/user/0/com.ai.assistance.operit/files/workspace/4df4d538-4ddb-4ab6-a689-2b3faef4780b/blog/theme/app.js',
+        '/data/user/0/com.ai.assistance.operit/files/workspace/4df4d538-4ddb-4ab6-a689-2b3faef4780b/blog/theme/lightbox.js',
+    ]
+    for p in paths:
+        try:
+            s = open(p, encoding='utf8').read()
+            path = p
+            break
+        except Exception as e:
+            continue
+    if path is None:
+        print('no file found'); sys.exit(1)
+
+s = open(path, encoding='utf8').read()
+
+def is_ident_end(c):
+    return c.isalnum() or c in '_$)]}' + chr(39) + chr(34) + chr(96)
+
+pairing = {'(':')','[':']','{':'}'}
+stack = []
+defects = []
+regex_count = 0
+prev_significant = ' '
+i = 0
+n = len(s)
+
+while i < n:
+    c = s[i]
+    # single line comment
+    if c == '/' and i+1 < n and s[i+1] == '/':
+        while i < n and s[i] not in '\r\n': i += 1
+        continue
+    # block comment
+    if c == '/' and i+1 < n and s[i+1] == '*':
+        i += 2
+        while i+1 < n and not (s[i] == '*' and s[i+1] == '/'): i += 1
+        i += 2
+        continue
+    # string literal
+    if c in ('"', chr(39)):
+        q = c; i += 1
+        while i < n:
+            if s[i] == '\\': i += 2; continue
+            if s[i] == q: i += 1; break
+            i += 1
+        prev_significant = q
+        continue
+    # template string
+    if c == chr(96):
+        # try to treat as template string
+        i += 1
+        stack.append('`')
+        ok = False
+        while i < n:
+            if s[i] == '\\': i += 2; continue
+            if s[i] == chr(96):
+                stack.pop(); i += 1; prev_significant = chr(96); ok = True; break
+            if s[i] == '$' and i+1 < n and s[i+1] == '{':
+                stack.append('{'); i += 2
+                continue
+            if s[i] in '({[':
+                stack.append(s[i]); i += 1; continue
+            if s[i] in ')}]':
+                if stack and stack[-1] != '`' and pairing.get(stack[-1]) == s[i]:
+                    stack.pop(); i += 1; continue
+                else:
+                    defects.append('template unmatched %s at %d' % (s[i], i)); i += 1; continue
+            i += 1
+        continue
+    # regex literal: '/' when previous significant token is not a value/end
+    if c == '/' and not is_ident_end(prev_significant):
+        regex_count += 1
+        i += 1
+        in_class = False
+        while i < n:
+            if s[i] == '\\': i += 2; continue
+            if s[i] == '[': in_class = True; i += 1; continue
+            if s[i] == ']': in_class = False; i += 1; continue
+            if s[i] == '/' and not in_class:
+                i += 1
+                while i < n and s[i].isalpha(): i += 1
+                prev_significant = ''
+                break
+            if s[i] == '\n':
+                defects.append('regex unterminated at %d' % i); break
+            i += 1
+        continue
+    # brackets
+    if c in '([{':
+        stack.append(c); i += 1; prev_significant = c; continue
+    if c in ')]}':
+        if stack and pairing.get(stack[-1]) == c:
+            stack.pop(); i += 1; prev_significant = c; continue
+        else:
+            defects.append('unmatched %s at %d' % (c, i)); i += 1; prev_significant = c; continue
+    # significant char tracking (skip whitespace for regex heuristic but keep many ops)
+    if c.strip() or c in '+-*/%<>=!&|?,:;.' or c.isalnum() or c in '_$':
+        prev_significant = c
+    i += 1
+
+unclosed = [stack[j] for j in range(len(stack)-1, -1, -1)]
+print('FILE:', path)
+print('lines=', s.count(chr(10))+1, 'chars=', len(s))
+print('regex literals skipped=', regex_count)
+print('defects=', defects)
+print('stack_empty=', len(stack) == 0, 'unclosed=', unclosed)
+if not defects and not stack:
+    print('BRACKET BALANCE: OK')
+else:
+    print('BRACKET BALANCE: FAIL')
