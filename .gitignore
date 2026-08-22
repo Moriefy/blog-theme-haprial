@@ -46,3 +46,6 @@ logs/
 
 # Wrangler
 worker/.wrangler/
+
+# Operit backup
+.backup/
