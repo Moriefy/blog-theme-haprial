@@ -393,11 +393,14 @@ tr:hover td{background:var(--surface-container-high)}
   .filter-bar input.md3-input{flex:1.5;padding:0 12px}
   .filter-bar select.md3-input{padding-right:24px;background-position:right 6px center;background-size:10px}
   
-  /* 编辑器 */
-  .meta-grid{grid-template-columns:1fr}
-  .editor-wrap{grid-template-columns:1fr;height:auto}
-  .preview-pane{display:none}
-  .preview-pane.show{display:block}
+   /* 编辑器 */
+   .meta-grid{grid-template-columns:1fr}
+   .editor-wrap{grid-template-columns:1fr;height:auto}
+   .preview-pane{display:none}
+   .preview-pane.show{display:block}
+   .preview-pane.show{padding:16px;word-break:break-word;overflow-wrap:break-word}
+   .preview-pane.show pre{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+   .preview-pane.show table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   
   /* 评论 */
   .cmt-layout{grid-template-columns:1fr;height:auto}
