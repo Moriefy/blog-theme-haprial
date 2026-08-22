@@ -1,0 +1,618 @@
+/* ============================================================
+   评论系统样式 — Material Design 3 风格
+   与 Haprial 博客主题完全融合
+   ============================================================ */
+
+/* ── 评论区容器 ── */
+.comment-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--outline-variant);
+}
+.comment-section:empty { display: none; }
+
+/* ── 标题 ── */
+.cs-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.cs-header h3 {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin: 0;
+}
+.cs-count {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  color: var(--outline);
+  font-weight: 400;
+}
+
+/* ── 评论表单 ── */
+.cs-form {
+  margin-bottom: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* 回复指示器 */
+.cs-reply-indicator {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 6px 8px 6px 14px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--shape-m);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+}
+.cs-reply-indicator.visible { display: flex; }
+.cs-reply-indicator strong { font-weight: 600; }
+.cs-cr {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--shape-full);
+  border: none;
+  background: none;
+  color: var(--on-primary-container);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: background 150ms;
+}
+.cs-cr:hover { background: rgba(0,0,0,.08); }
+[data-theme="dark"] .cs-cr:hover { background: rgba(255,255,255,.08); }
+.cs-cr svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 输入框行 */
+.cs-form-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+}
+.cs-form input[type="text"],
+.cs-form input[type="email"],
+.cs-form input[type="url"] {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 8px 0;
+  border: none;
+  border-bottom: 1px solid var(--outline-variant);
+  border-radius: 0;
+  background: none;
+  color: var(--on-surface);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 14px;
+  letter-spacing: .01em;
+  transition: border-color 200ms;
+}
+.cs-form input:focus {
+  outline: none;
+  border-bottom-color: var(--on-surface);
+}
+.cs-form input::placeholder {
+  color: var(--outline);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+/* 竖分隔符 — 电脑端 */
+.cs-input-mid,
+.cs-input-last {
+  border-left: 1px solid var(--outline-variant);
+  padding-left: 12px;
+}
+
+/* 文本域 */
+.cs-textarea-wrap {
+  position: relative;
+}
+.cs-form textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--outline-variant);
+  border-radius: 0;
+  background: none;
+  color: var(--on-surface);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  letter-spacing: .01em;
+  resize: vertical;
+  transition: border-color 200ms;
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-variant) transparent;
+}
+.cs-form textarea:focus {
+  outline: none;
+  border-bottom-color: var(--on-surface);
+}
+.cs-form textarea::placeholder {
+  color: var(--outline);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.cs-form textarea::-webkit-scrollbar {
+  width: 4px;
+}
+.cs-form textarea::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  border-radius: 2px;
+}
+.cs-form textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 按钮组 — 下划线下方，右对齐 */
+.cs-btn-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+/* 放弃按钮 — MD3 Text Button */
+.cs-discard {
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--shape-full);
+  background: none;
+  color: var(--primary);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(.4,0,.2,1);
+}
+.cs-discard:hover {
+  background: var(--primary-container);
+}
+
+/* 提交按钮 — MD3 Filled Button */
+.cs-submit {
+  height: 38px;
+  padding: 0 24px;
+  border: none;
+  border-radius: var(--shape-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--e1);
+  transition: box-shadow 250ms cubic-bezier(.4,0,.2,1), transform 100ms cubic-bezier(.4,0,.2,1), opacity 200ms;
+  position: relative;
+  overflow: hidden;
+}
+.cs-submit:hover {
+  box-shadow: var(--e2);
+}
+.cs-submit:active {
+  transform: scale(.97);
+  box-shadow: none;
+}
+.cs-submit:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── 评论列表 ── */
+.cs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ── 单条评论 ── */
+.cs-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.cs-item:last-child { border-bottom: none; }
+
+.cs-item-main {
+  display: flex;
+  gap: 12px;
+}
+
+/* 头像 */
+.cs-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cs-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cs-avatar-initial {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--on-primary-container);
+}
+
+/* 内容区 */
+.cs-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.cs-nickname {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.cs-nickname a {
+  color: inherit;
+  text-decoration: none;
+}
+.cs-nickname a:hover {
+  color: var(--primary);
+}
+.cs-time {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 12px;
+  color: var(--outline);
+}
+.cs-edited {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 11px;
+  color: var(--outline);
+  font-style: italic;
+}
+
+/* 评论正文 */
+.cs-content {
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--on-surface-variant);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.cs-content p { margin: 0 0 8px; }
+.cs-content p:last-child { margin-bottom: 0; }
+.cs-content code {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: .85em;
+  background: var(--surface-container-high);
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: var(--shape-xs);
+}
+.cs-content pre {
+  background: var(--surface-container);
+  padding: 12px;
+  border-radius: var(--shape-s);
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.cs-content pre code {
+  padding: 0;
+  background: none;
+}
+.cs-content a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--primary-container);
+  transition: border-color 200ms;
+}
+.cs-content a:hover {
+  border-bottom-color: var(--primary);
+}
+.cs-content blockquote {
+  border-left: 3px solid var(--primary);
+  background: var(--surface-container);
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 0 var(--shape-s) var(--shape-s) 0;
+}
+.cs-content blockquote p {
+  margin: 0;
+  color: var(--on-surface-variant);
+}
+
+/* 长评论折叠 */
+.cs-content.cs-long {
+  max-height: 160px;
+  overflow: hidden;
+  position: relative;
+}
+.cs-content.cs-long::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(transparent, var(--surface-container-lowest));
+  pointer-events: none;
+}
+.cs-content.cs-expanded {
+  max-height: none;
+}
+.cs-content.cs-expanded::after {
+  display: none;
+}
+.cs-expand-btn {
+  display: inline-block;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.cs-expand-btn:hover {
+  text-decoration: underline;
+}
+
+/* Markdown 样式 */
+.cs-content h2 { font-size: 16px; font-weight: 600; margin: 12px 0 6px; color: var(--on-surface); }
+.cs-content h3 { font-size: 15px; font-weight: 600; margin: 10px 0 4px; color: var(--on-surface); }
+.cs-content strong { font-weight: 600; color: var(--on-surface); }
+.cs-content em { font-style: italic; }
+.cs-content del { color: var(--outline); text-decoration: line-through; }
+.cs-content hr { border: none; height: 1px; background: var(--outline-variant); margin: 12px 0; }
+.cs-content ul { margin: 6px 0; padding-left: 20px; }
+.cs-content li { margin-bottom: 2px; }
+.cs-content img { max-width: 100%; border-radius: var(--shape-s); margin: 6px 0; }
+
+/* ── 操作栏 ── */
+.cs-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+.cs-action {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 12px;
+  color: var(--outline);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--shape-full);
+  transition: color 150ms, background 150ms;
+}
+.cs-action:hover {
+  color: var(--on-surface-variant);
+  background: var(--surface-container-high);
+}
+.cs-action svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.cs-action.liked {
+  color: var(--primary);
+}
+.cs-action.liked svg {
+  fill: var(--primary);
+}
+
+/* ── 嵌套回复 ── */
+.cs-replies {
+  margin-left: 48px;
+  padding-left: 14px;
+  border-left: 2px solid var(--outline-variant);
+  list-style: none;
+}
+.cs-replies .cs-item {
+  padding: 12px 0;
+}
+.cs-replies .cs-avatar {
+  width: 28px;
+  height: 28px;
+}
+.cs-replies .cs-avatar-initial {
+  font-size: 13px;
+}
+
+/* ── 状态提示 ── */
+.cs-pending-notice {
+  padding: 10px 14px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--shape-s);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ── 加载更多 ── */
+.cs-load-more {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-full);
+  background: none;
+  color: var(--on-surface-variant);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 200ms, background 200ms, transform 150ms;
+  position: relative;
+  overflow: hidden;
+}
+.cs-load-more:hover {
+  border-color: var(--primary);
+  background: var(--surface-container-low);
+  transform: translateY(-1px);
+}
+
+/* ── 博主标识 ── */
+.cs-admin-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 11px;
+  color: var(--outline);
+  text-decoration: none;
+  cursor: pointer;
+}
+.cs-admin-link:hover {
+  color: var(--primary);
+}
+
+.cs-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  line-height: 1.6;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.cs-load-more:active {
+  transform: scale(.98);
+}
+
+/* ── 空状态 ── */
+.cs-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--outline);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 14px;
+}
+
+/* ── 加载状态 ── */
+.cs-loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--outline);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+}
+.cs-loading::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--outline-variant);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: csSpin .6s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@keyframes csSpin { to { transform: rotate(360deg); } }
+
+/* ── Toast 提示 ── */
+.cs-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  padding: 10px 20px;
+  background: var(--on-surface);
+  color: var(--surface);
+  border-radius: var(--shape-s);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  font-size: 13px;
+  z-index: 9999;
+  opacity: 0;
+  transition: transform 250ms cubic-bezier(0,0,.2,1), opacity 250ms;
+  pointer-events: none;
+  box-shadow: var(--e3);
+}
+.cs-toast.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ── 响应式 ── */
+@media (max-width: 768px) {
+  .cs-form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .cs-form input[type="text"],
+  .cs-form input[type="email"],
+  .cs-form input[type="url"] {
+    font-size: 16px;
+    height: 44px;
+  }
+  .cs-input-mid,
+  .cs-input-last {
+    border-left: none;
+    padding-left: 0;
+  }
+  .cs-form textarea {
+    font-size: 16px;
+  }
+  .cs-replies {
+    margin-left: 24px;
+    padding-left: 10px;
+  }
+  .cs-meta {
+    gap: 4px;
+  }
+}
+
+/* ── 减少动画 ── */
+@media (prefers-reduced-motion: reduce) {
+  .cs-item { animation: none; }
+  .cs-toast { transition: none; }
+  .cs-loading::after { animation: none; }
+}

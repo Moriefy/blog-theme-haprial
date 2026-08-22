@@ -11,6 +11,8 @@ dist/
 build/
 *.bundle.js
 *.bundle.css
+.build-cache.json
+.recycle/
 
 # IDE
 .vscode/
@@ -41,3 +43,6 @@ logs/
 # Project specific
 *.tmp
 *.temp
+
+# Wrangler
+worker/.wrangler/
