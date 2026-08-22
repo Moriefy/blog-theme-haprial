@@ -258,7 +258,7 @@ function renderArticles(){
     +'<select class="md3-input" id="artTagFilter"><option value="">标签</option></select>'
     +'</div>'
     +'<div id="artBatchBar" class="batch-bar" style="display:none"></div>'
-    +'<div class="table-wrap"><table><thead><tr><th style="width:32px"></th><th>标题</th><th>日期</th><th>分类</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody id="artBody"><tr><td colspan="7" style="padding:20px 16px"><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div></td></tr></tbody></table></div>'
+    +'<div id="artBody" style="display:flex;flex-direction:column;gap:12px;padding:8px 0"><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div><div class="sk-line" style="border:none"><div class="skeleton" style="width:18px;height:18px;border-radius:4px"></div><div style="flex:1"><div class="skeleton sk-row w80"></div><div class="skeleton sk-row w40"></div></div></div></div>'
     +'<div id="artPagination" style="display:flex;justify-content:center;gap:4px;padding:16px 0"></div>';
   $('artSearch').addEventListener('input',function(){clearTimeout(artSearchTimer);artSearchTimer=setTimeout(function(){artSearch=$('artSearch').value.trim().toLowerCase();artPage=0;renderArtList()},300)});
   $('artStatus').addEventListener('change',function(){artFilter=this.value;artPage=0;renderArtList()});
@@ -301,16 +301,32 @@ function renderArtList(){
   var start=artPage*artPerPage;
   var pageItems=filtered.slice(start,start+artPerPage);
   var tb=$('artBody');if(!tb)return;
-  if(!pageItems.length){tb.innerHTML='<tr><td colspan="7" class="empty">暂无文章</td></tr>'}
+  if(!pageItems.length){tb.innerHTML='<div class="empty" style="padding:20px 0;text-align:center">暂无文章</div>'}
   else{tb.innerHTML=pageItems.map(function(a){
     var tags=[];try{tags=parseTags(a.tags)}catch(e){}
     var checked=artSelected.has(a.id)?' checked':'';
-    return '<tr><td><input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+'></td><td><strong>'+esc(a.title)+'</strong>'+(a.pinned?' <span style="color:var(--primary)">'+_ico.pin+'</span>':'')+(a.excerpt?'<div style="font-size:12px;color:var(--on-surface-variant);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px">'+esc(a.excerpt)+'</div>':'')+'</td><td>'+esc(a.date)+'</td><td>'+esc(a.category)+'</td><td>'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</td><td><span class="status-badge status-'+a.status+'">'+(a.status==='published'?'已发布':'草稿')+'</span></td><td class="action-group">'
-    +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
-    +'<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+a.id+')">导出</button>'
-    +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
-    +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
-    +'</td></tr>'
+    return '<div class="list-card" style="align-items:flex-start">'
+      +'<div style="display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0">'
+      +'<input type="checkbox" class="art-cb" data-id="'+a.id+'"'+checked+' style="margin-top:4px">'
+      +'<div class="friend-info">'
+      +'<div class="friend-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<span>'+esc(a.title)+'</span>'
+      +(a.pinned?' <span style="color:var(--primary)">'+_ico.pin+'</span>':'')
+      +'<span class="status-badge status-'+a.status+'" style="font-size:11px">'+(a.status==='published'?'已发布':'草稿')+'</span>'
+      +'</div>'
+      +(a.excerpt?'<div class="friend-desc" style="margin-top:4px">'+esc(a.excerpt)+'</div>':'')
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:12px;color:var(--on-surface-variant)">'
+      +'<span>'+esc(a.date)+'</span>'
+      +(a.category?'<span>· '+esc(a.category)+'</span>':'')
+      +'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">'+tags.map(function(t){return '<span class="tag-chip">'+esc(t)+'</span>'}).join('')+'</div>'
+      +'</div></div>'
+      +'<div class="action-group" style="flex-shrink:0">'
+      +'<button class="md3-btn md3-btn-text" onclick="location.hash=\'#/editor/'+a.id+'\'">编辑</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="window._exportSingleArt('+a.id+')">导出</button>'
+      +'<button class="md3-btn md3-btn-text" onclick="window._togglePub('+a.id+')">'+(a.status==='published'?'下架':'发布')+'</button>'
+      +'<button class="md3-btn md3-btn-text" style="color:var(--error)" onclick="window._delArt('+a.id+')">删除</button>'
+      +'</div></div>'
   }).join('')}
   // 分页
   var pg=$('artPagination');if(!pg)return;
