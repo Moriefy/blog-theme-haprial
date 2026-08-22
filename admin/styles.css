@@ -111,6 +111,7 @@ select.md3-input{cursor:pointer;appearance:none;background-image:url("data:image
 .topbar{height:56px;background:var(--surface-container);border-bottom:1px solid var(--outline-variant);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:50}
 .topbar-title{font-size:16px;font-weight:600;flex:1}
 .topbar-actions{display:flex;gap:8px;align-items:center}
+.search-container{margin-left:16px}
 .content{padding:24px;max-width:1200px;margin:0 auto}
 
 /* ══════════════════════════════════════
