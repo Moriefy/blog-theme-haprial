@@ -4,7 +4,10 @@
   "description": "关于代码、设计与构建 Web 的思考和实践。",
   "url": "https://pluslogic.eu.org",
   "author": "Moriefy",
-  "bio": "一个在乎代码品质的开发者，追求像散文一样可读的代码，追求浑然天成的设计。\n\n这个博客是我的公开笔记本。如果某篇文章引发了你的想法，欢迎通过社交平台与我交流。",
+  "bio": [
+    "一个在乎代码品质的开发者，追求像散文一样可读的代码，追求浑然天成的设计。",
+    "这个博客是我的公开笔记本。如果某篇文章引发了你的想法，欢迎通过社交平台与我交流。"
+  ],
   "skills": [
     "JavaScript",
     "TypeScript",
@@ -37,25 +40,25 @@
       "name": "技术",
       "slug": "tech",
       "desc": "涵盖前端、后端、系统编程等技术实践与思考。",
-      "color": "#3E505B"
+      "color": "#3e505b"
     },
     {
       "name": "设计",
       "slug": "design",
       "desc": "设计系统、色彩体系与用户体验的探索。",
-      "color": "#4A7B6A"
+      "color": "#4a7b6a"
     },
     {
       "name": "随想",
       "slug": "think",
       "desc": "关于编程哲学、工匠精神与行业文化的杂文。",
-      "color": "#8E6B9E"
+      "color": "#8e6b9e"
     },
     {
       "name": "文化",
       "slug": "culture",
       "desc": "音乐、咖啡、生活——代码之外的世界。",
-      "color": "#B07D56"
+      "color": "#b07d56"
     },
     {
       "name": "测试",
@@ -65,7 +68,7 @@
     }
   ],
   "comments": {
-    "enabled": true,
+    "enabled": false,
     "provider": "custom",
     "api": "https://comments.pluslogic.eu.org"
   },
@@ -97,8 +100,8 @@
     {
       "name": "xaoxuu",
       "url": "https://xaoxuu.com",
-      "desc": "stellar主题开发者",
-      "avatar": "https://gcore.jsdelivr.net/gh/cdn-x/xaoxuu@main/avatar/classic.webp"
+      "avatar": "https://gcore.jsdelivr.net/gh/cdn-x/xaoxuu@main/avatar/classic.webp",
+      "desc": "stellar主题开发者"
     },
     {
       "name": "纸鹿摸鱼处",
