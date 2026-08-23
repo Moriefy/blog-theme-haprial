@@ -68,7 +68,7 @@
     }
   ],
   "comments": {
-    "enabled": false,
+    "enabled": true,
     "provider": "custom",
     "api": "https://comments.pluslogic.eu.org"
   },
