@@ -697,9 +697,11 @@ function seoPageFoot() {
 // Copy theme assets
 const themeOut = path.join(OUT_DIR, 'theme');
 fs.mkdirSync(themeOut, { recursive: true });
-fs.copyFileSync(path.join(THEME_DIR, 'styles.css'), path.join(themeOut, 'styles.css'));
-fs.copyFileSync(path.join(THEME_DIR, 'app.js'), path.join(themeOut, 'app.js'));
-fs.copyFileSync(path.join(THEME_DIR, 'lightbox.js'), path.join(themeOut, 'lightbox.js'));
+const themeFiles = ['styles.css', 'core.js', 'mermaid.js', 'routing.js', 'article.js', 'toc.js', 'pages.js', 'events.js', 'app.js', 'lightbox.js', 'twikoo-custom.css'];
+themeFiles.forEach(f => {
+  const src = path.join(THEME_DIR, f);
+  if (fs.existsSync(src)) fs.copyFileSync(src, path.join(themeOut, f));
+});
 if (commentsEnabled) {
   fs.copyFileSync(path.join(THEME_DIR, 'comments.css'), path.join(themeOut, 'comments.css'));
   fs.copyFileSync(path.join(THEME_DIR, 'comments.js'), path.join(themeOut, 'comments.js'));
