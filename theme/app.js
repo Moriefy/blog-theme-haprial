@@ -460,11 +460,7 @@ function buildTOC(){tocList.innerHTML='';tocDrawerList.innerHTML='';headingCache
 function cacheHeadings(){headingCache=[];articleBody.querySelectorAll('h2,h3').forEach(function(h){headingCache.push({id:h.id,top:h.offsetTop})});_headingCacheDirty=false}
 var _headingCacheDirty=false;
 function invalidateHeadingCache(){_headingCacheDirty=true}
-function updateTOCHighlight(){if(tocManualLock||!headingCache||!headingCache.length)return;if(_headingCacheDirty)cacheHeadings();var av=articleView,st=av.scrollTop,viewH=av.clientHeight,scrollH=av.scrollHeight;// Visible content area: below sticky header (56px bar + 2px progress), above bottom
-var headerH=58,vTop=st+headerH,vBot=st+viewH,visH=viewH-headerH;if(visH<1||scrollH<1)return;// Find which section occupies the most visible area
-var best=null,bestVis=0;for(var i=0;i<headingCache.length;i++){var secTop=headingCache[i].top,secBot=i+1<headingCache.length?headingCache[i+1].top:scrollH;var vis=Math.max(0,Math.min(secBot,vBot)-Math.max(secTop,vTop));if(vis>bestVis){bestVis=vis;best=headingCache[i]}}// Highlight based on threshold: use the section with most visibility,
-// but if nothing is visible (scrolled past all), keep last highlight
-if(best&&best.id!==lastActiveId)setTocHighlight(best.id)}
+function updateTOCHighlight(){if(tocManualLock||!headingCache||!headingCache.length)return;if(_headingCacheDirty)cacheHeadings();var st=articleView.scrollTop;if(st<100)return;var target=st+120;var best=null;for(var i=0;i<headingCache.length;i++){if(headingCache[i].top<=target)best=headingCache[i];else break}if(best&&best.id!==lastActiveId)setTocHighlight(best.id)}
 function openTocSheet(){tocSheet.classList.add('open');setTimeout(function(){document.addEventListener('click',tocOutClick)},10);var active=tocDrawerList.querySelector('.toc-drawer-item.active');if(active){tocDrawerList.scrollTop=active.offsetTop-tocDrawerList.clientHeight/3}}
 function closeTocSheet(){tocSheet.classList.remove('open');document.removeEventListener('click',tocOutClick)}
 function tocOutClick(e){if(!e.target.closest('.toc-drawer')&&e.target!==tocToggleBtn&&!tocToggleBtn.contains(e.target))closeTocSheet()}
