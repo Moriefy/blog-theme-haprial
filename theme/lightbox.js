@@ -247,8 +247,6 @@ window.__initLightbox = function(articleBody) {
     lbImg.getAnimations().forEach(function(a){a.cancel()});
     lbImg.src = '';
     caption.style.display = 'none';
-    // Return focus to the original image for accessibility
-    if (origImgEl && origImgEl.focus) { origImgEl.setAttribute('tabindex','-1'); origImgEl.focus(); }
     origImgEl = null;
     origRect = null;
   }
