@@ -4,6 +4,7 @@
 'use strict';
 
 var H = window.Haprial;
+var $ = H.$;
 
 H.renderPaginationPage = function(){
   var all = H.getAllCards(), cards = all.filter(function(c){ return c.dataset._filtered!=='1' });

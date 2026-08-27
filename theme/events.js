@@ -4,6 +4,7 @@
 'use strict';
 
 var H = window.Haprial;
+var $ = H.$;
 
 // ── Scroll handlers ──────────────────────────────────────────────────────
 H.handleMainScroll = function(){

@@ -4,6 +4,7 @@
 'use strict';
 
 var H = window.Haprial;
+var $ = H.$;
 
 H.loadArticleMeta = function(id){
   var art = H.articles[id]; if(!art) return;

@@ -5,6 +5,7 @@
 'use strict';
 
 var H = window.Haprial;
+var $ = H.$;
 
 // ── Initialize DOM refs ──────────────────────────────────────────────────
 H.initDom();
