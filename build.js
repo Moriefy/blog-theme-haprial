@@ -274,7 +274,7 @@ function buildIndexHtml(articleCardsHtml, config, opts) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css" integrity="sha384-KiXbx4H8g5WzsoWp+1s62zOzXEJNjRp/obm1oFBhyBn4T5IJFF+a3p+Oa3hzsZeI" crossorigin="anonymous" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-light.css" integrity="sha384-IlZgqBVXc/53BxMrn7k6DQ0Y62xboZTo7XXCh1gyLw39DKISAqHavnU1xjsyg8ox" crossorigin="anonymous" media="print" onload="this.media='all'">
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
@@ -450,7 +450,7 @@ ${art.tags.map(t => '<meta property="article:tag" content="' + escHtml(t) + '">'
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" media="print" onload="this.media='all'">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css" integrity="sha384-KiXbx4H8g5WzsoWp+1s62zOzXEJNjRp/obm1oFBhyBn4T5IJFF+a3p+Oa3hzsZeI" crossorigin="anonymous" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-light.css" integrity="sha384-IlZgqBVXc/53BxMrn7k6DQ0Y62xboZTo7XXCh1gyLw39DKISAqHavnU1xjsyg8ox" crossorigin="anonymous" media="print" onload="this.media='all'">
 
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=JetBrains+Mono:wght@400&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
