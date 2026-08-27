@@ -250,6 +250,15 @@ H.initClickHandler = function(){
   });
 };
 
+// ── Focus trap helper ────────────────────────────────────────────────────
+H._trapFocus = function(container, e) {
+  var focusable = container.querySelectorAll('button:not([disabled]):not([style*="display:none"]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');
+  if (!focusable.length) return;
+  var first = focusable[0], last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+};
+
 // ── Keyboard handler ─────────────────────────────────────────────────────
 H.initKeyboardHandler = function(){
   document.addEventListener('keydown',function(e){
@@ -261,6 +270,10 @@ H.initKeyboardHandler = function(){
       if(lb&&lb.classList.contains('open')){if(window.__lbClose)window.__lbClose();else{lb.classList.remove('open');document.body.style.overflow=''}return}
       if(H.el.articleView.classList.contains('open')){if(history.length>1)history.back();else{H.closeArticleVisual();H.pushRoute({type:'page',page:'articles'})}return}
     }
+    // Focus trap for search view
+    if(e.key==='Tab' && H.el.searchView.classList.contains('open')){ H._trapFocus(H.el.searchView, e); return }
+    // Focus trap for TOC drawer
+    if(e.key==='Tab' && H.el.tocSheet.classList.contains('open')){ H._trapFocus(H.el.tocSheet, e); return }
     if(window.__cmtInputFocused) return;
     var ae=document.activeElement;
     if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable)) return;
