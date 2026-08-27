@@ -74,11 +74,10 @@ a{color:var(--primary);text-decoration:none}
 .tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;transition:transform var(--dur-slow) var(--motion-emphasized)}
 
 /* ── Page Transitions ── */
-.page{display:none;padding-bottom:40px;contain:content}.page.active{display:block;flex:1}
+.page{visibility:hidden;opacity:0;pointer-events:none;padding-bottom:40px;contain:content;transform:translateX(24px) scale(.996);transition:opacity var(--dur-med) var(--motion-standard),transform var(--dur-med) var(--motion-standard),visibility 0s linear var(--dur-med);will-change:transform,opacity}
+.page.active{visibility:visible;opacity:1;pointer-events:auto;transform:none;flex:1;transition:opacity var(--dur-med) var(--motion-standard),transform var(--dur-med) var(--motion-standard),visibility 0s 0s}
 @keyframes slideInRight{from{opacity:0;transform:translateX(52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
-@keyframes slideOutLeft{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(-36px) scale(.99)}}
-@keyframes slideOutRight{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(36px) scale(.99)}}
 .page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
 .page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
 
@@ -103,9 +102,9 @@ a{color:var(--primary);text-decoration:none}
 /* ── Article Cards ── */
 #articleList{scroll-margin-top:104px}
 .article-list{padding-bottom:8px}
-.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:content;transition:transform var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard),background var(--dur-fast) var(--motion-standard)}
-@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-med) var(--motion-standard-decelerate) backwards}
+.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;contain:content;transition:background var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard)}
+.card-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.card.show{opacity:1;visibility:visible;pointer-events:auto}
 .card+.card{border-top:1px solid var(--outline-variant)}
 .card:hover{background:var(--surface-container-low)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
