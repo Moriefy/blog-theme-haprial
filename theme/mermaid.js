@@ -1,4 +1,4 @@
-// mermaid.js — Custom Mermaid renderer with full syntax support
+// mermaid.js — Mermaid chart rendering (flowchart, sequence, pie)
 // Depends on: Haprial (core.js)
 (function(){
 'use strict';
@@ -29,21 +29,124 @@ H._renderMermaidBlock = function(b){
   code = code.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,"\"");
   if(!code) return;
   try{
-    var svg = H.renderMermaidDiagram(code.trim());
+    var svg = H.renderMermaidFlowchart(code.trim());
     if(svg){
       b.innerHTML = svg;
-      var innerSvg = b.querySelector('svg');
-      if(innerSvg) H._setupMermaidZoom(b, innerSvg);
       var pieSvg = b.querySelector('.pie-chart');
       if(pieSvg) H.initPieChart(pieSvg);
+      var innerSvg = b.querySelector('svg');
+      if(innerSvg) H._setupMermaidZoom(b, innerSvg);
     } else {
       b.innerHTML = '<p style="color:var(--outline)">不支持的图表类型</p>';
     }
   }catch(e){ b.innerHTML = '<p style="color:var(--outline)">图表渲染失败</p>' }
 };
 
-// ── Diagram type detection ───────────────────────────────────────────────
-H.renderMermaidDiagram = function(code){
+H._setupMermaidZoom = function(b, innerSvg){
+  var panel = document.createElement('div');
+  panel.className = 'mermaid-zoom-panel';
+  var btnIn = document.createElement('button');
+  btnIn.className = 'mermaid-zoom-btn'; btnIn.title = '放大';
+  btnIn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>';
+  var btnOut = document.createElement('button');
+  btnOut.className = 'mermaid-zoom-btn'; btnOut.title = '缩小';
+  btnOut.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
+  panel.appendChild(btnIn); panel.appendChild(btnOut); b.appendChild(panel);
+
+  var scale=1, tx=0, ty=0, dragging=false, startX=0, startY=0, startTx=0, startTy=0;
+  var STEP=0.4, MIN_SCALE=1, MAX_SCALE=3;
+  var _zfRaf=null, _bw=0, _bh=0, _sw0=0, _sh0=0;
+
+  function _refreshDims(){ _bw=b.clientWidth; _bh=b.clientHeight; var _sgr=innerSvg.getBoundingClientRect(); _sw0=_sgr.width; _sh0=_sgr.height }
+  function clamp(){
+    var bw=_bw, bh=_bh, sw, sh;
+    if(dragging){ sw=_sw0*scale; sh=_sh0*scale }
+    else{ bw=b.clientWidth; bh=b.clientHeight; _bw=bw; _bh=bh; var _sgr2=innerSvg.getBoundingClientRect(); sw=_sgr2.width*scale; sh=_sgr2.height*scale; _sw0=_sgr2.width; _sh0=_sgr2.height }
+    var maxX=Math.max((sw-bw)/2,0), maxY=Math.max((sh-bh)/2,0);
+    if(tx>maxX)tx=maxX; if(tx<-maxX)tx=-maxX; if(ty>maxY)ty=maxY; if(ty<-maxY)ty=-maxY;
+  }
+  function _applyNow(){
+    clamp();
+    innerSvg.style.transform='scale('+scale+') translate('+tx/scale+'px,'+ty/scale+'px)';
+    innerSvg.style.transition=dragging?'none':'transform .25s ease';
+    b.classList.toggle('zoomed',scale>1);
+  }
+  function _scheduleApply(){ if(!_zfRaf)_zfRaf=requestAnimationFrame(function(){_zfRaf=null;_applyNow()}) }
+  function apply(){ if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null}_applyNow() }
+
+  function zoomAround(cx,cy,factor){
+    var s0=scale, s1=Math.min(MAX_SCALE,Math.max(MIN_SCALE,s0*factor));
+    if(s1===s0){apply();return}
+    var brect=b.getBoundingClientRect(), rect=innerSvg.getBoundingClientRect();
+    var sx=cx-(rect.left-brect.left), sy=cy-(rect.top-brect.top);
+    var px=sx/s0, py=sy/s0;
+    var _sgr3=innerSvg.getBoundingClientRect(), Cx=_sgr3.width/2, Cy=_sgr3.height/2;
+    scale=s1; tx+=(s0-s1)*(px-Cx); ty+=(s0-s1)*(py-Cy);
+    if(scale<=MIN_SCALE){tx=0;ty=0}
+    apply();
+  }
+  b._zoomAround = function(e,dir){
+    var br=b.getBoundingClientRect();
+    var f=(dir==='out')?(1-STEP):(1+STEP);
+    zoomAround(e.clientX-br.left, e.clientY-br.top, f);
+  };
+  btnIn.addEventListener('click',function(){ zoomAround(b.clientWidth/2, b.clientHeight/2, 1+STEP) });
+  btnOut.addEventListener('click',function(){ zoomAround(b.clientWidth/2, b.clientHeight/2, 1-STEP) });
+  innerSvg.addEventListener('mousedown',function(e){
+    if(scale<=1||e.altKey)return; e.preventDefault(); dragging=true; innerSvg.style.willChange='transform';
+    startX=e.clientX; startY=e.clientY; startTx=tx; startTy=ty; innerSvg.classList.add('panning'); _refreshDims();
+  });
+  var _onDocMove=function(e){if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);_scheduleApply()};
+  var _onDocUp=function(){if(dragging){dragging=false;innerSvg.style.willChange='';innerSvg.classList.remove('panning');document.removeEventListener('mousemove',_onDocMove);document.removeEventListener('mouseup',_onDocUp);if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null;_applyNow()}}};
+  document.addEventListener('mousemove',_onDocMove);
+  document.addEventListener('mouseup',_onDocUp);
+
+  // Touch support
+  var touchId=null, touchPending=false, touchStartX=0, touchStartY=0, TOUCH_THRESHOLD=8;
+  var pinchDist=0, pinchScale0=0;
+  b.addEventListener('touchstart',function(e){
+    var pts=e.touches;
+    if(pts.length===2){
+      e.preventDefault();
+      var dx=pts[0].clientX-pts[1].clientX, dy=pts[0].clientY-pts[1].clientY;
+      pinchDist=Math.sqrt(dx*dx+dy*dy); pinchScale0=scale;
+    } else if(pts.length===1 && scale>1){
+      touchId=pts[0].identifier; touchStartX=pts[0].clientX; touchStartY=pts[0].clientY;
+      startTx=tx; startTy=ty; dragging=true; innerSvg.style.transition='none';
+    }
+  },{passive:false});
+  b.addEventListener('touchmove',function(e){
+    var pts=e.touches;
+    if(pts.length===2 && pinchDist>0){
+      e.preventDefault();
+      var dx=pts[0].clientX-pts[1].clientX, dy=pts[0].clientY-pts[1].clientY;
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      scale=Math.max(MIN_SCALE,Math.min(MAX_SCALE,pinchScale0*(dist/pinchDist)));
+      _scheduleApply();
+    } else if(pts.length===1 && dragging){
+      for(var i=0;i<pts.length;i++){
+        if(pts[i].identifier===touchId){
+          tx=startTx+(pts[i].clientX-touchStartX);
+          ty=startTy+(pts[i].clientY-touchStartY);
+          _scheduleApply();
+          break;
+        }
+      }
+    }
+  },{passive:false});
+  b.addEventListener('touchend',function(e){
+    if(pinchDist>0 && e.touches.length<2){ pinchDist=0; scale=Math.max(MIN_SCALE,scale); _applyNow() }
+    if(e.touches.length===0){ dragging=false; innerSvg.style.transition='' }
+  });
+
+  b._zoomCleanup = function(){
+    document.removeEventListener('mousemove', _onDocMove);
+    document.removeEventListener('mouseup', _onDocUp);
+  };
+};
+
+// ── Flowchart rendering ──────────────────────────────────────────────────
+H.renderMermaidFlowchart = function(code){
   var lines = code.split('\n');
   if(!lines.length) return null;
   var first = lines[0].trim().toLowerCase();
@@ -53,77 +156,21 @@ H.renderMermaidDiagram = function(code){
   return null;
 };
 
-// ── Flowchart rendering ──────────────────────────────────────────────────
 H.renderFlowGraph = function(lines){
-  var nodes={}, nodeOrder=[], edges=[], children={}, subgraphs={}, currentSubgraph=null;
-  var styles = {};
+  var nodes={}, nodeOrder=[], edges=[], children={};
   var dir='TB';
-  
   function getNode(id){ if(!nodes[id])nodes[id]={id:id,label:id,shape:'rect'}; return nodes[id] }
   function ensureNode(id){ if(!nodes[id]){getNode(id);nodeOrder.push(id)} }
 
-  // Parse all lines
   for(var i=0;i<lines.length;i++){
     var line=lines[i].trim();
     if(!line||line.startsWith('%%'))continue;
-    
-    // Direction
     var dm=line.match(/^(graph|flowchart)\s+([A-Z]{2})/i);
     if(dm){dir=dm[2].toUpperCase();continue}
-    
-    // Subgraph
-    if(line.match(/^subgraph\s+(.+)/i)){
-      var sgName = line.replace(/^subgraph\s+/i,'').trim();
-      currentSubgraph = sgName;
-      subgraphs[sgName] = {nodes:[]};
-      continue;
-    }
-    if(line.match(/^end$/i)){
-      currentSubgraph = null;
-      continue;
-    }
-    
-    // Style directive
-    var styleMatch = line.match(/^style\s+(\w+)\s+(.+)$/i);
-    if(styleMatch){
-      styles[styleMatch[1]] = styleMatch[2];
-      continue;
-    }
-    
-    // Note
-    var noteMatch = line.match(/^Note\s+(?:over\s+)?(\w+(?:,\w+)*)\s*:\s*(.+)$/i);
-    if(noteMatch){
-      // Skip notes for now (they're complex to position)
-      continue;
-    }
-    var noteRefMatch = line.match(/^(\w+)\[(.+)\]$/);
-    if(noteRefMatch && noteRefMatch[2].indexOf(':') === -1){
-      // This might be a note reference like Note1[page A: 3 links]
-      // Skip if it looks like a note
-      if(noteRefMatch[1].match(/^Note/i)){
-        continue;
-      }
-    }
-    
-    // Edge with label: A -->|label| B
-    var edgeLabelMatch = line.match(/^(\w+)\s*(-->|---|-\.-|==>|-->\|?|\.->|-->o|-->x)\s*\|([^|]+)\|\s*(\w+)\s*$/);
-    if(edgeLabelMatch){
-      var src=edgeLabelMatch[1], tgt=edgeLabelMatch[4], label=edgeLabelMatch[3].trim();
-      ensureNode(src); ensureNode(tgt);
-      edges.push({from:src,to:tgt,label:label,style:edgeLabelMatch[2]});
-      if(!children[src])children[src]=[]; children[src].push(tgt);
-      if(currentSubgraph && subgraphs[currentSubgraph]) subgraphs[currentSubgraph].nodes.push(src);
-      continue;
-    }
-    
-    // Edge: A --> B or A --> B label
     var em=line.match(/^(\w+)\s*(-->|---|-\.-|==>|-->\|?|\.->|-->o|-->x)\s*(\w+)\s*(?:[|"]([^|"]*)[|"])?\s*$/);
-    if(em){var src=em[1],tgt=em[3],label=em[4]||'';ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label,style:em[2]});if(!children[src])children[src]=[];children[src].push(tgt);if(currentSubgraph&&subgraphs[currentSubgraph])subgraphs[currentSubgraph].nodes.push(src);continue}
-    
-    // Node definition: A[label] or A{label} etc.
+    if(em){var src=em[1],tgt=em[3],label=em[4]||'';ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label});if(!children[src])children[src]=[];children[src].push(tgt);continue}
     var nm=line.match(/^(\w+)\s*(\{[^}]*\}|\[[^\]]*\]|\([^\)]*\)|\[\[[^\]]*\]\]|\(\([^\)]*\)\))\s*$/);
-    if(nm){var id=nm[1],shape=nm[2];var n=getNode(id);if(shape.startsWith('{')){n.shape='diamond';n.label=shape.slice(1,-1)}else if(shape.startsWith('[[')){n.shape='subroutine';n.label=shape.slice(2,-2)}else if(shape.startsWith('((')){n.shape='circle';n.label=shape.slice(2,-2)}else if(shape.startsWith('[')){n.shape='rect';n.label=shape.slice(1,-1)}else if(shape.startsWith('(')){n.shape='round';n.label=shape.slice(1,-1)}nodeOrder.push(id);if(currentSubgraph&&subgraphs[currentSubgraph])subgraphs[currentSubgraph].nodes.push(id);continue}
-    
+    if(nm){var id=nm[1],shape=nm[2];var n=getNode(id);if(shape.startsWith('{')){n.shape='diamond';n.label=shape.slice(1,-1)}else if(shape.startsWith('[[')){n.shape='subroutine';n.label=shape.slice(2,-2)}else if(shape.startsWith('((')){n.shape='circle';n.label=shape.slice(2,-2)}else if(shape.startsWith('[')){n.shape='rect';n.label=shape.slice(1,-1)}else if(shape.startsWith('(')){n.shape='round';n.label=shape.slice(1,-1)}nodeOrder.push(id);continue}
     if(line.startsWith('end'))continue;
   }
   if(!nodeOrder.length)return null;
@@ -154,23 +201,6 @@ H.renderFlowGraph = function(lines){
   // Render SVG
   var tc='var(--on-surface)', lc='var(--outline)', ac='var(--primary)';
   var s='<svg viewBox="0 0 '+sW+' '+sH+'" style="max-width:100%;height:auto;font-family:inherit">';
-  
-  // Draw subgraph backgrounds
-  for(var sgName in subgraphs){
-    var sg = subgraphs[sgName];
-    if(!sg.nodes.length) continue;
-    var minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
-    sg.nodes.forEach(function(id){
-      var p=positions[id]; if(!p) return;
-      minX=Math.min(minX,p.x-10); minY=Math.min(minY,p.y-30);
-      maxX=Math.max(maxX,p.x+p.w+10); maxY=Math.max(maxY,p.y+p.h+10);
-    });
-    if(minX<Infinity){
-      s+='<rect x="'+minX+'" y="'+minY+'" width="'+(maxX-minX)+'" height="'+(maxY-minY)+'" rx="8" fill="none" stroke="'+ac+'" stroke-width="1" stroke-dasharray="6 4" opacity="0.5"/>';
-      s+='<text x="'+(minX+10)+'" y="'+(minY+16)+'" font-size="12" font-weight="600" fill="'+ac+'">'+H.escHtml(sgName)+'</text>';
-    }
-  }
-  
   // Draw edges
   edges.forEach(function(e){
     var from=positions[e.from], to=positions[e.to];
@@ -178,26 +208,14 @@ H.renderFlowGraph = function(lines){
     var x1=from.x+from.w, y1=from.y+from.h/2;
     var x2=to.x, y2=to.y+to.h/2;
     var mx=(x1+x2)/2;
-    var dash=e.style&&e.style.indexOf('-.')>=0?' stroke-dasharray="6 4"':'';
-    s+='<path d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+lc+'" stroke-width="1.5"'+dash+'/>';
+    s+='<path d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+lc+'" stroke-width="1.5"/>';
     if(e.label)s+='<text x="'+mx+'" y="'+(Math.min(y1,y2)-8)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
   });
-  
   // Draw nodes
   nodeOrder.forEach(function(id){
     var n=nodes[id], p=positions[id];
     if(!p)return;
     var fill='var(--surface-container)', stroke='var(--outline-variant)';
-    
-    // Apply custom styles
-    if(styles[id]){
-      var styleStr = styles[id];
-      var fillMatch = styleStr.match(/fill:\s*([^,;]+)/);
-      var colorMatch = styleStr.match(/color:\s*([^,;]+)/);
-      if(fillMatch) fill = fillMatch[1].trim();
-      // Note: text color override would need separate handling
-    }
-    
     if(n.shape==='diamond'){
       s+='<polygon points="'+(p.x+p.w/2)+','+p.y+' '+(p.x+p.w)+','+(p.y+p.h/2)+' '+(p.x+p.w/2)+','+(p.y+p.h)+' '+p.x+','+(p.y+p.h/2)+'" fill="'+fill+'" stroke="'+stroke+'"/>';
     }else if(n.shape==='circle'){
@@ -218,16 +236,13 @@ H.renderSequenceDiagram = function(lines){
   lines.forEach(function(line){
     var pm=line.match(/^participant\s+(\S+)(?:\s+as\s+(.+))?$/);
     if(pm){participants.push({id:pm[1],label:pm[2]||pm[1]});return}
-    // Handle Note over
-    var noteMatch=line.match(/^Note\s+(?:over\s+)?(\w+(?:,\w+)*)\s*:\s*(.+)$/i);
-    if(noteMatch){messages.push({type:'note',targets:noteMatch[1].split(','),label:noteMatch[2].trim()});return}
     var mm=line.match(/^(\S+)\s*(--?>>?|--?>>?)\s*(\S+)\s*:\s*(.+)$/);
-    if(mm)messages.push({type:'message',from:mm[1],to:mm[3],label:mm[4].trim(),style:mm[2].indexOf('--')>=0?'dashed':'solid'});
+    if(mm)messages.push({from:mm[1],to:mm[3],label:mm[4].trim(),style:mm[2].indexOf('--')>=0?'dashed':'solid'});
   });
   if(!participants.length&&!messages.length)return null;
   var pMap={};participants.forEach(function(p){pMap[p.id]=p});
-  messages.forEach(function(m){if(m.type==='message'){if(!pMap[m.from])pMap[m.from]={id:m.from,label:m.from};if(!pMap[m.to])pMap[m.to]={id:m.to,label:m.to}}});
-  var pList=[];var seen={};messages.forEach(function(m){if(m.type==='message'){if(!seen[m.from]){pList.push(pMap[m.from]);seen[m.from]=1}if(!seen[m.to]){pList.push(pMap[m.to]);seen[m.to]=1}}});
+  messages.forEach(function(m){if(!pMap[m.from])pMap[m.from]={id:m.from,label:m.from};if(!pMap[m.to])pMap[m.to]={id:m.to,label:m.to}});
+  var pList=[];var seen={};messages.forEach(function(m){if(!seen[m.from]){pList.push(pMap[m.from]);seen[m.from]=1}if(!seen[m.to]){pList.push(pMap[m.to]);seen[m.to]=1}});
   if(!pList.length)return null;
   var colW=200,colGap=80,rowH=60,padX=50,padY=40;
   var sW=pList.length*colW+(pList.length-1)*colGap+padX*2;
@@ -238,27 +253,14 @@ H.renderSequenceDiagram = function(lines){
   s+='<defs><marker id="sa" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0L10,3L0,6" fill="'+ac+'"/></marker></defs>';
   pList.forEach(function(p,i){var x=padX+i*(colW+colGap)+colW/2;s+='<rect x="'+(x-60)+'" y="'+padY+'" width="120" height="36" rx="8" fill="'+bg+'" stroke="'+lc+'" stroke-width="1.5"/><text x="'+x+'" y="'+(padY+22)+'" text-anchor="middle" font-size="14" font-weight="600" fill="'+tc+'">'+H.escHtml(p.label)+'</text>';s+='<line x1="'+x+'" y1="'+(padY+36)+'" x2="'+x+'" y2="'+(sH-padY)+'" stroke="'+ac+'" stroke-width="1" stroke-dasharray="4 3"/>'});
   var pIdx={};pList.forEach(function(p,i){pIdx[p.id]=i});
-  var msgIdx=0;
   messages.forEach(function(m,i){
-    var yi=padY+60+msgIdx*rowH;
-    if(m.type==='note'){
-      // Render note as centered box
-      var targetIdx=pIdx[m.targets[0]];
-      if(targetIdx!==undefined){
-        var cx=padX+targetIdx*(colW+colGap)+colW/2;
-        s+='<rect x="'+(cx-60)+'" y="'+(yi-5)+'" width="120" height="30" rx="4" fill="'+bg+'" stroke="'+ac+'" stroke-width="1" stroke-dasharray="4 2"/>';
-        s+='<text x="'+cx+'" y="'+(yi+14)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(m.label)+'</text>';
-      }
-      msgIdx++;
-      return;
-    }
+    var yi=padY+60+i*rowH;
     var fromX=padX+pIdx[m.from]*(colW+colGap)+colW/2;
     var toX=padX+pIdx[m.to]*(colW+colGap)+colW/2;
     var dash=m.style==='dashed'?' stroke-dasharray="6 4"':'';
     s+='<line x1="'+fromX+'" y1="'+yi+'" x2="'+toX+'" y2="'+yi+'" stroke="'+lc+'" stroke-width="1.5"'+dash+' marker-end="url(#sa)"/>';
     var lx=(fromX+toX)/2;
     s+='<text x="'+lx+'" y="'+(yi-8)+'" text-anchor="middle" font-size="13" fill="'+tc+'">'+H.escHtml(m.label)+'</text>';
-    msgIdx++;
   });
   s+='</svg>';return s;
 };
@@ -355,110 +357,6 @@ H.initPieChart = function(svg){
   });
   if(bg)bg.addEventListener('click',clearAll);
   svg.addEventListener('mouseleave',clearAll);
-};
-
-// ── Zoom functionality ───────────────────────────────────────────────────
-H._setupMermaidZoom = function(b, innerSvg){
-  var panel = document.createElement('div');
-  panel.className = 'mermaid-zoom-panel';
-  var btnIn = document.createElement('button');
-  btnIn.className = 'mermaid-zoom-btn'; btnIn.title = '放大';
-  btnIn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>';
-  var btnOut = document.createElement('button');
-  btnOut.className = 'mermaid-zoom-btn'; btnOut.title = '缩小';
-  btnOut.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
-  panel.appendChild(btnIn); panel.appendChild(btnOut); b.appendChild(panel);
-
-  var scale=1, tx=0, ty=0, dragging=false, startX=0, startY=0, startTx=0, startTy=0;
-  var STEP=0.4, MIN_SCALE=1, MAX_SCALE=3;
-  var _zfRaf=null, _bw=0, _bh=0, _sw0=0, _sh0=0;
-
-  function _refreshDims(){ _bw=b.clientWidth; _bh=b.clientHeight; var _sgr=innerSvg.getBoundingClientRect(); _sw0=_sgr.width; _sh0=_sgr.height }
-  function clamp(){
-    var bw=_bw, bh=_bh, sw, sh;
-    if(dragging){ sw=_sw0*scale; sh=_sh0*scale }
-    else{ bw=b.clientWidth; bh=b.clientHeight; _bw=bw; _bh=bh; var _sgr2=innerSvg.getBoundingClientRect(); sw=_sgr2.width*scale; sh=_sgr2.height*scale; _sw0=_sgr2.width; _sh0=_sgr2.height }
-    var maxX=Math.max((sw-bw)/2,0), maxY=Math.max((sh-bh)/2,0);
-    if(tx>maxX)tx=maxX; if(tx<-maxX)tx=-maxX; if(ty>maxY)ty=maxY; if(ty<-maxY)ty=-maxY;
-  }
-  function _applyNow(){
-    clamp();
-    innerSvg.style.transform='scale('+scale+') translate('+tx/scale+'px,'+ty/scale+'px)';
-    innerSvg.style.transition=dragging?'none':'transform .25s ease';
-    b.classList.toggle('zoomed',scale>1);
-  }
-  function _scheduleApply(){ if(!_zfRaf)_zfRaf=requestAnimationFrame(function(){_zfRaf=null;_applyNow()}) }
-  function apply(){ if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null}_applyNow() }
-
-  function zoomAround(cx,cy,factor){
-    var s0=scale, s1=Math.min(MAX_SCALE,Math.max(MIN_SCALE,s0*factor));
-    if(s1===s0){apply();return}
-    var brect=b.getBoundingClientRect(), rect=innerSvg.getBoundingClientRect();
-    var sx=cx-(rect.left-brect.left), sy=cy-(rect.top-brect.top);
-    var px=sx/s0, py=sy/s0;
-    var _sgr3=innerSvg.getBoundingClientRect(), Cx=_sgr3.width/2, Cy=_sgr3.height/2;
-    scale=s1; tx+=(s0-s1)*(px-Cx); ty+=(s0-s1)*(py-Cy);
-    if(scale<=MIN_SCALE){tx=0;ty=0}
-    apply();
-  }
-  b._zoomAround = function(e,dir){
-    var br=b.getBoundingClientRect();
-    var f=(dir==='out')?(1-STEP):(1+STEP);
-    zoomAround(e.clientX-br.left, e.clientY-br.top, f);
-  };
-  btnIn.addEventListener('click',function(){ zoomAround(b.clientWidth/2, b.clientHeight/2, 1+STEP) });
-  btnOut.addEventListener('click',function(){ zoomAround(b.clientWidth/2, b.clientHeight/2, 1-STEP) });
-  innerSvg.addEventListener('mousedown',function(e){
-    if(scale<=1||e.altKey)return; e.preventDefault(); dragging=true; innerSvg.style.willChange='transform';
-    startX=e.clientX; startY=e.clientY; startTx=tx; startTy=ty; innerSvg.classList.add('panning'); _refreshDims();
-  });
-  var _onDocMove=function(e){if(!dragging)return;tx=startTx+(e.clientX-startX);ty=startTy+(e.clientY-startY);_scheduleApply()};
-  var _onDocUp=function(){if(dragging){dragging=false;innerSvg.style.willChange='';innerSvg.classList.remove('panning');document.removeEventListener('mousemove',_onDocMove);document.removeEventListener('mouseup',_onDocUp);if(_zfRaf){cancelAnimationFrame(_zfRaf);_zfRaf=null;_applyNow()}}};
-  document.addEventListener('mousemove',_onDocMove);
-  document.addEventListener('mouseup',_onDocUp);
-
-  // Touch support
-  var touchId=null, touchStartX=0, touchStartY=0;
-  var pinchDist=0, pinchScale0=0;
-  b.addEventListener('touchstart',function(e){
-    var pts=e.touches;
-    if(pts.length===2){
-      e.preventDefault();
-      var dx=pts[0].clientX-pts[1].clientX, dy=pts[0].clientY-pts[1].clientY;
-      pinchDist=Math.sqrt(dx*dx+dy*dy); pinchScale0=scale;
-    } else if(pts.length===1 && scale>1){
-      touchId=pts[0].identifier; touchStartX=pts[0].clientX; touchStartY=pts[0].clientY;
-      startTx=tx; startTy=ty; dragging=true; innerSvg.style.transition='none';
-    }
-  },{passive:false});
-  b.addEventListener('touchmove',function(e){
-    var pts=e.touches;
-    if(pts.length===2 && pinchDist>0){
-      e.preventDefault();
-      var dx=pts[0].clientX-pts[1].clientX, dy=pts[0].clientY-pts[1].clientY;
-      var dist=Math.sqrt(dx*dx+dy*dy);
-      scale=Math.max(MIN_SCALE,Math.min(MAX_SCALE,pinchScale0*(dist/pinchDist)));
-      _scheduleApply();
-    } else if(pts.length===1 && dragging){
-      for(var i=0;i<pts.length;i++){
-        if(pts[i].identifier===touchId){
-          tx=startTx+(pts[i].clientX-touchStartX);
-          ty=startTy+(pts[i].clientY-touchStartY);
-          _scheduleApply();
-          break;
-        }
-      }
-    }
-  },{passive:false});
-  b.addEventListener('touchend',function(e){
-    if(pinchDist>0 && e.touches.length<2){ pinchDist=0; scale=Math.max(MIN_SCALE,scale); _applyNow() }
-    if(e.touches.length===0){ dragging=false; innerSvg.style.transition='' }
-  });
-
-  b._zoomCleanup = function(){
-    document.removeEventListener('mousemove', _onDocMove);
-    document.removeEventListener('mouseup', _onDocUp);
-  };
 };
 
 })();
