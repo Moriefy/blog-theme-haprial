@@ -70,10 +70,16 @@ window.__initLightbox = function(articleBody) {
 
   // Wait for image load with timeout fallback
   function waitLoad(cb, ms) {
-    var timer = setTimeout(function() { hideSpinner(); cb(); }, ms || 10000);
-    if (lbImg.complete && lbImg.naturalWidth > 0) { clearTimeout(timer); hideSpinner(); cb(); return; }
-    lbImg.onload  = function() { clearTimeout(timer); hideSpinner(); cb(); };
-    lbImg.onerror = function() { clearTimeout(timer); hideSpinner(); cb(); };
+    var done = false;
+    function finish() { if (done) return; done = true; hideSpinner(); cb(); }
+    var timer = setTimeout(finish, ms || 10000);
+    if (lbImg.complete && lbImg.naturalWidth > 0) { clearTimeout(timer); finish(); return; }
+    // Cached images may need one frame for complete flag to update
+    requestAnimationFrame(function() {
+      if (lbImg.complete && lbImg.naturalWidth > 0) { clearTimeout(timer); finish(); return; }
+      lbImg.onload  = function() { clearTimeout(timer); finish(); };
+      lbImg.onerror = function() { clearTimeout(timer); finish(); };
+    });
   }
 
   // ── Collect images from article body ──────────────────────────────────────
