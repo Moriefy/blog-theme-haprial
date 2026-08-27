@@ -167,12 +167,41 @@ H.renderFlowGraph = function(lines){
     if(!line||line.startsWith('%%'))continue;
     var dm=line.match(/^(graph|flowchart)\s+([A-Z]{2})/i);
     if(dm){dir=dm[2].toUpperCase();continue}
-    // Edge with label: A -->|label| B
-    var edgeLabelMatch = line.match(/^(\w+)\s*(-->|---|-\.-|==>)\s*\|([^|]+)\|\s*(\w+)\s*$/);
-    if(edgeLabelMatch){var src=edgeLabelMatch[1],tgt=edgeLabelMatch[4],label=edgeLabelMatch[3].trim();ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label});if(!children[src])children[src]=[];children[src].push(tgt);continue}
-    // Edge without label: A --> B
-    var em=line.match(/^(\w+)\s*(-->|---|-\.-|==>|\.->|-->o|-->x)\s*(\w+)\s*$/);
-    if(em){var src=em[1],tgt=em[3];ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:''});if(!children[src])children[src]=[];children[src].push(tgt);continue}
+    
+    // Helper: parse node ID, optionally with inline definition like C[label]
+    function parseNodeId(s){
+      s=s.trim();
+      var nm=s.match(/^(\w+)(\[.*\]|\{.*\}|\(.*\)|\(\(.*\)\)|\[\[.*\]\])?$/);
+      if(nm){
+        var id=nm[1],shape=nm[2];
+        if(shape){
+          var n=getNode(id);
+          if(shape.startsWith('{')){n.shape='diamond';n.label=shape.slice(1,-1)}
+          else if(shape.startsWith('[[')){n.shape='subroutine';n.label=shape.slice(2,-2)}
+          else if(shape.startsWith('((')){n.shape='circle';n.label=shape.slice(2,-2)}
+          else if(shape.startsWith('[')){n.shape='rect';n.label=shape.slice(1,-1)}
+          else if(shape.startsWith('(')){n.shape='round';n.label=shape.slice(1,-1)}
+          nodeOrder.push(id);
+        }
+        return id;
+      }
+      return s.match(/^\w+$/) ? s : null;
+    }
+    
+    // Edge with label: A -->|label| C[label] or A -->|label| C
+    var edgeLabelMatch = line.match(/^(\w+)\s*(-->|---|-\.-|==>)\s*\|([^|]+)\|\s*(.+)$/);
+    if(edgeLabelMatch){
+      var src=edgeLabelMatch[1],label=edgeLabelMatch[3].trim();
+      var tgt=parseNodeId(edgeLabelMatch[4]);
+      if(tgt){ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label});if(!children[src])children[src]=[];children[src].push(tgt);continue}
+    }
+    // Edge without label: A --> C[label] or A --> C
+    var em=line.match(/^(\w+)\s*(-->|---|-\.-|==>|\.->|-->o|-->x)\s*(.+)$/);
+    if(em){
+      var src=em[1],tgt=parseNodeId(em[3]);
+      if(tgt){ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:''});if(!children[src])children[src]=[];children[src].push(tgt);continue}
+    }
+    // Node definition: A[label] or A{label} etc.
     var nm=line.match(/^(\w+)\s*(\{[^}]*\}|\[[^\]]*\]|\([^\)]*\)|\[\[[^\]]*\]\]|\(\([^\)]*\)\))\s*$/);
     if(nm){var id=nm[1],shape=nm[2];var n=getNode(id);if(shape.startsWith('{')){n.shape='diamond';n.label=shape.slice(1,-1)}else if(shape.startsWith('[[')){n.shape='subroutine';n.label=shape.slice(2,-2)}else if(shape.startsWith('((')){n.shape='circle';n.label=shape.slice(2,-2)}else if(shape.startsWith('[')){n.shape='rect';n.label=shape.slice(1,-1)}else if(shape.startsWith('(')){n.shape='round';n.label=shape.slice(1,-1)}nodeOrder.push(id);continue}
     if(line.startsWith('end'))continue;
@@ -237,7 +266,8 @@ H.renderFlowGraph = function(lines){
 // ── Sequence diagram rendering ───────────────────────────────────────────
 H.renderSequenceDiagram = function(lines){
   lines.shift();var participants=[],messages=[];
-  lines.forEach(function(line){
+  lines.forEach(function(rawLine){
+    var line=rawLine.trim(); if(!line||line.startsWith('%%'))return;
     var pm=line.match(/^participant\s+(\S+)(?:\s+as\s+(.+))?$/);
     if(pm){participants.push({id:pm[1],label:pm[2]||pm[1]});return}
     var mm=line.match(/^(\S+)\s*(--?>>?|--?>>?)\s*(\S+)\s*:\s*(.+)$/);
@@ -272,7 +302,8 @@ H.renderSequenceDiagram = function(lines){
 // ── Pie chart rendering ──────────────────────────────────────────────────
 H.renderPieChart = function(lines){
   var title='';var slices=[];var inPie=false;
-  lines.forEach(function(line){
+  lines.forEach(function(rawLine){
+    var line=rawLine.trim(); if(!line||line.startsWith('%%'))return;
     if(line.match(/^pie\s*(?:title\s+(.*))?$/i)){title=RegExp.$1||'';inPie=true;return}
     if(inPie){var sm=line.match(/^"([^"]+)"\s*:\s*(\d+)/);if(sm)slices.push({label:sm[1],value:parseInt(sm[2])})}
   });
