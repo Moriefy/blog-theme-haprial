@@ -553,7 +553,7 @@ a{color:var(--primary);text-decoration:none}
 @keyframes fbSlideInR{from{opacity:0;transform:translateX(25%)}to{opacity:1;transform:translateX(0)}}
 @keyframes fbSlideInL{from{opacity:0;transform:translateX(-25%)}to{opacity:1;transform:translateX(0)}}
 @keyframes lbEnterAnim{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
-[data-theme="dark"] .article-body img{filter:brightness(.85) contrast(1.05)}
+[data-theme="dark"] .article-body img:not(.img-revealed){filter:brightness(.85) contrast(1.05) blur(12px)}
 [data-theme="dark"] .img-figure img{mix-blend-mode:luminosity}
 [data-theme="dark"] .lightbox-toolbar{background:rgba(30,34,38,.55);border-color:rgba(255,255,255,.08);opacity:1}
 [data-theme="dark"] .lightbox-bottombar{background:rgba(30,34,38,.6);border-color:rgba(255,255,255,.08);opacity:1}
@@ -576,8 +576,8 @@ a{color:var(--primary);text-decoration:none}
 }
 
 /* ── Article Images ── */
-.article-body img{cursor:zoom-in;display:block;max-width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant);filter:blur(20px);transition:filter .32s var(--motion-emphasized)}.article-body img.img-revealed{filter:blur(0)}
-@media(prefers-reduced-motion:reduce){.article-body img{filter:none;transition:none!important}}
+.article-body img{cursor:zoom-in;display:block;width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant);aspect-ratio:16/9;object-fit:cover;filter:blur(12px);will-change:filter;transition:filter .3s var(--motion-standard)}.article-body img.img-revealed{filter:none;will-change:auto}
+@media(prefers-reduced-motion:reduce){.article-body img{filter:none;will-change:auto;transition:none!important}}
 .img-figure{margin:18px 0;text-align:center}
 .img-figure img{margin:0 auto}
 .img-figure figcaption{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:var(--outline);line-height:1.6;margin-top:8px;padding:0 8px}
