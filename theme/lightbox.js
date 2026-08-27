@@ -247,9 +247,10 @@ window.__initLightbox = function(articleBody) {
     lbImg.getAnimations().forEach(function(a){a.cancel()});
     lbImg.src = '';
     caption.style.display = 'none';
+    // Return focus to the original image for accessibility
+    if (origImgEl && origImgEl.focus) { origImgEl.setAttribute('tabindex','-1'); origImgEl.focus(); }
     origImgEl = null;
     origRect = null;
-    caption.style.display = 'none';
     origImgEl = null;
     origRect = null;
   }
@@ -440,6 +441,14 @@ window.__initLightbox = function(articleBody) {
     if (scale <= 1 && !switching) {
       if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
       if (e.key === 'ArrowLeft')  { e.preventDefault(); goPrev(); }
+    }
+    // Focus trap: keep Tab inside lightbox
+    if (e.key === 'Tab') {
+      var focusable = lb.querySelectorAll('button:not([style*="display:none"]),[href],[tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
   });
 

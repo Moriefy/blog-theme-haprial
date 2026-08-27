@@ -579,3 +579,20 @@ a{color:var(--primary);text-decoration:none}
 .img-figure{margin:18px 0;text-align:center}
 .img-figure img{margin:0 auto}
 .img-figure figcaption{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:var(--outline);line-height:1.6;margin-top:8px;padding:0 8px}
+
+/* ── Print Styles ── */
+@media print{
+  body{background:#fff!important;color:#000!important;font-size:12pt;line-height:1.6}
+  .top-app-bar,.page-tabs,.fab,.fab-comment,.site-footer,.toc,.toc-toggle,.rprog,.av-bar,.comment-section,.search-view,.lightbox,.art-nav{display:none!important}
+  .article-view{position:static!important;transform:none!important;overflow:visible!important}
+  .article-body{padding:0!important;opacity:1!important;content-visibility:visible!important}
+  .article-body img{max-width:100%!important;opacity:1!important;border:1px solid #ccc!important;page-break-inside:avoid}
+  .article-body a{color:#000!important;text-decoration:underline!important}
+  .article-body a[href]::after{content:" (" attr(href) ")";font-size:10px;color:#666}
+  .article-body pre,.article-body code{border:1px solid #ddd!important;background:#f5f5f5!important;color:#000!important;white-space:pre-wrap!important;word-break:break-all!important}
+  .article-body h1,.article-body h2,.article-body h3{page-break-after:avoid;color:#000!important}
+  .article-body blockquote{border-left:3px solid #999!important;color:#333!important}
+  .page{display:block!important;position:static!important}
+  .card{opacity:1!important;transform:none!important;animation:none!important}
+  @page{margin:2cm}
+}
