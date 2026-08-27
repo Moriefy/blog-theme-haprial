@@ -525,7 +525,7 @@ a{color:var(--primary);text-decoration:none}
 .lightbox-img-wrap .lb-spinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border:3px solid rgba(255,255,255,.2);border-top-color:rgba(255,255,255,.9);border-radius:50%;animation:lbSpin .8s linear infinite;z-index:5}
 @keyframes lbSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 .lightbox-img.loading{visibility:hidden}
-.lightbox-img{display:block;max-width:calc(100vw - 128px);max-height:calc(100vh - 160px);width:auto;height:auto;object-fit:contain;border-radius:var(--shape-m);background:#0b0d0f;transition:transform var(--dur-med) var(--motion-standard-decelerate),opacity var(--dur-med) var(--motion-standard);contain:layout paint}
+.lightbox-img{display:block;max-width:calc(100vw - 128px);max-height:calc(100vh - 160px);width:auto;height:auto;object-fit:contain;border-radius:var(--shape-m);background:#0b0d0f;transition:transform var(--dur-med) var(--motion-standard-decelerate),opacity var(--dur-med) var(--motion-standard)}
 .lightbox-img.lb-closing{transition:transform var(--dur-med) var(--motion-standard),opacity var(--dur-med) var(--motion-standard);box-shadow:none}
 .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:var(--shape-full);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:rgba(255,255,255,.85);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s var(--motion-standard),color .2s,box-shadow .2s;z-index:20;flex-shrink:0;box-shadow:var(--e1)}
 .lightbox-nav:hover{background:rgba(255,255,255,.16);color:#fff;box-shadow:var(--e2)}

@@ -251,8 +251,6 @@ window.__initLightbox = function(articleBody) {
     if (origImgEl && origImgEl.focus) { origImgEl.setAttribute('tabindex','-1'); origImgEl.focus(); }
     origImgEl = null;
     origRect = null;
-    origImgEl = null;
-    origRect = null;
   }
 
   // ── Navigate prev/next ────────────────────────────────────────────────────
