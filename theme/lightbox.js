@@ -386,7 +386,8 @@ window.__initLightbox = function(articleBody) {
     var target = images[curIdx].el;
     if (!target) return;
     close();
-    setTimeout(function() {
+    // Wait for close animation + one extra frame for reflow
+    setTimeout(function() { requestAnimationFrame(function() {
       var av = document.getElementById('articleView');
       if (!av) return;
       var ir = target.getBoundingClientRect();
@@ -407,9 +408,11 @@ window.__initLightbox = function(articleBody) {
         }
         requestAnimationFrame(step);
       }
-      target.style.boxShadow = '0 0 0 3px var(--primary)';
-      setTimeout(function() { target.style.boxShadow = ''; }, 2000);
-    }, 350);
+      // outline-offset:-3 draws inside the image, never clipped by overflow
+      target.style.outline = '3px solid var(--primary)';
+      target.style.outlineOffset = '-3px';
+      setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
+    }); }, 350);
   });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
