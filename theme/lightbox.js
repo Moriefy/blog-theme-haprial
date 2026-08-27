@@ -137,16 +137,19 @@ window.__initLightbox = function(articleBody) {
     resetZoom(true);
     updateNav();
 
-    showSpinner();
+    var origEl = images[curIdx].el;
+    var alreadyLoaded = origEl && origEl.complete && origEl.naturalWidth > 0;
+
+    // Skip spinner if article image already loaded (served from cache)
+    if (!alreadyLoaded) showSpinner();
     lbImg.src = images[curIdx].src;
     lbImg.alt = images[curIdx].alt || '';
     showCaption(images[curIdx].alt);
 
     // Force-load the article image so it has dimensions when locating later
-    var origEl = images[curIdx].el;
     if (origEl && origEl.loading === 'lazy') {
       origEl.loading = 'eager';
-      origEl.src = origEl.src; // trigger reload if not yet loaded
+      if (!alreadyLoaded) origEl.src = origEl.src;
     }
 
     lbImg.style.animation = '';
