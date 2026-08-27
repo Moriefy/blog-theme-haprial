@@ -30,6 +30,13 @@ function getGlobalFingerprint() {
   const files = [
     path.join(ROOT, 'site.config.json'),
     path.join(THEME_DIR, 'styles.css'),
+    path.join(THEME_DIR, 'core.js'),
+    path.join(THEME_DIR, 'mermaid.js'),
+    path.join(THEME_DIR, 'routing.js'),
+    path.join(THEME_DIR, 'article.js'),
+    path.join(THEME_DIR, 'toc.js'),
+    path.join(THEME_DIR, 'pages.js'),
+    path.join(THEME_DIR, 'events.js'),
     path.join(THEME_DIR, 'app.js'),
     path.join(THEME_DIR, 'lightbox.js'),
     path.join(THEME_DIR, 'comments.css'),
@@ -343,6 +350,13 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp
 
 <script src="/theme/lightbox.js?v=${globalFp}"></script>
 <script src="/theme/comments.js?v=${globalFp}"></script>
+<script defer src="/theme/core.js?v=${globalFp}"></script>
+<script defer src="/theme/mermaid.js?v=${globalFp}"></script>
+<script defer src="/theme/routing.js?v=${globalFp}"></script>
+<script defer src="/theme/article.js?v=${globalFp}"></script>
+<script defer src="/theme/toc.js?v=${globalFp}"></script>
+<script defer src="/theme/pages.js?v=${globalFp}"></script>
+<script defer src="/theme/events.js?v=${globalFp}"></script>
 <script defer src="/theme/app.js?v=${globalFp}"></script>
 <script>
 window.__HAPRIAL_DATA__ = ${JSON.stringify(dataObj).replace(/<\/script>/gi, '<\\/script>').replace(/-->/g, '--\\u003e')}
@@ -683,9 +697,11 @@ function seoPageFoot() {
 // Copy theme assets
 const themeOut = path.join(OUT_DIR, 'theme');
 fs.mkdirSync(themeOut, { recursive: true });
-fs.copyFileSync(path.join(THEME_DIR, 'styles.css'), path.join(themeOut, 'styles.css'));
-fs.copyFileSync(path.join(THEME_DIR, 'app.js'), path.join(themeOut, 'app.js'));
-fs.copyFileSync(path.join(THEME_DIR, 'lightbox.js'), path.join(themeOut, 'lightbox.js'));
+const themeFiles = ['styles.css', 'core.js', 'mermaid.js', 'routing.js', 'article.js', 'toc.js', 'pages.js', 'events.js', 'app.js', 'lightbox.js', 'twikoo-custom.css'];
+themeFiles.forEach(f => {
+  const src = path.join(THEME_DIR, f);
+  if (fs.existsSync(src)) fs.copyFileSync(src, path.join(themeOut, f));
+});
 if (commentsEnabled) {
   fs.copyFileSync(path.join(THEME_DIR, 'comments.css'), path.join(themeOut, 'comments.css'));
   fs.copyFileSync(path.join(THEME_DIR, 'comments.js'), path.join(themeOut, 'comments.js'));
