@@ -79,10 +79,8 @@ a{color:var(--primary);text-decoration:none}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes slideOutLeft{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(-36px) scale(.99)}}
 @keyframes slideOutRight{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(36px) scale(.99)}}
-.page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both}
-.page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both}
-.page.slide-out-left{animation:slideOutLeft var(--dur-fast) var(--motion-exit) both}
-.page.slide-out-right{animation:slideOutRight var(--dur-fast) var(--motion-exit) both}
+.page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
+.page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
 
 /* ── Hero ── */
 @keyframes heroReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
