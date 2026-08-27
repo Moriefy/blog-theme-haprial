@@ -186,12 +186,12 @@ H.switchPageVisual = function(name,dir){
   var curEl = $('page'+H.state.currentPage.charAt(0).toUpperCase()+H.state.currentPage.slice(1));
   if(!el||el===curEl){ H.syncTabs(name); return }
   H.syncTabs(name);
-  if(curEl){ curEl.classList.remove('active','slide-in-right','slide-in-left','slide-out-left','slide-out-right'); curEl.style.willChange='' }
+  if(curEl){ curEl.classList.remove('active','slide-in-right','slide-in-left','slide-out-left','slide-out-right') }
   el.classList.add('active');
   if(dir && !H.reducedMotion && !H.isMobile){
     var inCls = dir==='right' ? 'slide-in-right' : 'slide-in-left';
     el.classList.add(inCls);
-    el.addEventListener('animationend',function(){ el.classList.remove(inCls) },{once:true});
+    el.addEventListener('animationend',function(){ el.classList.remove(inCls); el.style.willChange='' },{once:true});
   }
   H.state.currentPage = name;
   if(name==='articles' && H.state.activeFilterLabel) H.applyFilterDirect(H.state.activeFilterLabel, H.state.activeFilterFn);

@@ -14,7 +14,7 @@ H.renderPaginationPage = function(){
   if(H.state.paginationPage<0) H.state.paginationPage=0;
   try{ sessionStorage.setItem('pg',H.state.paginationPage) }catch(e){}
   var renderKey = H.state.paginationPage+'|'+cards.map(function(c){return c.dataset.id}).join(',');
-  var animate = renderKey !== H.state._lastRenderKey;
+  var animate = renderKey !== H.state._lastRenderKey && !H.isLowEnd;
   H.state._lastRenderKey = renderKey;
   var start = H.state.paginationPage*H.state.perPage, end = start+H.state.perPage, ci=0;
   for(var i=0;i<all.length;i++){
@@ -24,7 +24,7 @@ H.renderPaginationPage = function(){
     else{
       c.style.display='';
       if(animate){ c.classList.add('show'); c.style.animationDelay=((ci-start)*20)+'ms' }
-      else if(!c.classList.contains('show')){ c.classList.add('show'); c.style.animationDelay='' }
+      else{ c.classList.add('show'); c.style.animationDelay='' }
     }
   }
   var noR = $('noResults'), pagination = H.el.pagination;
