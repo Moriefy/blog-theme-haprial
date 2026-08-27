@@ -395,42 +395,33 @@ window.__initLightbox = function(articleBody) {
     close();
 
     function doScroll() {
-      requestAnimationFrame(function() {
-        var av = document.getElementById('articleView');
-        if (!av) return;
-        var ir = target.getBoundingClientRect();
-        var ar = av.getBoundingClientRect();
-        var top = av.scrollTop + (ir.top - ar.top) - av.clientHeight / 2 + ir.height / 2;
-        top = Math.max(0, top);
-        var start = av.scrollTop;
-        var dist = top - start;
-        var dur = Math.min(600, Math.abs(dist) * 0.3);
-        if (dur < 16) { av.scrollTop = top; }
-        else {
-          var t0 = 0;
-          function step(ts) {
-            if (!t0) t0 = ts;
-            var p = Math.min((ts - t0) / dur, 1);
-            av.scrollTop = start + dist * (1 - Math.pow(1 - p, 3));
-            if (p < 1) requestAnimationFrame(step);
-          }
-          requestAnimationFrame(step);
+      var av = document.getElementById('articleView');
+      if (!av) return;
+      var ir = target.getBoundingClientRect();
+      var ar = av.getBoundingClientRect();
+      var top = av.scrollTop + (ir.top - ar.top) - av.clientHeight / 2 + ir.height / 2;
+      top = Math.max(0, top);
+      var start = av.scrollTop;
+      var dist = top - start;
+      var dur = Math.min(600, Math.abs(dist) * 0.3);
+      if (dur < 16) { av.scrollTop = top; }
+      else {
+        var t0 = 0;
+        function step(ts) {
+          if (!t0) t0 = ts;
+          var p = Math.min((ts - t0) / dur, 1);
+          av.scrollTop = start + dist * (1 - Math.pow(1 - p, 3));
+          if (p < 1) requestAnimationFrame(step);
         }
-        target.style.outline = '3px solid var(--primary)';
-        target.style.outlineOffset = '-3px';
-        setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
-      });
+        requestAnimationFrame(step);
+      }
+      target.style.outline = '3px solid var(--primary)';
+      target.style.outlineOffset = '-3px';
+      setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
     }
 
-    // Wait for close animation, then wait for article image to load if needed
-    setTimeout(function() {
-      if (target.complete && target.naturalWidth > 0) {
-        doScroll();
-      } else {
-        target.onload = function() { doScroll(); };
-        target.onerror = function() { doScroll(); };
-      }
-    }, 350);
+    // Wait for close animation to finish, then scroll
+    setTimeout(doScroll, 360);
   });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
