@@ -109,7 +109,7 @@ a{color:var(--primary);text-decoration:none}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-med) var(--motion-standard-decelerate) backwards}
 .card+.card{border-top:1px solid var(--outline-variant)}
-.card:hover{background:var(--surface-container-low);transform:translateY(-2px);box-shadow:var(--e2)}
+.card:hover{background:var(--surface-container-low)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
 .card:hover .card-title{color:var(--primary);transition:color var(--dur-med) var(--motion-standard)}
 .card-date{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;color:var(--outline);margin-bottom:3px;font-weight:400}
