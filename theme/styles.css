@@ -74,7 +74,7 @@ a{color:var(--primary);text-decoration:none}
 .tab-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--primary);border-radius:var(--shape-full) var(--shape-full) 0 0;pointer-events:none;transition:transform var(--dur-slow) var(--motion-emphasized)}
 
 /* ── Page Transitions ── */
-.page{display:none;padding-bottom:40px;contain:content}.page.active{display:block;flex:1}
+.page{position:absolute;visibility:hidden;pointer-events:none;padding-bottom:40px;contain:layout style paint;content-visibility:auto;contain-intrinsic-size:auto 600px}.page.active{position:static;visibility:visible;pointer-events:auto;display:flex;flex-direction:column;flex:1;content-visibility:visible}
 @keyframes slideInRight{from{opacity:0;transform:translateX(52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes slideOutLeft{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(-36px) scale(.99)}}
@@ -105,7 +105,7 @@ a{color:var(--primary);text-decoration:none}
 .article-list{padding-bottom:8px}
 .card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:layout style paint;transition:transform var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard),background var(--dur-fast) var(--motion-standard)}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-med) var(--motion-standard-decelerate) backwards}
+.card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-fast) var(--motion-standard-decelerate) backwards}
 .card+.card{border-top:1px solid var(--outline-variant)}
 .card:hover{background:var(--surface-container-low)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
@@ -136,8 +136,8 @@ a{color:var(--primary);text-decoration:none}
 /* ── Tags Grid ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .tags-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.tag-card{padding:14px 18px;background:var(--surface-container-lowest);border-radius:var(--shape-m);border:1px solid var(--outline-variant);cursor:pointer;transition:transform 180ms var(--motion-standard);position:relative;overflow:hidden;opacity:0;contain:content}
-#pageTags.active .tag-card{animation:fadeUp var(--dur-slow) var(--motion-standard) var(--sd,0ms) both}
+.tag-card{padding:14px 18px;background:var(--surface-container-lowest);border-radius:var(--shape-m);border:1px solid var(--outline-variant);cursor:pointer;transition:transform 180ms var(--motion-standard);position:relative;overflow:hidden;opacity:0;contain:layout style paint}
+#pageTags.active .tag-card{animation:fadeUp var(--dur-med) var(--motion-standard) var(--sd,0ms) both}
 .tag-card:hover{border-color:var(--primary);box-shadow:var(--e2);transform:translateY(-3px)}
 .tag-card:active{transition-duration:60ms}
 .tag-card-name{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;font-weight:400;color:var(--on-surface);margin-bottom:2px}
@@ -145,8 +145,8 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Categories Grid ── */
 .cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.cat-card{padding:20px 22px;background:var(--surface-container-lowest);border-radius:var(--shape-m);border:1px solid var(--outline-variant);cursor:pointer;transition:transform 180ms var(--motion-standard);position:relative;overflow:hidden;opacity:0}
-#pageCategories.active .cat-card{animation:fadeUp var(--dur-slow) var(--motion-standard) var(--sd,0ms) both}
+.cat-card{padding:20px 22px;background:var(--surface-container-lowest);border-radius:var(--shape-m);border:1px solid var(--outline-variant);cursor:pointer;transition:transform 180ms var(--motion-standard);position:relative;overflow:hidden;opacity:0;contain:layout style paint}
+#pageCategories.active .cat-card{animation:fadeUp var(--dur-med) var(--motion-standard) var(--sd,0ms) both}
 .cat-card:hover{border-color:var(--primary);box-shadow:var(--e2);transform:translateY(-3px)}
 .cat-card:active{transition-duration:60ms}
 .cat-dot{width:8px;height:8px;border-radius:50%;margin-bottom:10px}
@@ -162,8 +162,8 @@ a{color:var(--primary);text-decoration:none}
 .archive-year-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(32px,6vw,48px);font-weight:300;color:var(--on-surface);letter-spacing:.02em;padding:24px 0 16px 12px;line-height:1.1;border-bottom:1px solid var(--outline-variant);margin-bottom:12px;display:flex;align-items:baseline;gap:12px}
 .archive-year-count{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--outline)}
 @keyframes archiveReveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.archive-card{display:flex;align-items:center;gap:16px;padding:14px 16px;cursor:pointer;border-radius:var(--shape-m);opacity:0;position:relative;overflow:hidden;transition:transform 200ms var(--motion-standard);border:1px solid var(--outline-variant);margin-bottom:8px}
-#pageArchive.active .archive-card{animation:fadeUp var(--dur-slow) var(--motion-standard) var(--arch-d,0ms) both}
+.archive-card{display:flex;align-items:center;gap:16px;padding:14px 16px;cursor:pointer;border-radius:var(--shape-m);opacity:0;position:relative;overflow:hidden;transition:transform 200ms var(--motion-standard);border:1px solid var(--outline-variant);margin-bottom:8px;contain:layout style paint}
+#pageArchive.active .archive-card{animation:fadeUp var(--dur-med) var(--motion-standard) var(--arch-d,0ms) both}
 .archive-card:hover{border-color:var(--primary);box-shadow:var(--e2);transform:translateY(-3px)}
 .archive-card:active{transition-duration:60ms}
 .archive-card-date{display:flex;flex-direction:column;align-items:center;min-width:48px;flex-shrink:0}
@@ -178,8 +178,8 @@ a{color:var(--primary);text-decoration:none}
 
 /* ── Friends Grid ── */
 .fl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.fl-card{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--surface-container-lowest);border-radius:var(--shape-m);border:1px solid var(--outline-variant);cursor:pointer;transition:transform 180ms var(--motion-standard);text-decoration:none;color:inherit;opacity:0;overflow:hidden}
-#pageFriends.active .fl-card{animation:fadeUp var(--dur-slow) var(--motion-standard) var(--sd,0ms) both}
+.fl-card{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--surface-container-lowest);border-radius:var(--shape-m);border:1px solid var(--outline-variant);cursor:pointer;transition:transform 180ms var(--motion-standard);text-decoration:none;color:inherit;opacity:0;overflow:hidden;contain:layout style paint}
+#pageFriends.active .fl-card{animation:fadeUp var(--dur-med) var(--motion-standard) var(--sd,0ms) both}
 .fl-card:hover{border-color:var(--primary);box-shadow:var(--e2);transform:translateY(-3px)}
 .fl-card:active{transform:scale(.97);transition-duration:60ms}
 @media(max-width:768px){.fl-card{-webkit-tap-highlight-color:rgba(0,0,0,.06);transition:border-color 200ms}[data-theme="dark"] .fl-card{-webkit-tap-highlight-color:rgba(255,255,255,.08)}}
