@@ -77,10 +77,8 @@ a{color:var(--primary);text-decoration:none}
 .page{display:none;padding-bottom:40px;contain:content}.page.active{display:block;flex:1}
 @keyframes slideInRight{from{opacity:0;transform:translateX(52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
-@keyframes slideOutLeft{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(-36px) scale(.99)}}
-@keyframes slideOutRight{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(36px) scale(.99)}}
-.page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
-.page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
+.page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both}
+.page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both}
 
 /* ── Hero ── */
 @keyframes heroReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -103,9 +101,9 @@ a{color:var(--primary);text-decoration:none}
 /* ── Article Cards ── */
 #articleList{scroll-margin-top:104px}
 .article-list{padding-bottom:8px}
-.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:content;transition:transform var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard),background var(--dur-fast) var(--motion-standard)}
-@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-med) var(--motion-standard-decelerate) backwards}
+.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;contain:content;transition:background var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard)}
+.card-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.card.show{opacity:1;visibility:visible;pointer-events:auto}
 .card+.card{border-top:1px solid var(--outline-variant)}
 .card:hover{background:var(--surface-container-low)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
@@ -574,7 +572,7 @@ a{color:var(--primary);text-decoration:none}
 }
 
 /* ── Article Images ── */
-.article-body img{cursor:zoom-in;display:block;width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant);aspect-ratio:16/9;object-fit:cover;opacity:0;transition:opacity .28s var(--motion-standard)}.article-body img.img-revealed{opacity:1}
+.article-body img{cursor:zoom-in;display:block;max-width:100%;width:auto;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant);opacity:0;transition:opacity .28s var(--motion-standard)}.article-body img.img-revealed{opacity:1}
 @media(prefers-reduced-motion:reduce){.article-body img{opacity:1;transition:none!important}}
 .img-figure{margin:18px 0;text-align:center}
 .img-figure img{margin:0 auto}
