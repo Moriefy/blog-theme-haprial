@@ -144,12 +144,12 @@ H.escHtml = function(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'"');
 };
 
-// requestIdleCallback shim (ES5-safe)
-H._ric = window.requestIdleCallback || function(cb){
+// requestIdleCallback shim (ES5-safe) - bound to window to avoid Illegal invocation
+H._ric = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : function(cb){
   var st = Date.now();
   return setTimeout(function(){ cb({didTimeout:false, timeRemaining:function(){ return Math.max(0,50-(Date.now()-st)) }}) }, 1);
 };
-H._ricCancel = window.cancelIdleCallback || function(h){ clearTimeout(h) };
+H._ricCancel = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : function(h){ clearTimeout(h) };
 
 H.getAllCards = function(){
   if(!H.state._cachedCards) H.state._cachedCards = [].slice.call(document.querySelectorAll('.card'));
