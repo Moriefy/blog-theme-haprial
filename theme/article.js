@@ -115,9 +115,31 @@ H.restoreArticleScroll = function(id){
         H.el.avBar.classList.toggle('scrolled',s>0);
         var amax = H.el.articleView.scrollHeight - H.el.articleView.clientHeight;
         H.el.rprog.style.transform = amax>0 ? 'scaleX('+Math.min(1,s/amax)+')' : 'scaleX(0)';
+        // Show reading progress toast
+        if(amax > 0 && y > 200) H._showReadProgressToast(Math.round(y / amax * 100));
       },100);
     }
   }catch(e){}
+};
+
+H._showReadProgressToast = function(pct){
+  if(pct < 5) return;
+  var old = document.getElementById('readProgressToast');
+  if(old) old.remove();
+  var toast = document.createElement('div');
+  toast.id = 'readProgressToast';
+  toast.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg><span>上次读到 ' + pct + '%，已自动恢复</span>';
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:500;display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface-container-highest);color:var(--on-surface);border:1px solid var(--outline-variant);border-radius:var(--shape-full);font-family:Noto Sans SC,PingFang SC,sans-serif;font-size:13px;box-shadow:var(--e3);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap';
+  document.body.appendChild(toast);
+  requestAnimationFrame(function(){
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(function(){
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(function(){ toast.remove() }, 300);
+  }, 2500);
 };
 
 H.switchToArticleVisual = function(nid,dir){
