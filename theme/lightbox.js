@@ -397,10 +397,12 @@ window.__initLightbox = function(articleBody) {
     function doScroll() {
       var av = document.getElementById('articleView');
       if (!av) return;
+      // Header (56px) + progress bar (2px) offset
+      var headerH = 58;
       var ir = target.getBoundingClientRect();
       var ar = av.getBoundingClientRect();
-      var top = av.scrollTop + (ir.top - ar.top) - av.clientHeight / 2 + ir.height / 2;
-      top = Math.max(0, top);
+      var offset = (ir.top - ar.top) - headerH - (av.clientHeight - headerH) / 2 + ir.height / 2;
+      var top = Math.max(0, av.scrollTop + offset);
       var start = av.scrollTop;
       var dist = top - start;
       var dur = Math.min(600, Math.abs(dist) * 0.3);
@@ -420,8 +422,8 @@ window.__initLightbox = function(articleBody) {
       setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
     }
 
-    // Wait for close animation to finish, then scroll
-    setTimeout(doScroll, 360);
+    // Wait for close animation + one frame for reflow
+    setTimeout(function() { requestAnimationFrame(doScroll); }, 360);
   });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
