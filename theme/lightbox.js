@@ -167,6 +167,11 @@ window.__initLightbox = function(articleBody) {
 
     if (origImgEl) origRect = origImgEl.getBoundingClientRect();
     waitLoad(function() {
+      // Lightbox image loaded — force article image to load from cache
+      if (origEl && !origEl.complete) {
+        origEl.loading = 'eager';
+        origEl.src = origEl.src;
+      }
       // FLIP: grow from the clicked image rect into the centered stage.
       if (origRect && lbImg.naturalWidth) {
         var r = lbImg.getBoundingClientRect();
