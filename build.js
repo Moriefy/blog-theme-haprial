@@ -26,7 +26,7 @@ function saveCache(cache) {
 }
 
 function getGlobalFingerprint() {
-  // Hash files that affect every page: theme, config, build script itself
+  // Hash files that affect every page (force rebuild): theme, config, build script itself
   const files = [
     path.join(ROOT, 'site.config.json'),
     path.join(THEME_DIR, 'styles.css'),
