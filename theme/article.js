@@ -74,6 +74,7 @@ H.openArticleVisual = function(id){
     if(e.detail.id !== id) return;
     articleView.removeEventListener('article:content-ready',h);
     H.buildTOC();
+    H.restoreArticleScroll(id);
   },{once:true});
   requestAnimationFrame(function(){ H.loadArticle(id) });
 };
