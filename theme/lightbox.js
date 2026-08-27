@@ -142,6 +142,13 @@ window.__initLightbox = function(articleBody) {
     lbImg.alt = images[curIdx].alt || '';
     showCaption(images[curIdx].alt);
 
+    // Force-load the article image so it has dimensions when locating later
+    var origEl = images[curIdx].el;
+    if (origEl && origEl.loading === 'lazy') {
+      origEl.loading = 'eager';
+      origEl.src = origEl.src; // trigger reload if not yet loaded
+    }
+
     lbImg.style.animation = '';
     lbImg.classList.remove('lb-closing');
     lbImg.style.transform = '';
@@ -386,33 +393,44 @@ window.__initLightbox = function(articleBody) {
     var target = images[curIdx].el;
     if (!target) return;
     close();
-    // Wait for close animation + one extra frame for reflow
-    setTimeout(function() { requestAnimationFrame(function() {
-      var av = document.getElementById('articleView');
-      if (!av) return;
-      var ir = target.getBoundingClientRect();
-      var ar = av.getBoundingClientRect();
-      var top = av.scrollTop + (ir.top - ar.top) - av.clientHeight / 2 + ir.height / 2;
-      top = Math.max(0, top);
-      var start = av.scrollTop;
-      var dist = top - start;
-      var dur = Math.min(600, Math.abs(dist) * 0.3);
-      if (dur < 16) { av.scrollTop = top; }
-      else {
-        var t0 = 0;
-        function step(ts) {
-          if (!t0) t0 = ts;
-          var p = Math.min((ts - t0) / dur, 1);
-          av.scrollTop = start + dist * (1 - Math.pow(1 - p, 3));
-          if (p < 1) requestAnimationFrame(step);
+
+    function doScroll() {
+      requestAnimationFrame(function() {
+        var av = document.getElementById('articleView');
+        if (!av) return;
+        var ir = target.getBoundingClientRect();
+        var ar = av.getBoundingClientRect();
+        var top = av.scrollTop + (ir.top - ar.top) - av.clientHeight / 2 + ir.height / 2;
+        top = Math.max(0, top);
+        var start = av.scrollTop;
+        var dist = top - start;
+        var dur = Math.min(600, Math.abs(dist) * 0.3);
+        if (dur < 16) { av.scrollTop = top; }
+        else {
+          var t0 = 0;
+          function step(ts) {
+            if (!t0) t0 = ts;
+            var p = Math.min((ts - t0) / dur, 1);
+            av.scrollTop = start + dist * (1 - Math.pow(1 - p, 3));
+            if (p < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
         }
-        requestAnimationFrame(step);
+        target.style.outline = '3px solid var(--primary)';
+        target.style.outlineOffset = '-3px';
+        setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
+      });
+    }
+
+    // Wait for close animation, then wait for article image to load if needed
+    setTimeout(function() {
+      if (target.complete && target.naturalWidth > 0) {
+        doScroll();
+      } else {
+        target.onload = function() { doScroll(); };
+        target.onerror = function() { doScroll(); };
       }
-      // outline-offset:-3 draws inside the image, never clipped by overflow
-      target.style.outline = '3px solid var(--primary)';
-      target.style.outlineOffset = '-3px';
-      setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
-    }); }, 350);
+    }, 350);
   });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
