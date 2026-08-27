@@ -576,7 +576,8 @@ a{color:var(--primary);text-decoration:none}
 }
 
 /* ── Article Images ── */
-.article-body img{cursor:zoom-in;display:block;max-width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant)}
+.article-body img{cursor:zoom-in;display:block;max-width:100%;height:auto;background:var(--surface-container-high);border-radius:var(--shape-m);margin:18px 0;border:1px solid var(--outline-variant);opacity:0;filter:blur(20px);transition:filter .28s var(--motion-emphasized),opacity .22s var(--motion-standard)}.article-body img.img-revealed{opacity:1;filter:none}
+@media(prefers-reduced-motion:reduce){.article-body img{opacity:1;filter:none;transition:none!important}}
 .img-figure{margin:18px 0;text-align:center}
 .img-figure img{margin:0 auto}
 .img-figure figcaption{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;color:var(--outline);line-height:1.6;margin-top:8px;padding:0 8px}

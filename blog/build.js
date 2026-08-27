@@ -215,21 +215,21 @@ function postPageScript() {
   (function(){
     var imgs=document.querySelectorAll('.article-body img');
     var motionOK=!window.matchMedia('(prefers-reduced-motion:reduce)').matches;
-    function reveal(img){img.classList.add('revealed')}
+    function reveal(img){img.classList.add('img-revealed')}
     imgs.forEach(function(img){
       img.setAttribute('loading','lazy');
       if(!motionOK){reveal(img);return}
       if(img.complete&&img.naturalWidth>0){reveal(img);return}
-      img.addEventListener('load',function(){setTimeout(function(){reveal(img)},50)},{once:true});
-      img.addEventListener('error',function(){img.style.opacity='1';img.style.filter='';img.style.transform=''},{once:true});
+      img.addEventListener('load',function(){setTimeout(function(){reveal(img)},60)},{once:true});
+      img.addEventListener('error',function(){reveal(img)},{once:true});
     });
     if(motionOK&&'IntersectionObserver' in window){
       var obs=new IntersectionObserver(function(entries){
         entries.forEach(function(e){
-          if(e.isIntersecting){obs.unobserve(e.target);var im=e.target;if(im.complete&&im.naturalWidth>0){setTimeout(function(){reveal(im)},50)}}
+          if(e.isIntersecting){obs.unobserve(e.target);var im=e.target;if(im.complete&&im.naturalWidth>0){setTimeout(function(){reveal(im)},60)}}
         });
       },{threshold:0.1});
-      imgs.forEach(function(img){if(!img.classList.contains('revealed'))obs.observe(img)});
+      imgs.forEach(function(img){if(!img.classList.contains('img-revealed'))obs.observe(img)});
     }
   })();`;
 }
