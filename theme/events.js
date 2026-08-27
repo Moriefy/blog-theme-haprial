@@ -300,7 +300,7 @@ H.createRipple = function(e,el){
 
 H.initRippleHandler = function(){
   document.addEventListener('pointerdown',function(e){
-    var el=e.target.closest('.fl-card,.art-nav-btn,.archive-card,#filterClear');
+    var el=e.target.closest('.tag-card,.cat-card,.fl-card,.art-nav-btn,.archive-card,#filterClear');
     if(!el||el.disabled||el.offsetParent===null) return;
     H.createRipple(e,el);
   },{passive:true});
