@@ -316,6 +316,8 @@ window.__initLightbox = function(articleBody) {
     if (!lbImg.naturalWidth || switching) return;
     if (justDragged) { justDragged = false; return; }
     if (scale > 1) { resetZoom(); return; }
+    // Cancel any lingering FLIP animation so inline transform takes effect
+    lbImg.getAnimations().forEach(function(a){a.cancel()});
     var r = lbImg.getBoundingClientRect();
     var px = (e.clientX - r.left) / r.width * 100;
     var py = (e.clientY - r.top) / r.height * 100;
