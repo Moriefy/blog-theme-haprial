@@ -79,8 +79,8 @@ a{color:var(--primary);text-decoration:none}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-52px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes slideOutLeft{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(-36px) scale(.99)}}
 @keyframes slideOutRight{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(36px) scale(.99)}}
-.page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
-.page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both;will-change:transform,opacity}
+.page.slide-in-right{animation:slideInRight var(--dur-med) var(--motion-standard-decelerate) both}
+.page.slide-in-left{animation:slideInLeft var(--dur-med) var(--motion-standard-decelerate) both}
 
 /* ── Hero ── */
 @keyframes heroReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -103,7 +103,7 @@ a{color:var(--primary);text-decoration:none}
 /* ── Article Cards ── */
 #articleList{scroll-margin-top:104px}
 .article-list{padding-bottom:8px}
-.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:content;transition:transform var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard),background var(--dur-fast) var(--motion-standard)}
+.card{padding:16px 20px;cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);contain:layout style paint;transition:transform var(--dur-fast) var(--motion-standard),box-shadow var(--dur-fast) var(--motion-standard),background var(--dur-fast) var(--motion-standard)}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card.show{opacity:1;transform:translateY(0);animation:cardIn var(--dur-med) var(--motion-standard-decelerate) backwards}
 .card+.card{border-top:1px solid var(--outline-variant)}
@@ -415,7 +415,7 @@ a{color:var(--primary);text-decoration:none}
 /* ── Comment & Footer ── */
 .comment-section{margin-top:32px;padding-top:24px;border-top:1px solid var(--outline-variant)}
 .comment-section:empty{display:none}
-.site-footer{border-top:1px solid var(--outline-variant);padding:16px 24px;text-align:center;background:var(--surface-container-low)}
+.site-footer{border-top:1px solid var(--outline-variant);padding:16px 24px;text-align:center;background:var(--surface-container-low);content-visibility:auto;contain-intrinsic-size:auto 80px}
 .footer-nav{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px}
 .footer-link{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:13px;font-weight:400;color:var(--on-surface-variant);cursor:pointer;transition:color 200ms;padding:8px 4px;min-height:44px;display:inline-flex;align-items:center;border-radius:var(--shape-full);position:relative;overflow:hidden}
 .footer-link:hover{color:var(--primary)}
