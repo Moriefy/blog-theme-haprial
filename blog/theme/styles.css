@@ -253,7 +253,7 @@ a{color:var(--primary);text-decoration:none}
 .skel-gap{height:24px}
 
 /* ── Article Body ── */
-.article-body{padding-bottom:100px;overflow-x:hidden;opacity:0}
+.article-body{padding-bottom:100px;overflow-x:hidden;opacity:0;content-visibility:auto;contain-intrinsic-size:800px;contain:layout style paint}
 .article-body.revealed{opacity:1;transition:opacity var(--dur-med) var(--motion-standard)}
 .article-body h2{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:22px;font-weight:600;color:var(--on-surface);margin:40px 0 14px;scroll-margin-top:72px;letter-spacing:.02em}
 .article-body h3{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:17px;font-weight:600;color:var(--on-surface-variant);margin:28px 0 8px;scroll-margin-top:72px}

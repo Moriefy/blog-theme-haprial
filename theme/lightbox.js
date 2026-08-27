@@ -165,18 +165,16 @@ window.__initLightbox = function(articleBody) {
         var sF = Math.min(sx, sy);
         var dx = origRect.left + origRect.width / 2 - (r.left + r.width / 2);
         var dy = origRect.top + origRect.height / 2 - (r.top + r.height / 2);
-        lbImg.style.transition = 'none';
         lbImg.style.transformOrigin = '50% 50%';
-        lbImg.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sF + ')';
-        lbImg.style.opacity = '0';
-        void lbImg.offsetWidth;
-        lbImg.style.transition = 'transform 320ms var(--motion-emphasized), opacity 220ms var(--motion-standard)';
-        lbImg.style.transform = '';
-        lbImg.style.opacity = '1';
-        setTimeout(function() { lbImg.style.transition = ''; }, 340);
+        lbImg.animate([
+          {transform:'translate('+dx+'px,'+dy+'px) scale('+sF+')',opacity:0},
+          {transform:'translate(0,0) scale(1)',opacity:1}
+        ],{duration:320,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
       } else {
-        lbImg.style.animation = 'lbEnterAnim .3s cubic-bezier(0,0,.2,1) both';
-        setTimeout(function() { lbImg.style.animation = ''; }, 350);
+        lbImg.animate([
+          {opacity:0,transform:'scale(.92)'},
+          {opacity:1,transform:'scale(1)'}
+        ],{duration:300,easing:'cubic-bezier(0,0,.2,1)',fill:'forwards'});
       }
     });
   }
@@ -190,11 +188,12 @@ window.__initLightbox = function(articleBody) {
       var s = Math.min(sx, sy);
       var dx = origRect.left + origRect.width / 2 - (r.left + r.width / 2);
       var dy = origRect.top + origRect.height / 2 - (r.top + r.height / 2);
-      lbImg.classList.add('lb-closing');
-      lbImg.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')';
-      lbImg.style.opacity = '0';
       lbImg.style.transformOrigin = '50% 50%';
-      setTimeout(finishClose, 340);
+      var anim = lbImg.animate([
+        {transform:'translate(0,0) scale(1)',opacity:1},
+        {transform:'translate('+dx+'px,'+dy+'px) scale('+s+')',opacity:0}
+      ],{duration:300,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+      anim.onfinish = finishClose;
     } else {
       finishClose();
     }
@@ -230,7 +229,12 @@ window.__initLightbox = function(articleBody) {
     lbImg.classList.remove('lb-closing');
     lbImg.style.transform = '';
     lbImg.style.opacity = '';
+    lbImg.style.animation = '';
+    lbImg.getAnimations().forEach(function(a){a.cancel()});
     lbImg.src = '';
+    caption.style.display = 'none';
+    origImgEl = null;
+    origRect = null;
     caption.style.display = 'none';
     origImgEl = null;
     origRect = null;
@@ -242,11 +246,13 @@ window.__initLightbox = function(articleBody) {
     switching = true;
     resetZoom(true);
 
-    var outAnim = dir === 'next' ? 'fbSlideOutL .2s cubic-bezier(.4,0,1,1)' : 'fbSlideOutR .2s cubic-bezier(.4,0,1,1)';
-    var inAnim  = dir === 'next' ? 'fbSlideInR .28s cubic-bezier(0,0,.2,1)'  : 'fbSlideInL .28s cubic-bezier(0,0,.2,1)';
+    var outX = dir === 'next' ? '-25%' : '25%';
+    var inX  = dir === 'next' ? '25%' : '-25%';
 
-    lbImg.style.animation = outAnim;
-    setTimeout(function() {
+    lbImg.animate([
+      {opacity:1,transform:'translateX(0)'},
+      {opacity:0,transform:'translateX('+outX+')'}
+    ],{duration:200,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish = function() {
       curIdx = newIdx;
       showSpinner();
       lbImg.src = images[curIdx].src;
@@ -255,10 +261,13 @@ window.__initLightbox = function(articleBody) {
       showCaption(images[curIdx].alt);
 
       waitLoad(function() {
-        lbImg.style.animation = inAnim;
-        setTimeout(function() { lbImg.style.animation = ''; switching = false; }, 290);
+        lbImg.animate([
+          {opacity:0,transform:'translateX('+inX+')'},
+          {opacity:1,transform:'translateX(0)'}
+        ],{duration:280,easing:'cubic-bezier(0,0,.2,1)',fill:'forwards'});
+        setTimeout(function() { switching = false; }, 290);
       });
-    }, 210);
+    };
   }
 
   function goNext() { animateSwitch(curIdx + 1, 'next'); }
