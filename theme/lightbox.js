@@ -407,9 +407,8 @@ window.__initLightbox = function(articleBody) {
         }
         requestAnimationFrame(step);
       }
-      target.style.outline = '3px solid var(--primary)';
-      target.style.outlineOffset = '4px';
-      setTimeout(function() { target.style.outline = ''; target.style.outlineOffset = ''; }, 2000);
+      target.style.boxShadow = '0 0 0 3px var(--primary)';
+      setTimeout(function() { target.style.boxShadow = ''; }, 2000);
     }, 350);
   });
 
