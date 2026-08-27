@@ -138,18 +138,17 @@ window.__initLightbox = function(articleBody) {
     updateNav();
 
     var origEl = images[curIdx].el;
-    var alreadyLoaded = origEl && origEl.complete && origEl.naturalWidth > 0;
+    var cached = origEl && origEl.complete && origEl.naturalWidth > 0;
 
-    // Skip spinner if article image already loaded (served from cache)
-    if (!alreadyLoaded) showSpinner();
+    if (!cached) showSpinner();
     lbImg.src = images[curIdx].src;
     lbImg.alt = images[curIdx].alt || '';
     showCaption(images[curIdx].alt);
 
-    // Force-load the article image so it has dimensions when locating later
-    if (origEl && origEl.loading === 'lazy') {
+    // Force-load article image for locate later
+    if (origEl && origEl.loading === 'lazy' && !cached) {
       origEl.loading = 'eager';
-      if (!alreadyLoaded) origEl.src = origEl.src;
+      origEl.src = origEl.src;
     }
 
     lbImg.style.animation = '';
