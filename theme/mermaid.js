@@ -167,8 +167,12 @@ H.renderFlowGraph = function(lines){
     if(!line||line.startsWith('%%'))continue;
     var dm=line.match(/^(graph|flowchart)\s+([A-Z]{2})/i);
     if(dm){dir=dm[2].toUpperCase();continue}
-    var em=line.match(/^(\w+)\s*(-->|---|-\.-|==>|-->\|?|\.->|-->o|-->x)\s*(\w+)\s*(?:[|"]([^|"]*)[|"])?\s*$/);
-    if(em){var src=em[1],tgt=em[3],label=em[4]||'';ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label});if(!children[src])children[src]=[];children[src].push(tgt);continue}
+    // Edge with label: A -->|label| B
+    var edgeLabelMatch = line.match(/^(\w+)\s*(-->|---|-\.-|==>)\s*\|([^|]+)\|\s*(\w+)\s*$/);
+    if(edgeLabelMatch){var src=edgeLabelMatch[1],tgt=edgeLabelMatch[4],label=edgeLabelMatch[3].trim();ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label});if(!children[src])children[src]=[];children[src].push(tgt);continue}
+    // Edge without label: A --> B
+    var em=line.match(/^(\w+)\s*(-->|---|-\.-|==>|\.->|-->o|-->x)\s*(\w+)\s*$/);
+    if(em){var src=em[1],tgt=em[3];ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:''});if(!children[src])children[src]=[];children[src].push(tgt);continue}
     var nm=line.match(/^(\w+)\s*(\{[^}]*\}|\[[^\]]*\]|\([^\)]*\)|\[\[[^\]]*\]\]|\(\([^\)]*\)\))\s*$/);
     if(nm){var id=nm[1],shape=nm[2];var n=getNode(id);if(shape.startsWith('{')){n.shape='diamond';n.label=shape.slice(1,-1)}else if(shape.startsWith('[[')){n.shape='subroutine';n.label=shape.slice(2,-2)}else if(shape.startsWith('((')){n.shape='circle';n.label=shape.slice(2,-2)}else if(shape.startsWith('[')){n.shape='rect';n.label=shape.slice(1,-1)}else if(shape.startsWith('(')){n.shape='round';n.label=shape.slice(1,-1)}nodeOrder.push(id);continue}
     if(line.startsWith('end'))continue;
