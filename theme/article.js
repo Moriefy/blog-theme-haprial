@@ -129,8 +129,8 @@ H._showReadProgressToast = function(pct){
   if(old) old.remove();
   var toast = document.createElement('div');
   toast.id = 'readProgressToast';
-  toast.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0"><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg><span>上次读到 ' + pct + '%，已自动恢复</span>';
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:500;display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface-container-highest);color:var(--on-surface);border:1px solid var(--outline-variant);border-radius:var(--shape-full);font-family:Noto Sans SC,PingFang SC,sans-serif;font-size:13px;box-shadow:var(--e3);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap';
+  toast.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" style="flex-shrink:0"><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg><span>上次读到 ' + pct + '%，已自动恢复</span>';
+  toast.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:500;display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface-container-highest);color:var(--on-surface);border:1px solid var(--outline-variant);border-radius:var(--shape-full);font-family:Noto Sans SC,PingFang SC,sans-serif;font-size:12px;box-shadow:var(--e3);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap';
   document.body.appendChild(toast);
   requestAnimationFrame(function(){
     toast.style.opacity = '1';
@@ -138,7 +138,7 @@ H._showReadProgressToast = function(pct){
   });
   setTimeout(function(){
     toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    toast.style.transform = 'translateX(-50%) translateY(-20px)';
     setTimeout(function(){ toast.remove() }, 300);
   }, 2500);
 };
