@@ -263,7 +263,7 @@ H.renderFlowGraph = function(lines){
     s+='<text x="'+(p.x+p.w/2)+'" y="'+(p.y+p.h/2+5)+'" text-anchor="middle" font-size="14" font-weight="500" fill="'+tc+'">'+H.escHtml(n.label)+'</text>';
   });
 
-  // Layer 3: Draw edge labels (in the gap between node layers)
+  // Layer 3: Draw edge labels above the connecting lines
   edges.forEach(function(e){
     if(!e.label) return;
     var from=positions[e.from], to=positions[e.to];
@@ -271,8 +271,8 @@ H.renderFlowGraph = function(lines){
     var x1=from.x+from.w, y1=from.y+from.h/2;
     var x2=to.x, y2=to.y+to.h/2;
     var mx=(x1+x2)/2;
-    var labelY=(y1+y2)/2;
-    s+='<text x="'+mx+'" y="'+(labelY+4)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
+    var labelY=(y1+y2)/2 - 10;
+    s+='<text x="'+mx+'" y="'+labelY+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
   });
 
   s+='</svg>';
