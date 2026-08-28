@@ -237,7 +237,7 @@ H.renderFlowGraph = function(lines){
   // Render SVG
   var tc='var(--on-surface)', lc='var(--outline)', ac='var(--primary)';
   var s='<svg viewBox="0 0 '+sW+' '+sH+'" style="max-width:100%;height:auto;font-family:inherit">';
-  // Draw edges
+  // Draw edges first (below nodes)
   edges.forEach(function(e){
     var from=positions[e.from], to=positions[e.to];
     if(!from||!to)return;
@@ -245,7 +245,11 @@ H.renderFlowGraph = function(lines){
     var x2=to.x, y2=to.y+to.h/2;
     var mx=(x1+x2)/2;
     s+='<path d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+lc+'" stroke-width="1.5"/>';
-    if(e.label)s+='<text x="'+mx+'" y="'+(Math.min(y1,y2)-8)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
+    // Place label at midpoint of the curve, above the path
+    if(e.label){
+      var labelY = (y1+y2)/2 - 12;
+      s+='<text x="'+mx+'" y="'+labelY+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
+    }
   });
   // Draw nodes
   nodeOrder.forEach(function(id){
@@ -373,19 +377,38 @@ H.renderPieChart = function(lines){
     }
     s+='</g>';
   });
+  // Build legend as rows, each row centered
   var ly=titleH+cy+r+legendGap;
   var legendLabels=slices.map(function(sl){return H.escHtml(sl.label)});
-  var totalLegendW=0;legendLabels.forEach(function(l){totalLegendW+=l.length*13+36});
-  var lx=cx-totalLegendW/2;
-  // Ensure legend doesn't overflow
-  if(lx<10)lx=10;
+  // Build legend items with their widths
+  var legendItems=[];
   slices.forEach(function(sl,i){
     var col=colors[i%colors.length];
     var lbl=legendLabels[i];
-    if(lx+lbl.length*13+24>sW-10){lx=10;ly+=28}
-    s+='<circle cx="'+lx+'" cy="'+(ly+8)+'" r="5" fill="'+col+'"/>';
-    s+='<text x="'+(lx+14)+'" y="'+(ly+12)+'" font-size="13" fill="'+tc+'">'+lbl+'</text>';
-    lx+=lbl.length*13+36;
+    var itemW=lbl.length*13+36;
+    legendItems.push({col:col,lbl:lbl,w:itemW});
+  });
+  // Split into rows that fit within sW-20
+  var rows=[],currentRow=[],currentW=0;
+  legendItems.forEach(function(item){
+    if(currentW+item.w>sW-20 && currentRow.length){
+      rows.push(currentRow);
+      currentRow=[];currentW=0;
+    }
+    currentRow.push(item);
+    currentW+=item.w;
+  });
+  if(currentRow.length)rows.push(currentRow);
+  // Render each row centered
+  rows.forEach(function(row){
+    var rowW=0;row.forEach(function(item){rowW+=item.w});
+    var lx=(sW-rowW)/2;
+    row.forEach(function(item){
+      s+='<circle cx="'+lx+'" cy="'+(ly+8)+'" r="5" fill="'+item.col+'"/>';
+      s+='<text x="'+(lx+14)+'" y="'+(ly+12)+'" font-size="13" fill="'+tc+'">'+item.lbl+'</text>';
+      lx+=item.w;
+    });
+    ly+=28;
   });
   s+='</svg>';return s;
 };
