@@ -203,7 +203,7 @@ H.closeArticleVisual = function(){
       var target = document.querySelector('.card[data-id="'+H.state._lastOpenedCardId+'"],.archive-card[data-id="'+H.state._lastOpenedCardId+'"]');
       if(target){
         target.classList.add('card-return-highlight');
-        setTimeout(function(){ target.classList.remove('card-return-highlight') }, 2500);
+        target.addEventListener('mouseleave',function(){ target.classList.remove('card-return-highlight') },{once:true});
       }
       H.state._lastOpenedCardId = null;
     }

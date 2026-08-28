@@ -110,8 +110,7 @@ a{color:var(--primary);text-decoration:none}
 .card:hover{background:var(--surface-container)}
 .card:active{background:var(--surface-container-high);transition-duration:0s}
 .card:hover .card-title{color:var(--primary);transition:color var(--dur-med) var(--motion-standard)}
-.card-return-highlight{background:var(--primary-container)!important;transition:background .4s var(--motion-standard);animation:cardReturnPulse 2.5s var(--motion-standard)}
-@keyframes cardReturnPulse{0%{background:var(--primary-container)}70%{background:var(--primary-container)}100%{background:transparent}}
+.card-return-highlight{background:var(--primary-container)!important;transition:background .3s var(--motion-standard)}
 .card-date{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;color:var(--outline);margin-bottom:3px;font-weight:400}
 .card-title{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:18px;font-weight:600;color:var(--on-surface);line-height:1.4;margin-bottom:5px;transition:color var(--dur-fast) var(--motion-standard)}
 .card-excerpt{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:14px;color:var(--on-surface-variant);line-height:1.75;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
