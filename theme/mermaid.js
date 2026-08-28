@@ -204,11 +204,11 @@ H.renderFlowGraph = function(lines){
   }
   if(!nodeOrder.length)return null;
 
-  // Deduplicate edges
+  // Deduplicate edges (same from, to, and label)
   var edgeMap={};
   var dedupedEdges=[];
   edges.forEach(function(e){
-    var key=e.from+'->'+e.to;
+    var key=e.from+'->'+e.to+'|'+e.label;
     if(!edgeMap[key]){edgeMap[key]=e;dedupedEdges.push(e)}
   });
   edges=dedupedEdges;
