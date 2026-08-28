@@ -287,7 +287,7 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp
 <body>
 
 <header class="top-app-bar" id="topAppBar">
-  <span class="logo" id="logoBtn">Moriefy</span>
+  <span class="logo" id="logoBtn">Your Name</span>
   <div class="spacer"></div>
   <button class="icon-btn" id="searchBtn" aria-label="搜索"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
   <button class="icon-btn" id="themeBtn" aria-label="切换主题" aria-pressed="false"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
@@ -305,7 +305,7 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp
 </nav>
 
 <section class="page active" id="pageArticles" itemscope itemtype="https://schema.org/Blog"><div class="container">
-  <section class="hero"><h1>Moriefyの半岛铁盒</h1><p>${escHtml(config.tagline)}</p></section>
+  <section class="hero"><h1>Your Blog Title</h1><p>${escHtml(config.tagline)}</p></section>
   <div class="filter-bar" id="filterBar"><span>筛选标签：</span><strong id="filterLabel"></strong><button class="filter-clear" id="filterClear" aria-label="清除筛选">清除筛选</button></div>
   <section class="article-list" id="articleList">
     ${articleCardsHtml}
@@ -318,7 +318,7 @@ ${commentsEnabled?'<link rel="stylesheet" href="/theme/comments.css?v='+globalFp
 <section class="page" id="pageCategories"><div class="container"><section class="page-hero"><h1>分类</h1><p id="catsCount"></p></section><div class="cats-grid" id="catsGrid"></div></div></section>
 <section class="page" id="pageArchive"><div class="container"><section class="page-hero"><h1>归档</h1><p id="archiveCount"></p></section><div class="archive-timeline" id="archiveTimeline"></div></div></section>
 <section class="page" id="pageFriends"><div class="container"><section class="page-hero"><h1>友链</h1><p>这些站点值得关注。</p></section><div class="fl-grid" id="flGrid"></div>${commentsEnabled?'<section class="comment-section" id="friendsCommentSection"><div id="friendsCommentInner"></div></section>':''}</div></section>
-<section class="page" id="pageAbout"><div class="container"><div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="Moriefy" width="72" height="72"></div><h1>Moriefy</h1><p class="about-tagline">${escHtml(config.tagline)}</p><div class="about-divider"></div><div class="about-bio">${(Array.isArray(config.bio) ? config.bio : config.bio.split('\n')).filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">技术栈</h3><div class="about-skill-list">${config.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${Object.keys(articles).length}</span><span class="about-stat-label">篇文章</span></div><div class="about-stat"><span class="about-stat-num">${config.categories.length}</span><span class="about-stat-label">个分类</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">个标签</span></div></div><div class="about-divider"></div><div class="about-links">${config.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div><div class="about-divider"></div><div class="secret-drawer" id="secretDrawer"><div class="secret-drawer-trigger" onclick="this.parentElement.classList.toggle('open')"><svg viewBox="0 0 24 24" width="15" height="15" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg><span>还有一件事</span><svg class="secret-drawer-arrow" viewBox="0 0 24 24" width="14" height="14"><polyline points="6 9 12 15 18 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="secret-drawer-body"><div class="secret-drawer-content"><p>写博客这件事，最初只是想找个地方把脑子里的想法倒出来。没想到倒着倒着，就倒出了三十多篇。</p><p>如果你读到了这里，说明你和我一样，对某些事情有一种不讲道理的好奇心。这种好奇心不需要理由，也不需要目的。它就是存在。</p><p>感谢你的时间。下次见。</p></div></div></div></div></div></section>
+<section class="page" id="pageAbout"><div class="container"><div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="Your Name" width="72" height="72"></div><h1>Your Name</h1><p class="about-tagline">${escHtml(config.tagline)}</p><div class="about-divider"></div><div class="about-bio">${(Array.isArray(config.bio) ? config.bio : config.bio.split('\n')).filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">Skills</h3><div class="about-skill-list">${config.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${Object.keys(articles).length}</span><span class="about-stat-label">Posts</span></div><div class="about-stat"><span class="about-stat-num">${config.categories.length}</span><span class="about-stat-label">Categories</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">Tags</span></div></div><div class="about-divider"></div><div class="about-links">${config.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div><div class="about-divider"></div><div class="secret-drawer" id="secretDrawer"><div class="secret-drawer-trigger" onclick="this.parentElement.classList.toggle('open')"><svg viewBox="0 0 24 24" width="15" height="15" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg><span>One more thing</span><svg class="secret-drawer-arrow" viewBox="0 0 24 24" width="14" height="14"><polyline points="6 9 12 15 18 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="secret-drawer-body"><div class="secret-drawer-content"><p>Blogging started as a way to get thoughts out of my head. Before I knew it, I had written dozens of posts.</p><p>If you have read this far, you share the same unreasonable curiosity. This curiosity needs no reason or purpose. It simply exists.</p><p>Thank you for your time. See you next time.</p></div></div></div></div></div></section>
 
 <article class="article-view" id="articleView">
   <header class="av-bar" id="avBar">
@@ -463,7 +463,7 @@ ${config.comments&&config.comments.enabled?'<link rel="stylesheet" href="/theme/
 <body>
 
 <header class="top-app-bar" id="topAppBar">
-  <span class="logo" onclick="location.href='/'" style="cursor:pointer">Moriefy</span>
+  <span class="logo" onclick="location.href='/'" style="cursor:pointer">Your Name</span>
   <div class="spacer"></div>
   <button class="icon-btn" aria-label="切换主题" aria-pressed="false" onclick="(function(){var el=document.documentElement;el.classList.add('theme-transitioning');var c=el.getAttribute('data-theme')||'light';var t=c==='light'?'dark':'light';el.setAttribute('data-theme',t);try{localStorage.setItem('th',t)}catch(e){};document.querySelectorAll('.theme-wrap').forEach(function(w){var s=w.querySelector('.sun'),m=w.querySelector('.moon');if(t==='dark'){s.classList.add('off');m.classList.remove('off')}else{s.classList.remove('off');m.classList.add('off')}});setTimeout(function(){el.classList.remove('theme-transitioning')},250)})()"><span class="theme-wrap"><svg class="theme-ico sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg class="theme-ico moon off" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
 </header>
@@ -601,7 +601,7 @@ function seoPageFoot() {
 {
   const dir = path.join(OUT_DIR, 'tags');
   fs.mkdirSync(dir, { recursive: true });
-  let body = `<section class="page-hero"><h1>标签</h1><p>${allTags.length} 个标签</p></section><div class="tags-grid">`;
+  let body = `<section class="page-hero"><h1>标签</h1><p>${allTags.length} Tags</p></section><div class="tags-grid">`;
   allTags.forEach(t => {
     body += `<div class="tag-card" onclick="location.href='/#tags'"><span class="tag-name">${escHtml(t.n)}</span><span class="tag-count">${t.c} 篇</span></div>`;
   });
@@ -624,7 +624,7 @@ function seoPageFoot() {
 {
   const dir = path.join(OUT_DIR, 'categories');
   fs.mkdirSync(dir, { recursive: true });
-  let body = `<section class="page-hero"><h1>分类</h1><p>${cats.length} 个分类</p></section><div class="cats-grid">`;
+  let body = `<section class="page-hero"><h1>分类</h1><p>${cats.length} Categories</p></section><div class="cats-grid">`;
   cats.forEach(c => {
     body += `<div class="cat-card" style="border-left:4px solid ${c.col}" onclick="location.href='/#categories'"><div class="cat-name">${escHtml(c.n)}</div><div class="cat-desc">${escHtml(c.d)}</div><div class="cat-count">${c.c} 篇</div></div>`;
   });
@@ -655,7 +655,7 @@ function seoPageFoot() {
     if (!byYear[year]) byYear[year] = [];
     byYear[year].push({ id, ...a });
   });
-  let body = `<section class="page-hero"><h1>归档</h1><p>共 ${articleOrder.length} 篇文章</p></section>`;
+  let body = `<section class="page-hero"><h1>归档</h1><p>共 ${articleOrder.length} Posts</p></section>`;
   Object.keys(byYear).sort((a, b) => b.localeCompare(a)).forEach(year => {
     body += `<h2 style="font-size:20px;margin:24px 0 12px">${escHtml(year)}</h2>`;
     byYear[year].forEach(a => {
@@ -689,7 +689,7 @@ function seoPageFoot() {
 {
   const dir = path.join(OUT_DIR, 'about');
   fs.mkdirSync(dir, { recursive: true });
-  let body = `<div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="${escHtml(SITE_CONFIG.author)}" width="72" height="72"></div><h1>${escHtml(SITE_CONFIG.author)}</h1><p class="about-tagline">${escHtml(SITE_CONFIG.tagline)}</p><div class="about-divider"></div><div class="about-bio">${(Array.isArray(SITE_CONFIG.bio) ? SITE_CONFIG.bio : SITE_CONFIG.bio.split('\n')).filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">技术栈</h3><div class="about-skill-list">${SITE_CONFIG.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${articleOrder.length}</span><span class="about-stat-label">篇文章</span></div><div class="about-stat"><span class="about-stat-num">${cats.length}</span><span class="about-stat-label">个分类</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">个标签</span></div></div><div class="about-divider"></div><div class="about-links">${SITE_CONFIG.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div></div>`;
+  let body = `<div class="about-center"><div class="about-mono"><img src="/avatar.png" alt="${escHtml(SITE_CONFIG.author)}" width="72" height="72"></div><h1>${escHtml(SITE_CONFIG.author)}</h1><p class="about-tagline">${escHtml(SITE_CONFIG.tagline)}</p><div class="about-divider"></div><div class="about-bio">${(Array.isArray(SITE_CONFIG.bio) ? SITE_CONFIG.bio : SITE_CONFIG.bio.split('\n')).filter(Boolean).map(p => '<p>' + escHtml(p) + '</p>').join('')}</div><div class="about-divider"></div><h3 class="about-section-title">Skills</h3><div class="about-skill-list">${SITE_CONFIG.skills.map(s => '<span class="about-skill">' + escHtml(s) + '</span>').join('')}</div><div class="about-divider"></div><div class="about-stats"><div class="about-stat"><span class="about-stat-num">${articleOrder.length}</span><span class="about-stat-label">Posts</span></div><div class="about-stat"><span class="about-stat-num">${cats.length}</span><span class="about-stat-label">Categories</span></div><div class="about-stat"><span class="about-stat-num">${allTags.length}</span><span class="about-stat-label">Tags</span></div></div><div class="about-divider"></div><div class="about-links">${SITE_CONFIG.links.map(l => '<a class="about-link" href="' + escHtml(l.url) + '" target="_blank" rel="noopener">' + escHtml(l.name) + '</a>').join('')}</div></div>`;
   fs.writeFileSync(path.join(dir, 'index.html'), seoPageHead('关于', SITE_CONFIG.description) + body + seoPageFoot());
   console.log('  ✓ about/index.html');
 }
@@ -798,7 +798,7 @@ console.log('   Categories: ' + cats.length);
 // ── Sync to D1 (if env vars set) ──
 async function syncToD1() {
   const adminPw = process.env.ADMIN_PASSWORD;
-  const workerUrl = process.env.WORKER_URL || 'https://comments.pluslogic.eu.org';
+  const workerUrl = process.env.WORKER_URL || '';
   if (!adminPw) { console.log('   ⏭  D1 sync skipped (no ADMIN_PASSWORD)'); return; }
 
   function api(method, apiPath, body, token) {

@@ -9,6 +9,6 @@
     "dev": "wrangler dev"
   },
   "keywords": ["cloudflare", "worker", "d1", "blog"],
-  "author": "Moriefy",
+  "author": "Your Name",
   "license": "MIT"
 }

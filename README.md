@@ -1,74 +1,48 @@
-# Haprial
+# Haprial Blog Theme
 
-A minimal, zero-dependency static blog generator. Built for performance and pixel-perfect reproduction.
+> **[中文文档](README_CN.md)** | English
 
-## Quick Start
+> ⚠️ **Note:** This project was entirely created through **vibe coding** — a process of building by intuition, feel, and iterative experimentation rather than formal specifications. The code may not follow conventional patterns, but it works and feels right.
+>
+> If you use this project for your blog, I'd love to hear about it! Please let me know by opening an issue or starring the repo. Your feedback helps improve the project. ⭐
 
-```bash
-# Build
-node build.js
+A minimal, zero-dependency static blog theme with Material Design 3 aesthetics. Built for performance and pixel-perfect reproduction.
 
-# Preview
-cd dist && npx serve
-```
+### Desktop Preview
+![Desktop Preview](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview-desktop.jpg)
 
-## Project Structure
+### Mobile Preview
+![Mobile Preview](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview-mobile.jpg)
 
-```
-haprial/
-├── content/blog/       # Blog posts (Markdown)
-├── lib/                # Modules (markdown parser)
-│   └── markdown.js     # Zero-dependency Markdown → HTML
-├── theme/              # Theme files (CSS + JS)
-├── static/             # Static assets (favicon, etc.)
-├── src/                # Source pages (404)
-├── site.config.json    # Site configuration
-├── build.js            # Build orchestrator
-├── vercel.json         # Vercel deployment config
-└── dist/               # Generated output
-```
-
-## Writing Posts
-
-Create a `.md` file in `content/blog/`:
-
-```markdown
----
-title: "Your Post Title"
-date: "2024 年 3 月 15 日"
-dateISO: "2024-03-15"
-readingTime: "8 分钟"
-tags: ["Tag1", "Tag2"]
-category: "tech"
-excerpt: "A brief description."
 ---
 
-## Heading {#custom-id}
+**Welcome to star ⭐ and fork 🍴!**
 
-Your content here.
-```
-
-## Deploy to Vercel
-
-1. Push to GitHub
-2. Import in Vercel
-3. Framework: **Other**
-4. Build Command: `node build.js`
-5. Output Directory: `dist`
+> 📖 **Documentation**
+> - [Comments System (Worker)](worker/README.md) - Backend for comments
+> - [Admin Dashboard](admin/) - Manage your blog
 
 ## Features
 
-- ⚡ Zero dependencies - modular Node.js build (lib/markdown.js + build.js)
-- 🎨 Material Design 3 theme (light/dark)
-- 📱 Fully responsive
-- 🔍 SEO optimized (meta, OG, JSON-LD, sitemap, RSS)
-- 🚀 Static HTML - no JS required for content
-- 📝 Markdown content with front matter
-- 🏷️ Tags, categories, archive
-- 🔗 Friend links page
-- 🔎 Full-text search (client-side)
-- 📖 Table of contents
-- 🎭 Smooth animations (CSS + JS)
-# Tue Aug  4 00:07:27 CST 2026
-# test
+- Material Design 3 theme (light/dark)
+- Zero dependencies
+- Responsive design
+- SEO optimized
+- Full-text search
+- Comments system (optional)
+- Mermaid diagrams
+- Table of contents
+- RSS feed
 
+## Quick Start
+
+1. Clone the repository
+2. Edit `site.config.json`
+3. Add your avatar to `static/`
+4. Create blog posts in `content/blog/`
+5. Build: `node build.js`
+6. Deploy to Vercel or any static hosting
+
+## License
+
+MIT License

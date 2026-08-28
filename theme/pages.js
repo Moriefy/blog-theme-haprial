@@ -36,7 +36,7 @@ H.renderPaginationPage = function(){
     h+='<button class="pg-btn"'+(H.state.paginationPage===total-1?' disabled':'')+' data-pg="next" aria-label="下一页">'+H.icons.chevR+'</button>';
     pagination.innerHTML=h; pagination.classList.add('show');
   } else {
-    pagination.innerHTML='<span style="font-size:13px;color:var(--outline)">共 '+cards.length+' 篇文章</span>';
+    pagination.innerHTML='<span style="font-size:13px;color:var(--outline)">共 '+cards.length+' Posts</span>';
     pagination.classList.add('show');
   }
 };
@@ -57,16 +57,16 @@ H.renderArticleNav = function(id){
 
 H.renderTags = function(){
   var sorted = H.allTags.slice().sort(function(a,b){ return a.n.localeCompare(b.n,'zh-CN') });
-  $('tagsCount').textContent = '共 '+sorted.length+' 个标签';
+  $('tagsCount').textContent = '共 '+sorted.length+' Tags';
   $('tagsGrid').innerHTML = sorted.map(function(t,i){
-    return '<div class="tag-card" data-tag="'+t.n+'" style="--sd:'+i*15+'ms"><div class="tag-card-name">'+t.n+'</div><div class="tag-card-count">'+t.c+' 篇文章</div></div>';
+    return '<div class="tag-card" data-tag="'+t.n+'" style="--sd:'+i*15+'ms"><div class="tag-card-name">'+t.n+'</div><div class="tag-card-count">'+t.c+' Posts</div></div>';
   }).join('');
 };
 
 H.renderCats = function(){
-  $('catsCount').textContent = '共 '+H.cats.length+' 个分类';
+  $('catsCount').textContent = '共 '+H.cats.length+' Categories';
   $('catsGrid').innerHTML = H.cats.map(function(c,i){
-    return '<div class="cat-card" data-cat="'+c.f+'" style="--sd:'+i*15+'ms"><div class="cat-dot" style="background:'+c.col+'"></div><div class="cat-name">'+c.n+'</div><div class="cat-desc">'+c.d+'</div><div class="cat-count">'+c.c+' 篇文章</div></div>';
+    return '<div class="cat-card" data-cat="'+c.f+'" style="--sd:'+i*15+'ms"><div class="cat-dot" style="background:'+c.col+'"></div><div class="cat-name">'+c.n+'</div><div class="cat-desc">'+c.d+'</div><div class="cat-count">'+c.c+' Posts</div></div>';
   }).join('');
 };
 
@@ -90,7 +90,7 @@ H.renderArchive = function(){
     });
     html+='</div>';
   });
-  $('archiveCount').textContent = '共 '+entries.length+' 篇文章';
+  $('archiveCount').textContent = '共 '+entries.length+' Posts';
   $('archiveTimeline').innerHTML = html;
 };
 

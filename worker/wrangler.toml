@@ -10,5 +10,5 @@ database_name = "haprial-comments"
 database_id = "d6bf9f4f-b099-421f-a46c-c604a3974307"
 
 [vars]
-CORS_ORIGIN = "https://pluslogic.eu.org"
+CORS_ORIGIN = "https://your-domain.com"
 # ADMIN_TOKEN — 在 Cloudflare Dashboard 中设置，不要提交到仓库 

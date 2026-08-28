@@ -1,12 +1,12 @@
 {
-  "title": "Moriefyの半岛铁盒",
-  "tagline": "我点燃烛火温暖岁末的秋天",
-  "description": "关于代码、设计与构建 Web 的思考和实践。",
-  "url": "https://pluslogic.eu.org",
-  "author": "Moriefy",
+  "title": "Your Blog Title",
+  "tagline": "Your blog tagline here",
+  "description": "A brief description of your blog.",
+  "url": "https://your-domain.com",
+  "author": "Your Name",
   "bio": [
-    "一个在乎代码品质的开发者，追求像散文一样可读的代码，追求浑然天成的设计。",
-    "这个博客是我的公开笔记本。如果某篇文章引发了你的想法，欢迎通过社交平台与我交流。"
+    "A short bio about yourself.",
+    "You can add multiple paragraphs."
   ],
   "skills": [
     "JavaScript",
@@ -20,7 +20,7 @@
   "links": [
     {
       "name": "GitHub",
-      "url": "https://github.com/Moriefy"
+      "url": "https://github.com/yourusername"
     },
     {
       "name": "Twitter",
@@ -32,7 +32,7 @@
     },
     {
       "name": "Email",
-      "url": "mailto:hello@pluslogic.eu.org"
+      "url": "mailto:hello@your-domain.com"
     }
   ],
   "categories": [
@@ -70,7 +70,7 @@
   "comments": {
     "enabled": true,
     "provider": "custom",
-    "api": "https://comments.pluslogic.eu.org"
+    "api": ""
   },
   "friends": [
     {

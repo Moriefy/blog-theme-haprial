@@ -77,7 +77,7 @@ async function verifyWebhookSignature(request, secret) {
 // ── GitHub Fetch Helper ──
 async function githubFetch(env, filePath) {
   const token = env.GITHUB_TOKEN;
-  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
   if (!token) return null;
   const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
@@ -110,7 +110,7 @@ async function ensureTables(db){
 // ── GitHub Push Helper ──
 async function githubPush(env, filePath, content, message) {
   const token = env.GITHUB_TOKEN;
-  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
   if (!token) return { ok: false, error: 'GITHUB_TOKEN not set in Worker env' };
 
   // Get current file SHA (if exists)
@@ -145,7 +145,7 @@ async function githubPush(env, filePath, content, message) {
 // ── GitHub Push Binary (base64 direct, no re-encode) ──
 async function githubPushBinary(env, filePath, base64Content, message) {
   const token = env.GITHUB_TOKEN;
-  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
   if (!token) return { ok: false, error: 'GITHUB_TOKEN not set' };
   let sha = null;
   try {
@@ -175,7 +175,7 @@ async function githubPushBinary(env, filePath, base64Content, message) {
 
 async function githubDelete(env, filePath, message) {
   const token = env.GITHUB_TOKEN;
-  const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+  const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
   if (!token) return { ok: false, error: 'GITHUB_TOKEN not set' };
 
   let sha = null;
@@ -239,7 +239,7 @@ export default {
       // ════════════════════════════════════════
       //  PUBLIC API (评论系统)
       // ════════════════════════════════════════
-      if (path === '/api/health') return json({ ok: true, hasGithubToken: !!env.GITHUB_TOKEN, repo: env.GITHUB_REPO || 'Moriefy/Blog_Astro' });
+      if (path === '/api/health') return json({ ok: true, hasGithubToken: !!env.GITHUB_TOKEN, repo: env.GITHUB_REPO || 'yourusername/your-blog-repo' });
 
       // GET /api/admin/github-test — 测试 GitHub token 是否有效（需管理员认证）
       if (method === 'GET' && path === '/api/admin/github-test') {
@@ -247,7 +247,7 @@ export default {
         if (!await verifyAdmin(request, env)) return json({ error: '未授权' }, 401);
         const token = env.GITHUB_TOKEN;
         if (!token) return json({ ok: false, error: 'GITHUB_TOKEN 未设置' });
-        const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+        const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
         try {
           const resp = await fetch(`https://api.github.com/repos/${repo}`, {
             headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
@@ -610,7 +610,7 @@ export default {
           if (!page || !content) return json({ error: '缺少必填字段' }, 400);
           const avatarHash = email ? md5(email.trim().toLowerCase()) : null;
           const contentHtml = renderMd(content);
-          const result = await env.DB.prepare("INSERT INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(page, parent_id || 0, depth || 0, nickname || 'Moriefy', email || '3518972914@qq.com', website || 'https://pluslogic.eu.org', avatarHash, content, contentHtml, 'admin', 'Admin Dashboard', 'approved', 1).run();
+          const result = await env.DB.prepare("INSERT INTO comments (page_slug,parent_id,depth,nickname,email,website,avatar_hash,content,content_html,ip,user_agent,status,is_admin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(page, parent_id || 0, depth || 0, nickname || 'Admin', email || 'admin@your-domain.com', website || 'https://your-domain.com', avatarHash, content, contentHtml, 'admin', 'Admin Dashboard', 'approved', 1).run();
           return json({ ok: true, id: result.meta.last_row_id }, 201);
         }
 
@@ -784,7 +784,7 @@ export default {
 
         // ── 从 GitHub 导入数据 ──
         if (method === 'POST' && path === '/api/admin/import-from-github') {
-          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
           const token = env.GITHUB_TOKEN;
           if (!token) return json({ error: '未配置 GITHUB_TOKEN' }, 500);
           const listResp = await fetch(`https://api.github.com/repos/${repo}/contents/content/blog`, {
@@ -849,7 +849,7 @@ export default {
           const filePath = `static/images/${imgFolder}/${safeName}`;
           const result = await githubPushBinary(env, filePath, data, `image: ${safeName}`);
           if (!result.ok) return json({ error: '上传失败', detail: result }, 500);
-          return json({ ok: true, url: `https://pluslogic.eu.org/images/${imgFolder}/${safeName}`, path: filePath });
+          return json({ ok: true, url: `https://your-domain.com/images/${imgFolder}/${safeName}`, path: filePath });
         }
 
         // POST /api/admin/images/folder — 新建文件夹
@@ -866,7 +866,7 @@ export default {
         if (method === 'GET' && path === '/api/admin/images/list') {
           const folder = url.searchParams.get('folder') || '';
           const token = env.GITHUB_TOKEN;
-          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
           const ghPath = folder ? `static/images/${folder}` : 'static/images';
           const resp = await fetch(`https://api.github.com/repos/${repo}/contents/${ghPath}`, {
             headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
@@ -892,7 +892,7 @@ export default {
 
           // 1. 从 GitHub 读取源文件（保留原始 base64）
           const ghToken = env.GITHUB_TOKEN;
-          const ghRepo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const ghRepo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
           if (!ghToken) return json({ error: '未配置 GITHUB_TOKEN' }, 500);
           const getResp = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${srcFullPath}`, {
             headers: { 'Authorization': `token ${ghToken}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
@@ -939,7 +939,7 @@ export default {
           const folderPath = decodeURIComponent(path.replace('/api/admin/images/folder/', ''));
           if (!folderPath || folderPath.includes('..')) return json({ error: '无效路径' }, 400);
           const token = env.GITHUB_TOKEN;
-          const repo = env.GITHUB_REPO || 'Moriefy/Blog_Astro';
+          const repo = env.GITHUB_REPO || 'yourusername/your-blog-repo';
           const listResp = await fetch(`https://api.github.com/repos/${repo}/contents/static/images/${folderPath}`, {
             headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Haprial-Worker' }
           });
