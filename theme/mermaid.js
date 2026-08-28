@@ -272,7 +272,10 @@ H.renderFlowGraph = function(lines){
     s+='<text x="'+(p.x+p.w/2)+'" y="'+(p.y+p.h/2+5)+'" text-anchor="middle" font-size="14" font-weight="500" fill="'+tc+'">'+H.escHtml(n.label)+'</text>';
   });
 
-  // Layer 3: Draw edge labels above the connecting lines
+  // Layer 3: Draw edge labels above/below lines (offset for bidirectional edges)
+  // Build reverse-edge lookup
+  var reverseMap={};
+  edges.forEach(function(e){ if(e.label) reverseMap[e.to+'->'+e.from]=true });
   edges.forEach(function(e){
     if(!e.label) return;
     var from=positions[e.from], to=positions[e.to];
@@ -280,7 +283,11 @@ H.renderFlowGraph = function(lines){
     var x1=from.x+from.w, y1=from.y+from.h/2;
     var x2=to.x, y2=to.y+to.h/2;
     var mx=(x1+x2)/2;
-    var labelY=(y1+y2)/2 - 10;
+    var my=(y1+y2)/2;
+    // If reverse edge exists, offset: forward above, reverse below
+    var hasReverse=reverseMap[e.from+'->'+e.to];
+    var offset=hasReverse?(x1<x2?-12:12):-10;
+    var labelY=my+offset;
     s+='<text x="'+mx+'" y="'+labelY+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
   });
 
