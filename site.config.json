@@ -1,26 +1,30 @@
 {
-  "title": "Your Blog Title",
-  "tagline": "Your blog tagline here",
-  "description": "A brief description of your blog.",
-  "url": "https://your-domain.com",
-  "author": "Your Name",
+  "title": "Moriefyの半岛铁盒",
+  "tagline": "我点燃烛火温暖岁末的秋天",
+  "description": "关于代码、设计与构建 Web 的思考和实践。",
+  "url": "https://pluslogic.eu.org",
+  "author": "Moriefy",
   "bio": [
-    "A short bio about yourself.",
-    "You can add multiple paragraphs."
+    "一个在乎代码品质的开发者，追求像散文一样可读的代码，追求浑然天成的设计。",
+    "这个博客是我的公开笔记本。如果某篇文章引发了你的想法，欢迎通过社交平台与我交流。"
   ],
   "skills": [
-    "Skill 1",
-    "Skill 2",
-    "Skill 3"
+    "JavaScript",
+    "TypeScript",
+    "Rust",
+    "CSS",
+    "Node.js",
+    "React",
+    "设计系统"
   ],
   "links": [
     {
       "name": "GitHub",
-      "url": "https://github.com/yourusername"
+      "url": "https://github.com/Moriefy"
     },
     {
       "name": "Twitter",
-      "url": "https://twitter.com/yourusername"
+      "url": "https://twitter.com"
     },
     {
       "name": "RSS",
@@ -28,40 +32,64 @@
     },
     {
       "name": "Email",
-      "url": "mailto:hello@your-domain.com"
+      "url": "mailto:hello@pluslogic.eu.org"
     }
   ],
   "categories": [
     {
-      "name": "Technology",
+      "name": "技术",
       "slug": "tech",
-      "desc": "Posts about technology and programming.",
+      "desc": "涵盖前端、后端、系统编程等技术实践与思考。",
       "color": "#3e505b"
     },
     {
-      "name": "Design",
+      "name": "设计",
       "slug": "design",
-      "desc": "Posts about design and UX.",
+      "desc": "设计系统、色彩体系与用户体验的探索。",
       "color": "#4a7b6a"
     },
     {
-      "name": "Thoughts",
+      "name": "随想",
       "slug": "think",
-      "desc": "Personal thoughts and reflections.",
+      "desc": "关于编程哲学、工匠精神与行业文化的杂文。",
       "color": "#8e6b9e"
+    },
+    {
+      "name": "文化",
+      "slug": "culture",
+      "desc": "音乐、咖啡、生活——代码之外的世界。",
+      "color": "#b07d56"
+    },
+    {
+      "name": "测试",
+      "slug": "test",
+      "desc": "简简单单，测测试试",
+      "color": "#4c1353"
     }
   ],
   "comments": {
-    "enabled": false,
+    "enabled": true,
     "provider": "custom",
-    "api": ""
+    "api": "https://comments.pluslogic.eu.org"
   },
   "friends": [
     {
-      "name": "Example Friend",
-      "url": "https://example.com",
-      "avatar": "https://example.com/avatar.png",
-      "desc": "A brief description of your friend's blog."
+      "name": "Example Blog 1",
+      "url": "https://example1.com",
+      "avatar": "https://via.placeholder.com/48/6750a4/ffffff?text=1",
+      "desc": "An example friend blog for demonstration."
+    },
+    {
+      "name": "Example Blog 2",
+      "url": "https://example2.com",
+      "avatar": "https://via.placeholder.com/48/4a7b6a/ffffff?text=2",
+      "desc": "Another example friend blog."
+    },
+    {
+      "name": "Example Blog 3",
+      "url": "https://example3.com",
+      "avatar": "https://via.placeholder.com/48/8e6b9e/ffffff?text=3",
+      "desc": "A third example friend blog."
     }
   ]
 }
