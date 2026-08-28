@@ -79,7 +79,7 @@ function loadArticles(prevCache, globalFp) {
 
     // Cache miss — parse fresh
     const [meta, body] = parseFrontMatter(raw);
-    const dateVal = meta.date || meta.dateISO || '';
+    const dateVal = meta.dateISO || meta.date || '';
     let slug = dateVal ? dateVal.replace(/-/g, '') : id_guess;
     const content = mdToHtml(body);
 
