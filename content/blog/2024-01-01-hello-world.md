@@ -1,51 +1,75 @@
 ---
 title: "Hello World"
-date: "January 1, 2024"
+date: "2024年1月1日"
 dateISO: "2024-01-01"
-readingTime: "2 min"
-tags: ["Hello", "World"]
+readingTime: "3 分钟"
+tags: ["Hello", "入门"]
 category: "tech"
-excerpt: "Your first blog post."
+excerpt: "欢迎来到你的新博客！这是第一篇文章。"
 ---
 
-## Hello World
+## 你好，世界 👋
 
-Welcome to your new blog! This is your first post. You can edit or delete it and start writing.
+欢迎来到你的新博客！这是自动生成的第一篇文章，你可以编辑或删除它。
 
-### Getting Started
+## 快速开始
 
-1. Edit `site.config.json` to configure your blog
-2. Create new posts in `content/blog/`
-3. Run `node build.js` to build
-4. Deploy to Vercel or any static hosting
+### 1. 配置博客
 
-### Writing Posts
+编辑 `site.config.json`，修改以下字段：
 
-Create a `.md` file in `content/blog/` with front matter:
+```json
+{
+  "title": "你的博客标题",
+  "tagline": "你的博客标语",
+  "author": "你的名字",
+  "url": "https://你的域名.com"
+}
+```
+
+### 2. 撰写文章
+
+在 `content/blog/` 目录下创建 `.md` 文件：
 
 ```markdown
 ---
-title: "Your Post Title"
-date: "Month Day, Year"
-dateISO: "YYYY-MM-DD"
-readingTime: "X min"
-tags: ["Tag1", "Tag2"]
+title: "文章标题"
+date: "2024年1月15日"
+dateISO: "2024-01-15"
+readingTime: "5 分钟"
+tags: ["标签1", "标签2"]
 category: "tech"
-excerpt: "A brief description."
+excerpt: "文章摘要。"
 ---
 
-Your content here...
+正文内容...
 ```
 
-### Features
+### 3. 构建和部署
 
-- Material Design 3 theme
-- Light and dark mode
-- Responsive design
-- Full-text search
-- Table of contents
-- Comments system (optional)
-- RSS feed
-- SEO optimized
+```bash
+# 构建
+node build.js
 
-Enjoy your new blog! 🎉
+# 本地预览
+cd dist && npx serve
+```
+
+## 功能特性
+
+- 🎨 Material Design 3 主题
+- 🌙 深色/浅色模式
+- 📱 响应式设计
+- 🔍 全文搜索
+- 📖 自动生成目录
+- 💬 评论系统（可选）
+- 📊 Mermaid 图表
+- 📡 RSS 订阅
+
+## 开始写作
+
+现在，开始你的写作之旅吧！
+
+> 写博客这件事，最初只是想找个地方把脑子里的想法倒出来。没想到倒着倒着，就倒出了很多篇。
+
+祝你写作愉快！🎉
