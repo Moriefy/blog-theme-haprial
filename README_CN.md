@@ -1,8 +1,10 @@
 # Haprial 博客主题
 
+> 中文文档 | **[English](README.md)**
+
 一个极简、零依赖的静态博客主题，采用 Material Design 3 设计语言。专注于性能和像素级还原。
 
-![Haprial 主题](https://via.placeholder.com/800x400/6750a4/ffffff?text=Haprial+主题)
+![Haprial 主题](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview.svg)
 
 ## ✨ 特性
 

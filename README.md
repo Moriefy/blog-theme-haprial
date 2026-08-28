@@ -1,8 +1,10 @@
 # Haprial Blog Theme
 
+> **[中文文档](README_CN.md)** | English
+
 A minimal, zero-dependency static blog theme with Material Design 3 aesthetics. Built for performance and pixel-perfect reproduction.
 
-![Haprial Theme](https://via.placeholder.com/800x400/6750a4/ffffff?text=Haprial+Theme)
+![Haprial Theme](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview.svg)
 
 ## ✨ Features
 

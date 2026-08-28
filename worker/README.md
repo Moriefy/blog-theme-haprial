@@ -1,5 +1,7 @@
 # Comments Worker
 
+> English | **[中文文档](README_CN.md)**
+
 Cloudflare Worker backend for the Haprial blog comments system.
 
 ## Features
