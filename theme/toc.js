@@ -11,7 +11,7 @@ H.setTocHighlight = function(id){
   H.state.lastActiveId = id;
   var tocList = H.el.tocList, tocDrawerList = H.el.tocDrawerList, tocSheet = H.el.tocSheet;
   var items = tocList.children;
-  for(var i=0;i<items.length++){ var it=items[i]; it.classList.toggle('active', it.dataset.target===id) }
+  for(var i=0;i<items.length;i++){ var it=items[i]; it.classList.toggle('active', it.dataset.target===id) }
   var dItems = tocDrawerList.children;
   for(var i=0;i<dItems.length;i++){ var di=dItems[i]; di.classList.toggle('active', di.dataset.target===id) }
   if(!tocSheet.classList.contains('open')) return;
