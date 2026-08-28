@@ -167,8 +167,7 @@ H.renderFlowGraph = function(lines){
     if(!line||line.startsWith('%%'))continue;
     var dm=line.match(/^(graph|flowchart)\s+([A-Z]{2})/i);
     if(dm){dir=dm[2].toUpperCase();continue}
-    
-    // Helper: parse node ID, optionally with inline definition like C[label]
+
     function parseNodeId(s){
       s=s.trim();
       var nm=s.match(/^(\w+)(\[.*\]|\{.*\}|\(.*\)|\(\(.*\)\)|\[\[.*\]\])?$/);
@@ -187,21 +186,18 @@ H.renderFlowGraph = function(lines){
       }
       return s.match(/^\w+$/) ? s : null;
     }
-    
-    // Edge with label: A -->|label| C[label] or A -->|label| C
+
     var edgeLabelMatch = line.match(/^(\w+)\s*(-->|---|-\.-|==>)\s*\|([^|]+)\|\s*(.+)$/);
     if(edgeLabelMatch){
       var src=edgeLabelMatch[1],label=edgeLabelMatch[3].trim();
       var tgt=parseNodeId(edgeLabelMatch[4]);
       if(tgt){ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:label});if(!children[src])children[src]=[];children[src].push(tgt);continue}
     }
-    // Edge without label: A --> C[label] or A --> C
     var em=line.match(/^(\w+)\s*(-->|---|-\.-|==>|\.->|-->o|-->x)\s*(.+)$/);
     if(em){
       var src=em[1],tgt=parseNodeId(em[3]);
       if(tgt){ensureNode(src);ensureNode(tgt);edges.push({from:src,to:tgt,label:''});if(!children[src])children[src]=[];children[src].push(tgt);continue}
     }
-    // Node definition: A[label] or A{label} etc.
     var nm=line.match(/^(\w+)\s*(\{[^}]*\}|\[[^\]]*\]|\([^\)]*\)|\[\[[^\]]*\]\]|\(\([^\)]*\)\))\s*$/);
     if(nm){var id=nm[1],shape=nm[2];var n=getNode(id);if(shape.startsWith('{')){n.shape='diamond';n.label=shape.slice(1,-1)}else if(shape.startsWith('[[')){n.shape='subroutine';n.label=shape.slice(2,-2)}else if(shape.startsWith('((')){n.shape='circle';n.label=shape.slice(2,-2)}else if(shape.startsWith('[')){n.shape='rect';n.label=shape.slice(1,-1)}else if(shape.startsWith('(')){n.shape='round';n.label=shape.slice(1,-1)}nodeOrder.push(id);continue}
     if(line.startsWith('end'))continue;
@@ -220,7 +216,7 @@ H.renderFlowGraph = function(lines){
   // Calculate node width based on longest label
   var maxLabelLen=0;
   nodeOrder.forEach(function(id){var n=nodes[id];if(n.label.length>maxLabelLen)maxLabelLen=n.label.length});
-  var nodeW=Math.max(160, maxLabelLen*14+40),nodeH=50,gapX=40,gapY=60;
+  var nodeW=Math.max(160, maxLabelLen*10+40),nodeH=50,gapX=60,gapY=60;
   var sW=(maxD+1)*(nodeW+gapX)+40;
   var maxLayerLen=0;layers.forEach(function(l){if(l.length>maxLayerLen)maxLayerLen=l.length});
   var sH=maxLayerLen*(nodeH+gapY)+80;
@@ -234,10 +230,10 @@ H.renderFlowGraph = function(lines){
     });
   });
 
-  // Render SVG
   var tc='var(--on-surface)', lc='var(--outline)', ac='var(--primary)';
   var s='<svg viewBox="0 0 '+sW+' '+sH+'" style="max-width:100%;height:auto;font-family:inherit">';
-  // Draw edges first (below nodes)
+
+  // Layer 1: Draw edge paths (below everything)
   edges.forEach(function(e){
     var from=positions[e.from], to=positions[e.to];
     if(!from||!to)return;
@@ -245,13 +241,9 @@ H.renderFlowGraph = function(lines){
     var x2=to.x, y2=to.y+to.h/2;
     var mx=(x1+x2)/2;
     s+='<path d="M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+lc+'" stroke-width="1.5"/>';
-    // Place label at midpoint of the curve, above the path
-    if(e.label){
-      var labelY = (y1+y2)/2 - 12;
-      s+='<text x="'+mx+'" y="'+labelY+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
-    }
   });
-  // Draw nodes
+
+  // Layer 2: Draw nodes (above edges)
   nodeOrder.forEach(function(id){
     var n=nodes[id], p=positions[id];
     if(!p)return;
@@ -267,6 +259,22 @@ H.renderFlowGraph = function(lines){
     }
     s+='<text x="'+(p.x+p.w/2)+'" y="'+(p.y+p.h/2+5)+'" text-anchor="middle" font-size="14" font-weight="500" fill="'+tc+'">'+H.escHtml(n.label)+'</text>';
   });
+
+  // Layer 3: Draw edge labels on top of everything
+  edges.forEach(function(e){
+    if(!e.label) return;
+    var from=positions[e.from], to=positions[e.to];
+    if(!from||!to)return;
+    var x1=from.x+from.w, y1=from.y+from.h/2;
+    var x2=to.x, y2=to.y+to.h/2;
+    var mx=(x1+x2)/2;
+    var labelY=(y1+y2)/2;
+    // Background rect for readability
+    var labelW=e.label.length*7+16;
+    s+='<rect x="'+(mx-labelW/2)+'" y="'+(labelY-10)+'" width="'+labelW+'" height="16" rx="3" fill="var(--surface)"/>';
+    s+='<text x="'+mx+'" y="'+(labelY+2)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
+  });
+
   s+='</svg>';
   return s;
 };
@@ -319,15 +327,31 @@ H.renderPieChart = function(lines){
   var total=0;slices.forEach(function(s){total+=s.value});if(!total)return null;
   var colors=['#3D5A6E','#4A7B6A','#8E6B9E','#B07D56','#5C7A3D','#6B5B8A','#8B6B4A','#4A6B8A','#7A5B6B','#5B7A6A'];
   var cx=250,cy=180,r=120;
-  var sW=500,legendGap=50,legendH=slices.length*28;
+  var sW=500,legendGap=40;
   var titleH=title?40:0;
-  var sH=titleH+cy+r+legendGap+legendH+40;
   var _dark=document.documentElement.getAttribute('data-theme')==='dark';var tc=_dark?'#E4E7EB':'#1C1C1E',ac=_dark?'#8A919C':'#8E9196',lb=_dark?'#E4E7EB':'#1C1C1E';
   var bg=_dark?'#1E2429':'#FFFFFF';
+  var pieCy=titleH+cy;
+
+  // Pre-calculate legend to determine total SVG height
+  var legendLabels=slices.map(function(sl){return H.escHtml(sl.label)});
+  var legendItems=slices.map(function(sl,i){
+    return {col:colors[i%colors.length], lbl:legendLabels[i], w: legendLabels[i].length*7.5+26};
+  });
+  // Split legend into rows
+  var rows=[],currentRow=[],currentW=0;
+  legendItems.forEach(function(item){
+    if(currentW+item.w > sW-40 && currentRow.length){ rows.push(currentRow); currentRow=[]; currentW=0; }
+    currentRow.push(item); currentW+=item.w;
+  });
+  if(currentRow.length) rows.push(currentRow);
+  var legendH=rows.length*28;
+  var sH=titleH+cy+r+legendGap+legendH+30;
+
   var s='<svg class="pie-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
   s+='<rect class="pie-bg" width="'+sW+'" height="'+sH+'" fill="transparent"/>';
   if(title)s+='<text x="'+(sW/2)+'" y="'+(titleH-8)+'" text-anchor="middle" font-size="16" font-weight="600" fill="'+tc+'">'+H.escHtml(title)+'</text>';
-  var pieCy=titleH+cy;
+
   var startAngle=-Math.PI/2;
   var sliceData=[];
   slices.forEach(function(sl,i){
@@ -344,62 +368,27 @@ H.renderPieChart = function(lines){
     if(angle>0.3)s+='<text x="'+tx+'" y="'+(ty+4)+'" text-anchor="middle" font-size="12" font-weight="600" fill="#fff" pointer-events="none">'+pct+'%</text>';
     startAngle=endAngle;
   });
+
+  // Draw hover labels
   sliceData.forEach(function(sd){
     var lx1=cx+r*0.85*Math.cos(sd.midAngle);
     var ly1=pieCy+r*0.85*Math.sin(sd.midAngle);
-    // Adjust label radius to avoid overlap with legend
-    var labelR = r * 1.3;
-    // If label would be in the bottom area near legend, push it up
-    var rawLy2 = pieCy + labelR * Math.sin(sd.midAngle);
-    var legendTop = titleH + cy + r + legendGap - 10;
-    if (rawLy2 > legendTop) {
-      labelR = r * 1.15;
-    }
+    var labelR=r*1.25;
     var lx2=cx+labelR*Math.cos(sd.midAngle);
     var ly2=pieCy+labelR*Math.sin(sd.midAngle);
     var right=Math.cos(sd.midAngle)>=0;
     var tx=lx2+(right?10:-10);
     var anchor=right?'start':'end';
     var label=H.escHtml(sd.label)+' ('+sd.pct+'%)';
-    var available=right?sW-tx-10:tx-10;
-    var fontSize=13;var charW=fontSize*0.55;var maxChars=Math.floor(available/charW);
-    if(maxChars<6)maxChars=6;
     s+='<g class="pie-label" style="opacity:0;transition:opacity 200ms;pointer-events:none">';
     s+='<line x1="'+lx1+'" y1="'+ly1+'" x2="'+lx2+'" y2="'+ly2+'" stroke="'+ac+'" stroke-width="1.2"/>';
     s+='<circle cx="'+lx1+'" cy="'+ly1+'" r="2.5" fill="'+ac+'"/>';
-    if(label.length>maxChars){
-      var lns=[];for(var k=0;k<label.length;k+=maxChars)lns.push(label.slice(k,k+maxChars));
-      s+='<text x="'+tx+'" y="'+(ly2+4)+'" text-anchor="'+anchor+'" font-size="'+fontSize+'" font-weight="500" fill="'+lb+'">';
-      lns.forEach(function(ln,li){s+='<tspan x="'+tx+'" dy="'+(li===0?0:16)+'">'+ln+'</tspan>'});
-      s+='</text>';
-    }else{
-      s+='<text x="'+tx+'" y="'+(ly2+4)+'" text-anchor="'+anchor+'" font-size="'+fontSize+'" font-weight="500" fill="'+lb+'">'+label+'</text>';
-    }
+    s+='<text x="'+tx+'" y="'+(ly2+4)+'" text-anchor="'+anchor+'" font-size="13" font-weight="500" fill="'+lb+'">'+label+'</text>';
     s+='</g>';
   });
-  // Build legend as rows, each row centered
+
+  // Draw legend centered
   var ly=titleH+cy+r+legendGap;
-  var legendLabels=slices.map(function(sl){return H.escHtml(sl.label)});
-  // Build legend items with their widths
-  var legendItems=[];
-  slices.forEach(function(sl,i){
-    var col=colors[i%colors.length];
-    var lbl=legendLabels[i];
-    var itemW=lbl.length*13+36;
-    legendItems.push({col:col,lbl:lbl,w:itemW});
-  });
-  // Split into rows that fit within sW-20
-  var rows=[],currentRow=[],currentW=0;
-  legendItems.forEach(function(item){
-    if(currentW+item.w>sW-20 && currentRow.length){
-      rows.push(currentRow);
-      currentRow=[];currentW=0;
-    }
-    currentRow.push(item);
-    currentW+=item.w;
-  });
-  if(currentRow.length)rows.push(currentRow);
-  // Render each row centered
   rows.forEach(function(row){
     var rowW=0;row.forEach(function(item){rowW+=item.w});
     var lx=(sW-rowW)/2;
@@ -410,6 +399,7 @@ H.renderPieChart = function(lines){
     });
     ly+=28;
   });
+
   s+='</svg>';return s;
 };
 
