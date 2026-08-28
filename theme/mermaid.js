@@ -352,7 +352,7 @@ H.renderPieChart = function(lines){
   // Pre-calculate legend to determine total SVG height
   var legendLabels=slices.map(function(sl){return H.escHtml(sl.label)});
   var legendItems=slices.map(function(sl,i){
-    return {col:colors[i%colors.length], lbl:legendLabels[i], w: legendLabels[i].length*7.5+26};
+    return {col:colors[i%colors.length], lbl:legendLabels[i], w: legendLabels[i].length*9+32};
   });
   // Split legend into rows
   var rows=[],currentRow=[],currentW=0;
