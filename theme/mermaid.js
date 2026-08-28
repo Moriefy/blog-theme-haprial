@@ -217,7 +217,10 @@ H.renderFlowGraph = function(lines){
   var layers=[];for(i=0;i<=maxD;i++)layers.push([]);
   nodeOrder.forEach(function(id){layers[depths[id]].push(id)});
 
-  var nodeW=160,nodeH=50,gapX=40,gapY=60;
+  // Calculate node width based on longest label
+  var maxLabelLen=0;
+  nodeOrder.forEach(function(id){var n=nodes[id];if(n.label.length>maxLabelLen)maxLabelLen=n.label.length});
+  var nodeW=Math.max(160, maxLabelLen*14+40),nodeH=50,gapX=40,gapY=60;
   var sW=(maxD+1)*(nodeW+gapX)+40;
   var maxLayerLen=0;layers.forEach(function(l){if(l.length>maxLayerLen)maxLayerLen=l.length});
   var sH=maxLayerLen*(nodeH+gapY)+80;
@@ -311,10 +314,10 @@ H.renderPieChart = function(lines){
   if(!slices.length)return null;
   var total=0;slices.forEach(function(s){total+=s.value});if(!total)return null;
   var colors=['#3D5A6E','#4A7B6A','#8E6B9E','#B07D56','#5C7A3D','#6B5B8A','#8B6B4A','#4A6B8A','#7A5B6B','#5B7A6A'];
-  var cx=250,cy=200,r=130;
-  var sW=500,legendGap=60,legendH=slices.length*26;
+  var cx=250,cy=180,r=120;
+  var sW=500,legendGap=50,legendH=slices.length*28;
   var titleH=title?40:0;
-  var sH=titleH+cy+r+legendGap+legendH+30;
+  var sH=titleH+cy+r+legendGap+legendH+40;
   var _dark=document.documentElement.getAttribute('data-theme')==='dark';var tc=_dark?'#E4E7EB':'#1C1C1E',ac=_dark?'#8A919C':'#8E9196',lb=_dark?'#E4E7EB':'#1C1C1E';
   var bg=_dark?'#1E2429':'#FFFFFF';
   var s='<svg class="pie-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
@@ -374,12 +377,14 @@ H.renderPieChart = function(lines){
   var legendLabels=slices.map(function(sl){return H.escHtml(sl.label)});
   var totalLegendW=0;legendLabels.forEach(function(l){totalLegendW+=l.length*13+36});
   var lx=cx-totalLegendW/2;
+  // Ensure legend doesn't overflow
+  if(lx<10)lx=10;
   slices.forEach(function(sl,i){
     var col=colors[i%colors.length];
     var lbl=legendLabels[i];
-    if(lx+lbl.length*13+24>sW-20){lx=cx-totalLegendW/2;ly+=26}
-    s+='<circle cx="'+lx+'" cy="'+(ly+6)+'" r="5" fill="'+col+'"/>';
-    s+='<text x="'+(lx+12)+'" y="'+(ly+10)+'" font-size="13" fill="'+tc+'">'+lbl+'</text>';
+    if(lx+lbl.length*13+24>sW-10){lx=10;ly+=28}
+    s+='<circle cx="'+lx+'" cy="'+(ly+8)+'" r="5" fill="'+col+'"/>';
+    s+='<text x="'+(lx+14)+'" y="'+(ly+12)+'" font-size="13" fill="'+tc+'">'+lbl+'</text>';
     lx+=lbl.length*13+36;
   });
   s+='</svg>';return s;
