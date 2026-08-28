@@ -46,6 +46,7 @@ H.state = {
   imgObserver: null,
   _mermaidIO: null,
   _closeAnimDone: false,
+  _lastOpenedCardId: null,
   _tocRaf: null,
   _headingCacheDirty: false,
   lastRouteWasArticle: false,

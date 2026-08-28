@@ -198,6 +198,15 @@ H.closeArticleVisual = function(){
     H.state.lastRouteWasArticle = false;
     H.el.topAppBar.classList.toggle('elevated', H.state.scrollPos>0);
     H.el.fab.classList.toggle('visible', H.state.scrollPos>400);
+    // Highlight the card that was just closed
+    if(H.state._lastOpenedCardId){
+      var target = document.querySelector('.card[data-id="'+H.state._lastOpenedCardId+'"],.archive-card[data-id="'+H.state._lastOpenedCardId+'"]');
+      if(target){
+        target.classList.add('card-return-highlight');
+        setTimeout(function(){ target.classList.remove('card-return-highlight') }, 2500);
+      }
+      H.state._lastOpenedCardId = null;
+    }
   }
   articleView.addEventListener('transitionend',function h(e){ if(e.target!==articleView)return; articleView.removeEventListener('transitionend',h); afterClose() });
   setTimeout(afterClose,350);

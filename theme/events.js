@@ -204,8 +204,8 @@ H.initClickHandler = function(){
       setTimeout(function(){ H.pushRoute({type:'article',articleId:sid}); H.openArticleVisual(sid) },150); return;
     }
     // Archive/card click
-    if((t=e.target.closest('.archive-card'))&&t.dataset.id){ H.pushRoute({type:'article',articleId:t.dataset.id}); H.openArticleVisual(t.dataset.id); return }
-    if((t=e.target.closest('.card'))&&t.dataset.id){ H.pushRoute({type:'article',articleId:t.dataset.id}); H.openArticleVisual(t.dataset.id); return }
+    if((t=e.target.closest('.archive-card'))&&t.dataset.id){ H.state._lastOpenedCardId=t.dataset.id; H.pushRoute({type:'article',articleId:t.dataset.id}); H.openArticleVisual(t.dataset.id); return }
+    if((t=e.target.closest('.card'))&&t.dataset.id){ H.state._lastOpenedCardId=t.dataset.id; H.pushRoute({type:'article',articleId:t.dataset.id}); H.openArticleVisual(t.dataset.id); return }
     // Back button
     if(e.target.closest('#avBack')){ if(history.length>1)history.back(); else{H.closeArticleVisual();H.pushRoute({type:'page',page:'articles'})} return }
     // TOC toggle
