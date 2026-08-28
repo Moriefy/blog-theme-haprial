@@ -312,9 +312,9 @@ H.renderPieChart = function(lines){
   var total=0;slices.forEach(function(s){total+=s.value});if(!total)return null;
   var colors=['#3D5A6E','#4A7B6A','#8E6B9E','#B07D56','#5C7A3D','#6B5B8A','#8B6B4A','#4A6B8A','#7A5B6B','#5B7A6A'];
   var cx=250,cy=200,r=130;
-  var sW=500,legendGap=44,legendH=slices.length*26;
+  var sW=500,legendGap=60,legendH=slices.length*26;
   var titleH=title?40:0;
-  var sH=titleH+cy+r+legendGap+legendH+20;
+  var sH=titleH+cy+r+legendGap+legendH+30;
   var _dark=document.documentElement.getAttribute('data-theme')==='dark';var tc=_dark?'#E4E7EB':'#1C1C1E',ac=_dark?'#8A919C':'#8E9196',lb=_dark?'#E4E7EB':'#1C1C1E';
   var bg=_dark?'#1E2429':'#FFFFFF';
   var s='<svg class="pie-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+sW+' '+sH+'" style="font-family:Noto Sans SC,PingFang SC,sans-serif;max-width:'+sW+'px;width:100%;height:auto">';
@@ -340,8 +340,16 @@ H.renderPieChart = function(lines){
   sliceData.forEach(function(sd){
     var lx1=cx+r*0.85*Math.cos(sd.midAngle);
     var ly1=pieCy+r*0.85*Math.sin(sd.midAngle);
-    var lx2=cx+r*1.4*Math.cos(sd.midAngle);
-    var ly2=pieCy+r*1.4*Math.sin(sd.midAngle);
+    // Adjust label radius to avoid overlap with legend
+    var labelR = r * 1.3;
+    // If label would be in the bottom area near legend, push it up
+    var rawLy2 = pieCy + labelR * Math.sin(sd.midAngle);
+    var legendTop = titleH + cy + r + legendGap - 10;
+    if (rawLy2 > legendTop) {
+      labelR = r * 1.15;
+    }
+    var lx2=cx+labelR*Math.cos(sd.midAngle);
+    var ly2=pieCy+labelR*Math.sin(sd.midAngle);
     var right=Math.cos(sd.midAngle)>=0;
     var tx=lx2+(right?10:-10);
     var anchor=right?'start':'end';
