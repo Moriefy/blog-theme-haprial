@@ -203,7 +203,10 @@ H.closeArticleVisual = function(){
       var target = document.querySelector('.card[data-id="'+H.state._lastOpenedCardId+'"],.archive-card[data-id="'+H.state._lastOpenedCardId+'"]');
       if(target){
         target.classList.add('card-return-highlight');
-        target.addEventListener('mouseleave',function(){ target.classList.remove('card-return-highlight') },{once:true});
+        function dismiss(){ target.classList.remove('card-return-highlight'); target.removeEventListener('mouseleave',dismiss); document.removeEventListener('touchstart',dismiss); window.removeEventListener('scroll',dismiss) }
+        target.addEventListener('mouseleave',dismiss);
+        document.addEventListener('touchstart',dismiss,{once:true,passive:true});
+        window.addEventListener('scroll',dismiss,{once:true,passive:true});
       }
       H.state._lastOpenedCardId = null;
     }
