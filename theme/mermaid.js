@@ -214,9 +214,12 @@ H.renderFlowGraph = function(lines){
   nodeOrder.forEach(function(id){layers[depths[id]].push(id)});
 
   // Calculate node width based on longest label
-  var maxLabelLen=0;
+  var maxLabelLen=0, maxEdgeLabelLen=0;
   nodeOrder.forEach(function(id){var n=nodes[id];if(n.label.length>maxLabelLen)maxLabelLen=n.label.length});
-  var nodeW=Math.max(160, maxLabelLen*10+40),nodeH=50,gapX=60,gapY=60;
+  edges.forEach(function(e){if(e.label && e.label.length>maxEdgeLabelLen)maxEdgeLabelLen=e.label.length});
+  var nodeW=Math.max(160, maxLabelLen*10+40),nodeH=50;
+  // Gap must be wide enough for edge labels between layers
+  var gapX=Math.max(80, maxEdgeLabelLen*8+40),gapY=60;
   var sW=(maxD+1)*(nodeW+gapX)+40;
   var maxLayerLen=0;layers.forEach(function(l){if(l.length>maxLayerLen)maxLayerLen=l.length});
   var sH=maxLayerLen*(nodeH+gapY)+80;
@@ -260,7 +263,7 @@ H.renderFlowGraph = function(lines){
     s+='<text x="'+(p.x+p.w/2)+'" y="'+(p.y+p.h/2+5)+'" text-anchor="middle" font-size="14" font-weight="500" fill="'+tc+'">'+H.escHtml(n.label)+'</text>';
   });
 
-  // Layer 3: Draw edge labels on top of everything
+  // Layer 3: Draw edge labels (in the gap between node layers)
   edges.forEach(function(e){
     if(!e.label) return;
     var from=positions[e.from], to=positions[e.to];
@@ -269,10 +272,7 @@ H.renderFlowGraph = function(lines){
     var x2=to.x, y2=to.y+to.h/2;
     var mx=(x1+x2)/2;
     var labelY=(y1+y2)/2;
-    // Background rect for readability
-    var labelW=e.label.length*7+16;
-    s+='<rect x="'+(mx-labelW/2)+'" y="'+(labelY-10)+'" width="'+labelW+'" height="16" rx="3" fill="var(--surface)"/>';
-    s+='<text x="'+mx+'" y="'+(labelY+2)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
+    s+='<text x="'+mx+'" y="'+(labelY+4)+'" text-anchor="middle" font-size="12" fill="'+tc+'">'+H.escHtml(e.label)+'</text>';
   });
 
   s+='</svg>';
