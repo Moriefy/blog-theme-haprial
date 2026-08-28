@@ -2,9 +2,17 @@
 
 > 中文文档 | **[English](README.md)**
 
+> ⚠️ **说明：** 本项目完全通过 **Vibe Coding**（氛围编程）创建——这是一种依靠直觉、感觉和反复试验来构建的过程，而非遵循正式的规范。代码可能不符合传统模式，但它能工作，而且感觉对了。
+>
+> 如果你采用本项目作为你的博客，我很想听听你的使用体验！请通过 Issue 告诉我，或者给项目一个 Star。你的反馈有助于项目的改进。⭐
+
 一个极简、零依赖的静态博客主题，采用 Material Design 3 设计语言。专注于性能和像素级还原。
 
 ![Haprial 主题](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview.svg)
+
+---
+
+**欢迎 Star ⭐ 和 Fork 🍴！**
 
 ## ✨ 特性
 

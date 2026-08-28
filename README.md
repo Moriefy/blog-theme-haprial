@@ -2,9 +2,17 @@
 
 > **[中文文档](README_CN.md)** | English
 
+> ⚠️ **Note:** This project was entirely created through **vibe coding** — a process of building by intuition, feel, and iterative experimentation rather than formal specifications. The code may not follow conventional patterns, but it works and feels right.
+>
+> If you use this project for your blog, I'd love to hear about it! Please let me know by opening an issue or starring the repo. Your feedback helps improve the project. ⭐
+
 A minimal, zero-dependency static blog theme with Material Design 3 aesthetics. Built for performance and pixel-perfect reproduction.
 
 ![Haprial Theme](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview.svg)
+
+---
+
+**Welcome to star ⭐ and fork 🍴!**
 
 ## ✨ Features
 
