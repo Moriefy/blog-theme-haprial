@@ -8,11 +8,19 @@
 
 一个极简、零依赖的静态博客主题，采用 Material Design 3 设计语言。专注于性能和像素级还原。
 
-![Haprial 主题](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview.svg)
+### 桌面端预览
+![桌面端预览](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview-desktop.jpg)
+
+### 移动端预览
+![移动端预览](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview-mobile.jpg)
 
 ---
 
 **欢迎 Star ⭐ 和 Fork 🍴！**
+
+> 📖 **文档**
+> - [评论系统 (Worker)](worker/README_CN.md) - 评论后端
+> - [管理后台](admin/) - 管理你的博客
 
 ## ✨ 特性
 
