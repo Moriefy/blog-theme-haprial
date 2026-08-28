@@ -204,6 +204,15 @@ H.renderFlowGraph = function(lines){
   }
   if(!nodeOrder.length)return null;
 
+  // Deduplicate edges
+  var edgeMap={};
+  var dedupedEdges=[];
+  edges.forEach(function(e){
+    var key=e.from+'->'+e.to;
+    if(!edgeMap[key]){edgeMap[key]=e;dedupedEdges.push(e)}
+  });
+  edges=dedupedEdges;
+
   // Layout
   var depths={};
   function getDepth(id,d){ if(depths[id]!==undefined)return depths[id]; depths[id]=d;var mx=d;(children[id]||[]).forEach(function(c){mx=Math.max(mx,getDepth(c,d+1))});return mx }
