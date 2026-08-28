@@ -5,12 +5,13 @@
 
 var H = window.Haprial;
 
+// ── Highlight a TOC item ────────────────────────────────────────────────
 H.setTocHighlight = function(id){
   if(H.state.lastActiveId === id) return;
   H.state.lastActiveId = id;
   var tocList = H.el.tocList, tocDrawerList = H.el.tocDrawerList, tocSheet = H.el.tocSheet;
   var items = tocList.children;
-  for(var i=0;i<items.length;i++){ var it=items[i]; it.classList.toggle('active', it.dataset.target===id) }
+  for(var i=0;i<items.length++){ var it=items[i]; it.classList.toggle('active', it.dataset.target===id) }
   var dItems = tocDrawerList.children;
   for(var i=0;i<dItems.length;i++){ var di=dItems[i]; di.classList.toggle('active', di.dataset.target===id) }
   if(!tocSheet.classList.contains('open')) return;
@@ -21,12 +22,14 @@ H.setTocHighlight = function(id){
   }
 };
 
+// ── Manual lock (after clicking a TOC item) ─────────────────────────────
 H.lockTocManual = function(){
   H.state.tocManualLock = true;
   clearTimeout(H.state.tocManualTimer);
-  H.state.tocManualTimer = setTimeout(function(){ H.state.tocManualLock = false },3000);
+  H.state.tocManualTimer = setTimeout(function(){ H.state.tocManualLock = false }, 2500);
 };
 
+// ── Build TOC from article headings ─────────────────────────────────────
 H.buildTOC = function(){
   var tocList = H.el.tocList, tocDrawerList = H.el.tocDrawerList, articleBody = H.el.articleBody;
   tocList.innerHTML = ''; tocDrawerList.innerHTML = '';
@@ -54,30 +57,64 @@ H.buildTOC = function(){
   if(H.state.headingCache.length) H.setTocHighlight(H.state.headingCache[0].id);
 };
 
+// ── Cache heading positions (offsetTop relative to articleBody) ─────────
 H.cacheHeadings = function(){
   H.state.headingCache = [];
   H.el.articleBody.querySelectorAll('h2,h3').forEach(function(h){
-    H.state.headingCache.push({id:h.id, top:h.offsetTop});
+    H.state.headingCache.push({id:h.id, top:h.offsetTop, tag:h.tagName});
   });
   H.state._headingCacheDirty = false;
 };
 
 H.invalidateHeadingCache = function(){ H.state._headingCacheDirty = true };
 
+// ── Update TOC highlight on scroll ──────────────────────────────────────
+// Logic:
+//   1. The "judgment line" is scrollTop + TOP_OFFSET (120px, below the app bar)
+//   2. Among all headings whose top <= judgment line, pick the last one
+//   3. Edge case: scrollTop is small → highlight first heading
+//   4. Edge case: near bottom → if last heading is below judgment line, force highlight it
 H.updateTOCHighlight = function(){
-  if(H.state.tocManualLock || !H.state.headingCache || !H.state.headingCache.length) return;
+  if(H.state.tocManualLock) return;
+  var cache = H.state.headingCache;
+  if(!cache || !cache.length) return;
   if(H.state._headingCacheDirty) H.cacheHeadings();
-  var st = H.el.articleView.scrollTop;
-  if(st<100) return;
-  var target = st+120;
+
+  var view = H.el.articleView;
+  var st = view.scrollTop;
+  var viewH = view.clientHeight;
+  var scrollMax = view.scrollHeight - viewH;
+  var TOP_OFFSET = 120; // below the app bar
+
+  // Edge: at the very top → first heading
+  if(st < 80){
+    H.setTocHighlight(cache[0].id);
+    return;
+  }
+
+  // Edge: at the very bottom → last heading
+  // (the last heading may have scrolled past the judgment line)
+  if(scrollMax > 0 && st >= scrollMax - 10){
+    H.setTocHighlight(cache[cache.length-1].id);
+    return;
+  }
+
+  // Normal: find the last heading whose top <= judgment line
+  var judgmentLine = st + TOP_OFFSET;
   var best = null;
-  for(var i=0;i<H.state.headingCache.length;i++){
-    if(H.state.headingCache[i].top<=target) best = H.state.headingCache[i];
+  for(var i = 0; i < cache.length; i++){
+    if(cache[i].top <= judgmentLine) best = cache[i];
     else break;
   }
-  if(best && best.id !== H.state.lastActiveId) H.setTocHighlight(best.id);
+
+  // If no heading is above the judgment line (all headings are below),
+  // this shouldn't normally happen after scrolling past 80px, but handle it:
+  if(!best) best = cache[0];
+
+  if(best.id !== H.state.lastActiveId) H.setTocHighlight(best.id);
 };
 
+// ── TOC drawer sheet ────────────────────────────────────────────────────
 H.openTocSheet = function(){
   H.el.tocSheet.classList.add('open');
   setTimeout(function(){ document.addEventListener('click',H.tocOutClick) },10);
