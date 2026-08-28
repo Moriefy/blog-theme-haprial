@@ -248,7 +248,7 @@ H.renderFlowGraph = function(lines){
   nodeOrder.forEach(function(id){
     var n=nodes[id], p=positions[id];
     if(!p)return;
-    var fill='var(--surface-container)', stroke='var(--outline-variant)';
+    var fill='var(--surface-container-high)', stroke='var(--outline-variant)';
     if(n.shape==='diamond'){
       s+='<polygon points="'+(p.x+p.w/2)+','+p.y+' '+(p.x+p.w)+','+(p.y+p.h/2)+' '+(p.x+p.w/2)+','+(p.y+p.h)+' '+p.x+','+(p.y+p.h/2)+'" fill="'+fill+'" stroke="'+stroke+'"/>';
     }else if(n.shape==='circle'){
