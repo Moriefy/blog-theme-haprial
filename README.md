@@ -8,11 +8,19 @@
 
 A minimal, zero-dependency static blog theme with Material Design 3 aesthetics. Built for performance and pixel-perfect reproduction.
 
-![Haprial Theme](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview.svg)
+### Desktop Preview
+![Desktop Preview](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview-desktop.jpg)
+
+### Mobile Preview
+![Mobile Preview](https://raw.githubusercontent.com/Moriefy/blog-theme-haprial/main/static/preview-mobile.jpg)
 
 ---
 
 **Welcome to star ⭐ and fork 🍴!**
+
+> 📖 **Documentation**
+> - [Comments System (Worker)](worker/README.md) - Backend for comments
+> - [Admin Dashboard](admin/) - Manage your blog
 
 ## ✨ Features
 
