@@ -423,7 +423,7 @@ a{color:var(--primary);text-decoration:none}
 .footer-copy{font-family:
 .footer-powered{font-family:'Noto Sans SC','PingFang SC',sans-serif;font-size:11px;color:var(--outline);margin:4px 0 0}
 .footer-powered a{color:var(--primary);text-decoration:none;border-bottom:1px solid var(--primary-container);transition:border-color 200ms}
-.footer-powered a:hover{border-bottom-color:var(--primary)}'Noto Sans SC','PingFang SC',sans-serif;font-size:12px;color:var(--outline)}
+.footer-powered a:hover{border-bottom-color:var(--primary)}
 
 /* ── Reduced Motion ── */
 @media(prefers-reduced-motion:reduce){
