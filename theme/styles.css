@@ -277,7 +277,7 @@ a{color:var(--primary);text-decoration:none}
 .article-body del{color:var(--outline);text-decoration:line-through}
 
 /* ── Mermaid ── */
-.mermaid-block{margin:18px 0;padding:16px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--shape-m);overflow:hidden;text-align:center;-webkit-overflow-scrolling:touch;position:relative}
+.mermaid-block{margin:18px 0;padding:16px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--shape-m);overflow:visible;text-align:center;-webkit-overflow-scrolling:touch;position:relative}
 .mermaid-block svg{max-width:100%;height:auto;display:inline-block;cursor:pointer;touch-action:auto}
 .mermaid-block svg text{-webkit-user-select:text;user-select:text;cursor:text;-webkit-tap-highlight-color:transparent}
 .mermaid-block svg text::selection{background:var(--primary-container);color:var(--on-primary-container)}
